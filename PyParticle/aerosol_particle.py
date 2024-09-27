@@ -111,8 +111,7 @@ class Particle:
         return Dwet
     
     # def get_Dwet_from_RH(self,RH):
-    #     pass # need to fix this; maybe add Kohler as a separate package?
-    
+    #     pass # need to fix this; maybe add Kohler as a separate package? 
     def get_Ddry(self):
         vol_dry = self.get_vol_dry()
         Ddry = (vol_dry*6./np.pi)**(1./3.)
