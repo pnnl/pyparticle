@@ -1,2 +1,2 @@
 # PyParticle
-Python package for describing and analyzing individual aerosol particles
+Python package for describing and analyzing aerosol particles and particle populations
