@@ -20,7 +20,7 @@ from scipy import interpolate
 #     print(delegate)
 #     # delegate = py3bridge.Py3Wrapper('spam', 'listdir')
 #     # CoreShell = delegate('.')
-from PyMieScatt import CoreShell
+from PyMieScat.CoreShell import MieQCoreShell
 from . import get_number
 from dataclasses import dataclass
 # from population import Particle
@@ -197,7 +197,7 @@ class CoreShellParticle:
                 mShell = self.get_shell_ri(rr,ww)
                 
                 print(mCore,mShell,dCore_nm,dShell_nm, wavelength_nm)
-                output_dict = CoreShell.MieQCoreShell(
+                output_dict = MieQCoreShell(
                     mCore, mShell, wavelength_nm, dCore_nm, dShell_nm, 
                     asDict=True, asCrossSection=True)
                 self.Cext[rr,ww] = output_dict['Cext']
