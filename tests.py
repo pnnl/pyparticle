@@ -26,11 +26,13 @@ m_shell = 1.55 # assume shell is SO4
 #aero_spec_fracs = np.hstack([?,?,?])
 particle = PyParticle.make_particle(D_shell, aero_spec_names, aero_spec_fracs)
 
-# step 3: make an optical particle PyParticle
+# step 4: make an optical particle PyParticle
 # JOSCELYNE -- modify the code below
 
 rh_grid = np.hstack([RH])
 wvl_grid = np.hstack([550e-9])
 
 cs_particle = PyParticle.make_optical_particle(particle, rh_grid, wvl_grid)
+
+# step 5: compare the optical properties in cs_particle with those directly from PyMieScatt
 
