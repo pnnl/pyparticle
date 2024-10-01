@@ -3,7 +3,7 @@
 """
 Functions to create a monodisperse population
 
-@author: Laura
+@author: Laura Fierce
 """
 
 from . import ParticlePopulation
