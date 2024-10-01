@@ -226,38 +226,37 @@ class RefractiveIndex:
     RI_params: Optional[dict] = None
 
 def _add_spec_RI(
-        aero_spec,wvls,real_ri_fun=None,imag_ri_fun=None,
+        aero_spec,wvls,
         specdata_path='../../datasets/aerosol/species_data/',return_lookup=False,return_params=False):
     
     spec_name = aero_spec.name.upper()
-    if real_ri_fun == None:
-            if spec_name == 'H2O':
-                ri_h2o_filename = specdata_path + 'ri_water.csv'
-                wavelength_list = []
-                n_list = []
-                k_list = []
-                with open(ri_h2o_filename) as data_file:
-                    for line in data_file:
-                        if not 'Wavelength' in line:
-                            split_output = line.split(',')
-                            wavelength_list.append(1e-6*get_number(split_output[0]))
-                            n_list.append(get_number(split_output[3]))
-                            k_list.append(get_number(split_output[4]))
-                    wvls = np.hstack(wavelength_list)
-                    real_ris = np.hstack(n_list)
-                    imag_ris = np.hstack(k_list)
-                
-                real_ri_fun = interpolate.interp1d(wvls, real_ris)# lambda wvl: interpolate.interp1d(wvls, real_ris)(wvl)
-                imag_ri_fun = interpolate.interp1d(wvls, imag_ris) # lambda wvl: interpolate.interp1d(wvls, imag_ris)(wvl)#np.interp(wvl, wvls, imag_ris)        
-            else:
-                RI_params = get_RI_params(spec_name)
-                val_550 = RI_params['n_550']; val_alpha = RI_params['alpha_n']
-                real_ri_fun = lambda wvl: val_550*(wvl/550e-9)**(val_alpha)
-                
-                val_550 = RI_params['k_550']; val_alpha = RI_params['alpha_k']
-                imag_ri_fun = lambda wvl: val_550*(wvl/550e-9)**(val_alpha)
-                # real_ri_fun = lambda wvl: RI_params['n_550']*(wvl/(550e-9))**(-RI_params['alpha_n'])
-                # imag_ri_fun = lambda wvl: RI_params['k_550']*(wvl/(550e-9))**(-RI_params['alpha_k'])
+    if spec_name == 'H2O':
+        ri_h2o_filename = specdata_path + 'ri_water.csv'
+        wavelength_list = []
+        n_list = []
+        k_list = []
+        with open(ri_h2o_filename) as data_file:
+            for line in data_file:
+                if not 'Wavelength' in line:
+                    split_output = line.split(',')
+                    wavelength_list.append(1e-6*get_number(split_output[0]))
+                    n_list.append(get_number(split_output[3]))
+                    k_list.append(get_number(split_output[4]))
+            wvls = np.hstack(wavelength_list)
+            real_ris = np.hstack(n_list)
+            imag_ris = np.hstack(k_list)
+        
+        real_ri_fun = interpolate.interp1d(wvls, real_ris)# lambda wvl: interpolate.interp1d(wvls, real_ris)(wvl)
+        imag_ri_fun = interpolate.interp1d(wvls, imag_ris) # lambda wvl: interpolate.interp1d(wvls, imag_ris)(wvl)#np.interp(wvl, wvls, imag_ris)        
+    else:
+        RI_params = get_RI_params(spec_name)
+        val_550 = RI_params['n_550']; val_alpha = RI_params['alpha_n']
+        real_ri_fun = lambda wvl: val_550*(wvl/550e-9)**(val_alpha)
+        
+        val_550 = RI_params['k_550']; val_alpha = RI_params['alpha_k']
+        imag_ri_fun = lambda wvl: val_550*(wvl/550e-9)**(val_alpha)
+        # real_ri_fun = lambda wvl: RI_params['n_550']*(wvl/(550e-9))**(-RI_params['alpha_n'])
+        # imag_ri_fun = lambda wvl: RI_params['k_550']*(wvl/(550e-9))**(-RI_params['alpha_k'])
             
     if not return_lookup:
         real_ris = None
