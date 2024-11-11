@@ -9,7 +9,7 @@ from .aerosol_species import retrieve_one_species
 from . import data_path
 from dataclasses import dataclass
 from typing import Tuple
-from typing import Optional
+# from typing import Optional
 import numpy as np
 from scipy.constants import R
 import scipy.optimize as opt
@@ -35,7 +35,7 @@ class Particle:
         if idx_h2o == -1:
             idx_not_h2o = idx_all[:-1]
         elif idx_h2o >= 0:
-            idx_not_h2o = np.hstack([idx for idx in idx_all if idx != idx_h2o])
+            idx_not_h2o = np.array([idx for idx in idx_all if idx != idx_h2o])
         else:    
             idx_not_h2o = np.hstack([idx_all[:idx_h2o],idx_all[idx_h2o:][1:]])
         return idx_not_h2o
@@ -48,6 +48,10 @@ class Particle:
         return np.where([
             spec.name not in core_specs + ['H2O'] for spec in self.species])[0]
     
+    def idx_spec(self, spec_name):
+        return np.where([
+            spec.name in spec_name for spec in self.species])
+        
     def get_spec_rhos(self):
         spec_rhos = np.hstack([one_spec.density for one_spec in self.species])
         return spec_rhos
@@ -55,6 +59,10 @@ class Particle:
     def get_spec_kappas(self):
         spec_kappas = np.hstack([one_spec.kappa for one_spec in self.species])
         return spec_kappas
+    
+    def get_spec_MWs(self):
+        spec_MWs = np.hstack([one_spec.molar_mass for one_spec in self.species])
+        return spec_MWs
     
     def get_mass_dry(self):
         mks = self.masses
@@ -65,12 +73,38 @@ class Particle:
         mks = self.masses
         mass_tot = np.sum(mks)
         return mass_tot
+    
+    def get_spec_mass(self,spec_name):
+        idx = self.idx_spec(spec_name)
+        mks = self.masses
+        return mks[idx]
+
+    def get_spec_vol(self,spec_name):
+        idx = self.idx_spec(spec_name)
+        vks = self.get_vks()
+        return vks[idx]
+    
+    def get_spec_moles(self,spec_name):
+        idx = self.idx_spec(spec_name)
+        moles = self.get_moles()
+        spec_moles = moles[idx][0]
+        return spec_moles
+    
+    def get_spec_rho(self,spec_name):
+        idx = self.idx_spec(spec_name)
+        rhos = self.get_spec_rhos()
+        return rhos[idx[0]]
         
     def get_rho_h2o(self):
         return self.species[self.idx_h2o].density
     
     def get_mass_h2o(self):
-        return self.masses[self.idx_h2o]
+        return self.masses[self.idx_h2o()]
+
+    def get_moles(self):
+        mks = self.masses
+        MWs = self.get_spec_MWs()
+        return mks/MWs
         
     def get_vks(self):
         mks = self.masses
@@ -144,9 +178,6 @@ class Particle:
         vks = self.get_vks()
         trho = np.sum(mks)/np.sum(vks)
         
-        # # alternative:
-        # spec_rhos = self.get_spec_rhos()
-        # trho = np.sum(vks*spec_rhos)/np.sum(vks)
         return trho
     
     def get_critical_supersaturation(self, return_D_crit=False):
@@ -156,7 +187,7 @@ class Particle:
         T=self.T
         sigma_h2o=self.surface_tension
         rho_h2o=self.AeroSpecs[idx_h2o].density
-        MW_h2o=self.AeroSpecs[idx_h2o].molecular_weight
+        MW_h2o=self.AeroSpecs[idx_h2o].molar_mass
         
         A = 4.*sigma_h2o*MW_h2o/(R*T*rho_h2o);
         
@@ -175,18 +206,40 @@ class Particle:
             return s_critical
         
 def make_particle(
-        D, aero_spec_names, aero_spec_fracs, 
+        D, aero_spec_names, aero_spec_frac, 
+        specdata_path= data_path + 'species_data/', 
+        surface_tension=0.072, D_is_wet=True):
+    
+    if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
+        aero_spec_names.append('H2O')
+        aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
+    
+    AeroSpecs = []
+    for name in aero_spec_names:
+        AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, surface_tension=surface_tension))
+    
+    if D_is_wet:# or 'H2O' not in aero_spec_names or 'h2o' not in aero_spec_names:
+        vol = np.pi/6.*D**3.
+        mass = effective_density(aero_spec_frac,AeroSpecs)*vol
+        spec_masses = mass*aero_spec_frac
+    else:
+        dryvol = np.pi/6.*D**3.
+        drymass = effective_density(aero_spec_frac[:-1],AeroSpecs[:-1])*dryvol
+        massfrac_h2o = aero_spec_frac[-1]
+        mass_h2o = massfrac_h2o * drymass/(1. - massfrac_h2o)
+        spec_masses = np.hstack([drymass*aero_spec_frac[:-1], mass_h2o])
+    
+    return Particle(species=AeroSpecs,masses=spec_masses)
+
+def make_particle_from_masses(
+        aero_spec_names, spec_masses,
         specdata_path= data_path + 'species_data/', 
         surface_tension=0.072):
     AeroSpecs = []
     for name in aero_spec_names:
         AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, surface_tension=surface_tension))
-    vol = np.pi/6.*D**3.
-    mass = effective_density(aero_spec_fracs,AeroSpecs)*vol
-    # spec_masses = np.array([mass*spec_frac for spec_frac in aero_spec_fracs]) 
-    spec_masses = mass*aero_spec_fracs
-
     return Particle(species=AeroSpecs,masses=spec_masses)
+    
 
 def compute_Sc_funsixdeg(diam,A,tkappa,dry_diam):
     c6=1.0;

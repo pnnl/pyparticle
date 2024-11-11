@@ -6,9 +6,10 @@ Demonstration script for using PyParticle to compute particle properties
 @author: Laura Fierce
 """
 
-import PyParticle
 
 import numpy as np
+import PyParticle
+
 
 D = 100e-9
 aero_spec_names = ['BC','SO4','H2O']

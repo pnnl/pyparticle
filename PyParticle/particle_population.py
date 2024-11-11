@@ -3,16 +3,17 @@
 """
 @author: Laura Fierce
 """
-import numpy as np
+
 from dataclasses import dataclass
 from typing import Tuple
 # from typing import Optional
 from warnings import warn
-from scipy.constants import R
-import scipy.optimize as optimize
+# from scipy.constants import R
+# import scipy.optimize as optimize
 
 from . import Particle
 from . import AerosolSpecies
+import numpy as np
 
 @dataclass
 class ParticlePopulation:
@@ -23,6 +24,7 @@ class ParticlePopulation:
     spec_masses: np.array # shape = (N_particles, N_species)
     num_concs: np.array # shape = N_particles
     ids: Tuple[int, ...] # shape = N_particles
+    
     
     def find_particle(self, part_id):
         if part_id in self.ids:
@@ -35,12 +37,12 @@ class ParticlePopulation:
             idx = len(self.ids)
         return idx
     
-    def get_particle(self, part_id, idx_h2o=-1):
+    def get_particle(self, part_id):
         if part_id in self.ids:
             # print([one_id == part_id for one_id in self.ids])
             idx_particle = self.find_particle(part_id)
             print(idx_particle,self.spec_masses.shape)
-            return Particle(self.species, self.spec_masses[idx_particle,:], idx_h2o=idx_h2o)
+            return Particle(self.species, self.spec_masses[idx_particle,:])
         else:
             raise ValueError(str(part_id) + ' not in ids')
             
@@ -59,9 +61,21 @@ class ParticlePopulation:
         if len(self.ids) == 0:
             self.spec_masses = np.zeros([1,len(self.species)])
             self.spec_masses[0,:] = particle.masses
-            self.num_concs = np.array([num_conc])
+            self.num_concs = np.hstack([num_conc])
             self.ids = [part_id]
         else:
-            self.spec_masses = np.hstack([self.spec_masses, particle.masses])
+            self.spec_masses = np.vstack([self.spec_masses, particle.masses.reshape(1,-1)])
             self.num_concs = np.hstack([self.num_concs, num_conc])
             self.ids.append(part_id)
+            
+            
+    def get_effective_radius(self):
+        rs = []
+        for part_id in self.ids:
+            particle = self.get_particle(part_id)
+            print(particle.get_Dwet())
+            rs.append(particle.get_Dwet()/2.)
+        rs = np.asarray(rs)
+        Ns = self.num_concs
+        return np.sum(rs*Ns)/np.sum(Ns)
+                

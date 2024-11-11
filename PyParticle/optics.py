@@ -20,7 +20,7 @@ from scipy import interpolate
 #     print(delegate)
 #     # delegate = py3bridge.Py3Wrapper('spam', 'listdir')
 #     # CoreShell = delegate('.')
-from PyMieScat.CoreShell import MieQCoreShell
+from PyMieScatt.CoreShell import MieQCoreShell
 from . import get_number
 from dataclasses import dataclass
 # from population import Particle
@@ -46,6 +46,7 @@ def make_optical_particle(
     if compute_optics:
         cs_particle._add_optics()
     return cs_particle
+
 @dataclass
 class CoreShellParticle:
     """CoreShellParticle: the definition of a core-shell ``optical particle" """
@@ -257,14 +258,14 @@ def _add_spec_RI(
         imag_ri_fun = lambda wvl: val_550*(wvl/550e-9)**(val_alpha)
         # real_ri_fun = lambda wvl: RI_params['n_550']*(wvl/(550e-9))**(-RI_params['alpha_n'])
         # imag_ri_fun = lambda wvl: RI_params['k_550']*(wvl/(550e-9))**(-RI_params['alpha_k'])
-            
+    
     if not return_lookup:
         real_ris = None
         imag_ris = None
     
     if not return_params:
         RI_params = None
-            
+        
     aero_spec.refractive_index = RefractiveIndex(
         real_ri_fun = real_ri_fun,
         imag_ri_fun = imag_ri_fun,
@@ -272,8 +273,8 @@ def _add_spec_RI(
         real_ris = real_ris,
         imag_ris = imag_ris,
         RI_params = RI_params)
-            
-            print(aero_spec.refractive_index.real_ri_fun(550e-9))
+    
+    print(aero_spec.refractive_index.real_ri_fun(550e-9))
     # aero_spec.refractive_index = spec_RI
     return aero_spec
 

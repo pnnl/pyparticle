@@ -5,14 +5,14 @@ class and functions for aerosol species
 
 @author: Laura Fierce
 """
-import os
-import numpy as np
+# import os
+# import numpy as np
 from dataclasses import dataclass
-from typing import Tuple
+# from typing import Tuple
 from typing import Optional
-from warnings import warn
-from scipy.constants import R
-import scipy.optimize as opt
+# from warnings import warn
+# from scipy.constants import R
+# import scipy.optimize as opt
 from . import data_path 
 
 
