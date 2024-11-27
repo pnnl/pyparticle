@@ -12,9 +12,10 @@ from .utilities import get_number
 # #from .utilities import Py3Wrapper
 from .aerosol_particle import Particle, make_particle, make_particle_from_masses
 from .aerosol_species import AerosolSpecies, retrieve_one_species
-from .optics import make_optical_particle
-
 from .particle_population import ParticlePopulation
+from .optics import make_optical_particle
+from .optics import make_optical_population
+
 
 from . import builder
 from .builder import monodisperse

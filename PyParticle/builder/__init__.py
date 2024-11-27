@@ -5,12 +5,12 @@
 
 @author: Laura Fierce
 """
-
+from .. import data_path
 from .. import retrieve_one_species
 from .. import Particle
 from .. import ParticlePopulation
 from .. import make_particle
-from .. import data_path
+from .. import make_particle_from_masses
 
 from . import monodisperse
 from . import partmc

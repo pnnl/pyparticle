@@ -14,6 +14,8 @@ import numpy as np
 from scipy.constants import R
 import scipy.optimize as opt
 
+from importlib import reload
+reload(np)
 
 @dataclass
 class Particle:
@@ -35,7 +37,7 @@ class Particle:
         if idx_h2o == -1:
             idx_not_h2o = idx_all[:-1]
         elif idx_h2o >= 0:
-            idx_not_h2o = np.array([idx for idx in idx_all if idx != idx_h2o])
+            idx_not_h2o = np.hstack([idx for idx in idx_all if idx != idx_h2o])
         else:    
             idx_not_h2o = np.hstack([idx_all[:idx_h2o],idx_all[idx_h2o:][1:]])
         return idx_not_h2o
@@ -94,7 +96,7 @@ class Particle:
         idx = self.idx_spec(spec_name)
         rhos = self.get_spec_rhos()
         return rhos[idx[0]]
-        
+            
     def get_rho_h2o(self):
         return self.species[self.idx_h2o].density
     
@@ -208,7 +210,8 @@ class Particle:
 def make_particle(
         D, aero_spec_names, aero_spec_frac, 
         specdata_path= data_path + 'species_data/', 
-        surface_tension=0.072, D_is_wet=True):
+        species_modifications={}, 
+        D_is_wet=True):
     
     if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
         aero_spec_names.append('H2O')
@@ -216,7 +219,13 @@ def make_particle(
     
     AeroSpecs = []
     for name in aero_spec_names:
-        AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, surface_tension=surface_tension))
+        if name in species_modifications.keys():
+            spec_modifications = species_modifications[name]
+        elif 'SOA' in species_modifications.keys() and name in ['MSA','ARO1','ARO2','ALK1','OLE1','API1','API2','LIM1','LIM2']:
+            spec_modifications = species_modifications['SOA']
+        else:
+            spec_modifications = {}
+        AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, spec_modifications=spec_modifications))
     
     if D_is_wet:# or 'H2O' not in aero_spec_names or 'h2o' not in aero_spec_names:
         vol = np.pi/6.*D**3.
@@ -233,11 +242,15 @@ def make_particle(
 
 def make_particle_from_masses(
         aero_spec_names, spec_masses,
-        specdata_path= data_path + 'species_data/', 
-        surface_tension=0.072):
+        specdata_path= data_path + 'species_data/',
+        species_modifications = {}):
     AeroSpecs = []
     for name in aero_spec_names:
-        AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, surface_tension=surface_tension))
+        if name in species_modifications.keys():
+            spec_modifications = species_modifications[name]
+        else:
+            spec_modifications = {}
+        AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, spec_modifications=spec_modifications))
     return Particle(species=AeroSpecs,masses=spec_masses)
     
 

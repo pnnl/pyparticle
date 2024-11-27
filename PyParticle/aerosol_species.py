@@ -38,14 +38,26 @@ class AerosolSpecies:
         self.molecular_weight = float(molecular_weight.replace('d','e'))
         self.kappa = float(kappa)
     
-def retrieve_one_species(name, specdata_path= data_path + 'species_data/',surface_tension=0.072):
+def retrieve_one_species(name, specdata_path=data_path + 'species_data/', spec_modifications={}):
     aero_datafile = specdata_path + 'aero_data.dat'
     with open(aero_datafile) as data_file:
         for line in data_file:
             if line.upper().startswith(name.upper()):
                 name_in_file,density,ions_in_solution,molar_mass,kappa = line.split()
+                
+                if 'kappa' in spec_modifications.keys():
+                    kappa = spec_modifications['kappa']
+                
+                if 'density' in spec_modifications.keys():
+                    density = spec_modifications['density']
+                
+                if 'surface_tension' in spec_modifications.keys():
+                    surface_tension = spec_modifications['surface_tension']
+                else:
+                    surface_tension=0.072
     return AerosolSpecies(
         name=name,
         density=float(density),
         kappa=float(kappa),
-        molar_mass=float(molar_mass.replace('d','e')))
+        molar_mass=float(molar_mass.replace('d','e')),
+        surface_tension=float(surface_tension))

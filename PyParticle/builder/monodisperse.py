@@ -10,10 +10,11 @@ from . import ParticlePopulation
 from . import make_particle
 from . import data_path
 import numpy as np
-
+from importlib import reload
+reload(np)
 
 def build(
-        population_settings, n_sd=1, specdata_path = data_path + 'species_data/'):
+        population_settings, n_particles=1, specdata_path = data_path + 'species_data/'):
     
     if specdata_path == None:
         specdata_path = data_path + 'species_data/'
@@ -28,6 +29,7 @@ def build(
     
     monodisperse_population = ParticlePopulation(species=particle.species,spec_masses=[],num_concs=[],ids=[])
     # print(getattr(monodisperse_population))
-    for ii in range(n_sd):
-        monodisperse_population.set_particle(particle, ii, population_settings['num_conc']/n_sd)
+    for ii in range(n_particles):
+        monodisperse_population.set_particle(particle, ii, population_settings['num_conc']/n_particles)
+    
     return monodisperse_population
