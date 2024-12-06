@@ -31,8 +31,8 @@ def build(
     
     currnc = Dataset(partmc_filepath)
     aero_spec_names = currnc.variables['aero_species'].names.split(',')
-    spec_masses = currnc.variables['aero_particle_mass'][:]
-    part_ids = currnc.variables['aero_id'][:]
+    spec_masses = np.array(currnc.variables['aero_particle_mass'][:])
+    part_ids = np.array([one_id for one_id in currnc.variables['aero_id'][:]],dtype=int)
     
     if 'aero_num_conc' in currnc.variables.keys():
         num_concs = currnc.variables['aero_num_conc'][:]

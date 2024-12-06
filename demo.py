@@ -13,7 +13,12 @@ from importlib import reload
 reload(np)
 
 rh_grid = np.hstack([0.,0.99])
-wvl_grid = np.hstack([350e-9,550e-9,750e-9])
+# wvl_grid = np.hstack([350e-9,550e-9,750e-9])
+wvl_grid = np.hstack([550e-9])
+
+# from dataclasses import asdict
+import json 
+import csv
 
 # D = 100e-9
 # aero_spec_names = ['BC','SO4','OC','H2O']
@@ -45,3 +50,11 @@ particle_population = PyParticle.builder.partmc.build(
     population_settings,n_particles=None,species_modifications=species_modifications)
 optical_population = PyParticle.make_optical_population(
     particle_population, rh_grid, wvl_grid,species_modifications=species_modifications)
+
+optical_pop_dict = optical_population.to_dict()
+optical_pop_dict['population_settings'] = population_settings
+optical_pop_dict['species_modifications'] = species_modifications
+
+output_file = 'sample.json'
+with open(output_file, "w") as outfile: 
+    json.dump(optical_pop_dict, outfile)

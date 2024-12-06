@@ -44,6 +44,7 @@ class ParticlePopulation:
             raise ValueError(str(part_id) + ' not in ids')
             
     def set_particle(self, particle, part_id, num_conc, suppress_warning=False):
+        part_id = int(part_id)
         if part_id not in self.ids:
             if not suppress_warning:
                 warn('part_id not in self.ids, adding ' + str(part_id))

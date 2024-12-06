@@ -41,22 +41,23 @@ def make_optical_particle(
         particle,rh_grid,wvl_grid,
         morphology='core-shell',compute_optics=True,temp=293.15,
         specdata_path=data_path + 'species_data/',
-        species_modifications={},
-        return_lookup=False,return_params=False):
+        species_modifications={}):
+        # return_lookup=False,return_params=False):
     if morphology == 'core-shell':
         optical_particle = CoreShellParticle(
             particle.species,
             particle.masses,
             rh_grid=rh_grid,wvl_grid=wvl_grid,temp=temp)
         optical_particle._add_spec_RIs(
-            specdata_path=specdata_path,species_modifications=species_modifications,
-            return_lookup=return_lookup,return_params=return_params)
+            specdata_path=specdata_path,species_modifications=species_modifications)
+            # return_lookup=return_lookup,return_params=return_params)
         optical_particle._add_params()
     else:
         print('only coded for morphology = \'core-shell\'')
     
     if compute_optics:
         optical_particle._add_optics()
+        
     return optical_particle
 
 def make_optical_population(
@@ -64,8 +65,8 @@ def make_optical_population(
         morphology='core-shell',compute_optics=True,temp=293.15,
         species_modifications={},
         specdata_path=data_path + 'species_data/',
-        suppress_warning=True,
-        return_lookup=False,return_params=False):
+        suppress_warning=True):
+        # return_lookup=False,return_params=False):
     optical_population = CoreShellPopulation(
         species = particle_population.species,
         spec_masses = particle_population.spec_masses,
@@ -81,11 +82,11 @@ def make_optical_population(
                 particle,rh_grid,wvl_grid,
                 morphology=morphology, compute_optics=compute_optics,
                 temp=temp, specdata_path=specdata_path,
-                species_modifications=species_modifications,
-                return_lookup=return_lookup,return_params=return_params)
+                species_modifications=species_modifications)
+                # return_lookup=return_lookup,return_params=return_params)
         optical_population.set_particle(
             optical_particle, part_id, num_conc,suppress_warning=suppress_warning)
-    
+        
     return optical_population
 
 
@@ -110,7 +111,7 @@ class CoreShellPopulation(ParticlePopulation):
     # computed from particle and refractive index data for each species
     core_ris: np.array = None # shape = (N_wvl,)
     dry_shell_ris: np.array  = None# shape = (N_wvl,)
-    h2o_ris = np.array = None # shape = N_wvl,
+    h2o_ris: np.array = None # shape = N_wvl,
     
     # the following are parameters computed by PyMieScatt
     Cexts: np.array  = None# shape = (N_rh,N_wvl)
@@ -126,12 +127,13 @@ class CoreShellPopulation(ParticlePopulation):
     gs_bc: np.array  = None# shape = (N_rh,N_wvl)
     Cprs_bc: np.array  = None# shape = (N_rh,N_wvl)
     Cbacks_bc: np.array  = None# shape = (N_rh,N_wvl)
-    # Cratios: np.array = None # shape = (N_rh,N_wvl)
     
-    # def initialize(self):
-    #     N_wvl = len(self.wvl_grid)
-    #     N_rh = len(self.rh_grid)
-    #     self.core_vols = np.zeros()
+    Cexts_nobc: np.array  = None# shape = (N_rh,N_wvl)
+    Cscas_nobc: np.array  = None# shape = (N_rh,N_wvl)
+    Cabss_nobc: np.array  = None# shape = (N_rh,N_wvl)
+    gs_nobc: np.array  = None# shape = (N_rh,N_wvl)
+    Cprs_nobc: np.array  = None# shape = (N_rh,N_wvl)
+    Cbacks_nobc: np.array  = None# shape = (N_rh,N_wvl)
     
     def find_particle(self, part_id):
         if part_id in self.ids:
@@ -144,10 +146,7 @@ class CoreShellPopulation(ParticlePopulation):
             idx = len(self.ids)
         return idx
     
-    def set_particle(self, optical_particle, part_id, num_conc,suppress_warning=False):
-        # if part_id == None:
-        #     warn('part_id not in self.ids, adding ' + str(part_id))
-        #     self.add_particle(optical_particle, part_id, num_conc)
+    def set_particle(self, optical_particle, part_id, num_conc,suppress_warning=False):        
         idx = self.find_particle(part_id)
         if type(self.core_vols) == type(None):
             if not suppress_warning:
@@ -192,6 +191,7 @@ class CoreShellPopulation(ParticlePopulation):
             self.gs_nobc[idx,:,:] = optical_particle.g_nobc
             self.Cprs_nobc[idx,:,:] = optical_particle.Cpr_nobc
             self.Cbacks_nobc[idx,:,:] = optical_particle.Cback_nobc
+    
     def add_particle(self, optical_particle, part_id, num_conc):
         N_rh = len(optical_particle.rh_grid)
         N_wvl = len(optical_particle.wvl_grid)
@@ -207,11 +207,11 @@ class CoreShellPopulation(ParticlePopulation):
             
             self.temp = optical_particle.temp
             
-            self.core_ris = np.zeros([1, N_wvl])
+            self.core_ris = np.zeros([1, N_wvl],dtype=complex)
             self.core_ris[0,:] = optical_particle.core_ris
-            self.dry_shell_ris = np.zeros([1, N_wvl])
+            self.dry_shell_ris = np.zeros([1, N_wvl],dtype=complex)
             self.dry_shell_ris[0,:] = optical_particle.dry_shell_ris
-            self.h2o_ris = np.zeros([1, N_wvl])
+            self.h2o_ris = np.zeros([1, N_wvl],dtype=complex)
             self.h2o_ris[0,:] = optical_particle.h2o_ris
             
             self.core_vols = np.hstack([optical_particle.core_vol])
@@ -302,6 +302,7 @@ class CoreShellPopulation(ParticlePopulation):
             return Particle(self.species, self.spec_masses[idx_particle,:])
         else:
             raise ValueError(str(part_id) + ' not in ids')
+    
     def get_babs(self,optics_type='total'):
         N_rh = len(self.rh_grid)
         N_wvl = len(self.wvl_grid)
@@ -318,7 +319,7 @@ class CoreShellPopulation(ParticlePopulation):
                     print('optics_type =', optics_type, 'not included')
                 b_abs[rr,ww] = np.sum(crossects*self.num_concs)
         return b_abs
-                
+    
     def get_bscat(self,optics_type='total'):
         N_rh = len(self.rh_grid)
         N_wvl = len(self.wvl_grid)
@@ -354,7 +355,7 @@ class CoreShellParticle(Particle):
     # computed from particle and refractive index data for each species
     core_ris: np.array = None # shape = (N_wvl,)
     dry_shell_ris: np.array  = None# shape = (N_wvl,)
-    h2o_ris = np.array = None # shape = N_wvl,
+    h2o_ris: np.array = None # shape = N_wvl,
     
     # the following are parameters computed by PyMieScatt
     Cext: np.array  = None# shape = (N_rh,N_wvl)
@@ -383,8 +384,8 @@ class CoreShellParticle(Particle):
     
     def _add_spec_RIs(
             self,specdata_path=data_path + 'species_data/',
-            species_modifications={},
-            return_lookup=False,return_params=False):
+            species_modifications={}):
+            # return_lookup=False,return_params=False):
         old_specs = self.species
         wvls = self.wvl_grid
         new_specs = []
@@ -393,26 +394,25 @@ class CoreShellParticle(Particle):
                 spec_modifications = species_modifications[old_spec.name]
             elif 'SOA' in species_modifications.keys() and old_spec.name in ['MSA','ARO1','ARO2','ALK1','OLE1','API1','API2','LIM1','LIM2']:
                 spec_modifications = species_modifications['SOA']
-
             else:
                 spec_modifications = {}
             
             new_spec = _add_spec_RI(
-                old_spec,wvls,
+                old_spec,#wvls,
                 specdata_path=specdata_path,
-                spec_modifications=spec_modifications,
-                return_lookup=return_lookup,return_params=return_params)
+                spec_modifications=spec_modifications)
+                # return_lookup=return_lookup,return_params=return_params)
             new_specs.append(new_spec)
         self.species = new_specs
+        # print(self.species)
         
     def _add_params(self):
         vks = self.get_vks()
         idx_core = self.idx_core()
         idx_dry_shell = self.idx_dry_shell()
-        
         self.core_vol = np.sum(vks[idx_core])
         
-        self.dry_shell_vol = np.sum(vks[idx_dry_shell])
+        self.shell_dry_vol = np.sum(vks[idx_dry_shell])
         
         self._add_h2o_vols()
         self._add_effective_ris()
@@ -434,36 +434,37 @@ class CoreShellParticle(Particle):
                     RH=rh,T=T, sigma_h2o=sigma_h2o, 
                     rho_h2o=rho_h2o, MW_h2o=MW_h2o)**3.
         self.h2o_vols = h2o_vols
-            
+        
     def _add_effective_ris(self):
         N_wvl = len(self.wvl_grid)
         vks = self.get_vks() 
-        core_ris = np.zeros(N_wvl,dtype=np.complex128)
+        core_ris = np.zeros(N_wvl,dtype=complex)
         for ii in self.idx_core():
             real_ris = self.species[ii].refractive_index.real_ri_fun(self.wvl_grid)
             imag_ris = self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid)
             core_ris += (real_ris + imag_ris*1j) * vks[ii] / self.core_vol
-
-        dry_shell_ris = np.zeros(N_wvl,dtype=np.complex128)        
+        
+        dry_shell_ris = np.zeros(N_wvl,dtype=complex)        
         for ii in self.idx_dry_shell():
             real_ris = self.species[ii].refractive_index.real_ri_fun(self.wvl_grid)
             imag_ris = self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid)
-            dry_shell_ris += (real_ris + imag_ris*1j) * vks[ii] / self.dry_shell_vol
+            dry_shell_ris += (real_ris + imag_ris*1j) * vks[ii] / self.shell_dry_vol
         
         ii = self.idx_h2o()
         real_ris = self.species[ii].refractive_index.real_ri_fun(self.wvl_grid)
         imag_ris = self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid)
-        h2o_ris = (real_ris + imag_ris*1j)
+        h2o_ris = np.array(real_ris + imag_ris*1j,dtype=complex)
         
-        self.core_ris = core_ris
-        self.dry_shell_ris = dry_shell_ris
-        self.h2o_ris = h2o_ris
-    
+        self.core_ris = np.array([complex(np.real(one_ri),np.imag(one_ri)) for one_ri in core_ris])# np.array(core_ris, dtype=complex)
+        self.dry_shell_ris = np.array([complex(np.real(one_ri),np.imag(one_ri)) for one_ri in dry_shell_ris])# np.array(dry_shell_ris, dtype=complex)
+        self.h2o_ris = np.array([complex(np.real(one_ri),np.imag(one_ri)) for one_ri in h2o_ris])# np.array(h2o_ris, dtype=complex)
     def get_shell_ri(self,rr,ww):
+        
         shell_ri = (
-            (self.h2o_ris[ww] * self.h2o_vols[rr]
-            + self.dry_shell_ris[ww] * self.dry_shell_vol) 
-            / (self.h2o_vols[rr] + self.dry_shell_vol)
+            # (self.h2o_ris[ww] * self.h2o_vols[rr]
+            (1.33 * self.h2o_vols[rr]
+            + self.dry_shell_ris[ww] * self.shell_dry_vol) 
+            / (self.h2o_vols[rr] + self.shell_dry_vol)
         )
         return shell_ri
     
@@ -471,13 +472,13 @@ class CoreShellParticle(Particle):
         return ((6./np.pi) * self.core_vol) ** (1./3.)
     
     def get_dry_diam(self):
-        return ((6./np.pi) * (self.core_vol + self.dry_shell_vol)) ** (1./3.)
+        return ((6./np.pi) * (self.core_vol + self.shell_dry_vol)) ** (1./3.)
 
     def get_wet_diam(self,rr):
-        return ((6./np.pi) * (self.core_vol + self.dry_shell_vol + self.h2o_vols[rr])) ** (1./3.)
+        return ((6./np.pi) * (self.core_vol + self.shell_dry_vol + self.h2o_vols[rr])) ** (1./3.)
     
     def get_wet_diams(self):
-        return ((6./np.pi) * (self.core_vol + self.dry_shell_vol + self.h2o_vols)) ** (1./3.)
+        return ((6./np.pi) * (self.core_vol + self.shell_dry_vol + self.h2o_vols)) ** (1./3.)
     
     def get_total_crossect(self,rr):
         return np.pi/4.*self.get_wet_diam(rr)**2
@@ -512,6 +513,7 @@ class CoreShellParticle(Particle):
         dCore_nm = 1e9 * self.get_core_diam()
         for rr in range(N_rh):
             dShell_nm = 1e9 * self.get_wet_diam(rr)
+            
             core_crossect = self.get_core_crossect()
             total_crossect = self.get_total_crossect(rr)
             
@@ -530,16 +532,16 @@ class CoreShellParticle(Particle):
                 self.Cpr[rr,ww] = output_dict['Qpr']*total_crossect
                 self.Cback[rr,ww] = output_dict['Qback']*total_crossect
                 
-                if self.core_vol>1e-34:
+                if not np.isclose(dCore_nm, 0.):
                     output_dict_bc = MieQ(
                         mCore, wavelength_nm, dCore_nm, 
                         asDict=True, asCrossSection=False)
-                    self.Cext_bc[rr,ww] = core_crossect*output_dict_bc['Qext']*core_crossect
-                    self.Csca_bc[rr,ww] = core_crossect*output_dict_bc['Qsca']*core_crossect
-                    self.Cabs_bc[rr,ww] = core_crossect*output_dict_bc['Qabs']*core_crossect
+                    self.Cext_bc[rr,ww] = output_dict_bc['Qext']*core_crossect
+                    self.Csca_bc[rr,ww] = output_dict_bc['Qsca']*core_crossect
+                    self.Cabs_bc[rr,ww] = output_dict_bc['Qabs']*core_crossect
                     self.g_bc[rr,ww] = output_dict_bc['g']
-                    self.Cpr_bc[rr,ww] = core_crossect*output_dict_bc['Qpr']*core_crossect
-                    self.Cback_bc[rr,ww] = core_crossect*output_dict_bc['Qback']*core_crossect
+                    self.Cpr_bc[rr,ww] = output_dict_bc['Qpr']*core_crossect
+                    self.Cback_bc[rr,ww] = output_dict_bc['Qback']*core_crossect
                     
                     output_dict_nobc_shell = MieQ(
                         mShell, wavelength_nm, dShell_nm, 
@@ -548,13 +550,9 @@ class CoreShellParticle(Particle):
                         mShell, wavelength_nm, dCore_nm, 
                         asDict=True, asCrossSection=False)
                     
-                    
-                    # output_dict_nobc = MieQ(
-                    #     1., mShell, wavelength_nm, dCore_nm, dShell_nm, 
-                    #     asDict=True, asCrossSection=True)
                     self.Cext_nobc[rr,ww] = output_dict_nobc_shell['Qext']*total_crossect - output_dict_nobc_core['Qext']*core_crossect
                     self.Csca_nobc[rr,ww] = output_dict_nobc_shell['Qsca']*total_crossect - output_dict_nobc_core['Qsca']*core_crossect
-                    if np.imag(mShell)>0:
+                    if not np.isclose(dCore_nm, 0.):
                         self.Cabs_nobc[rr,ww] = output_dict_nobc_shell['Qabs']*total_crossect - output_dict_nobc_core['Qabs']*core_crossect
                     self.g_nobc_core[rr,ww] = output_dict_nobc_core['g']
                     self.g_nobc_shell[rr,ww] = output_dict_nobc_shell['g']
@@ -568,13 +566,15 @@ class CoreShellParticle(Particle):
                     self.g_nobc_shell[rr,ww] = self.g[rr,ww]
                     self.Cpr_nobc[rr,ww] = self.Cpr[rr,ww]
                     self.Cback_nobc[rr,ww] = self.Cback[rr,ww]
-                    
+
+# FIXME: expand aerosol species to include RIs
+    
 @dataclass
 class RefractiveIndex:
     """RefractiveIndex: the definition of wavelength-dependent refractive index.
     Applies to an individual aerosol component or for a mixture of components """
     
-    # conventiona is to always use real_ri_fun and imag_ri_fun if they are defined
+    # convention is to always use real_ri_fun and imag_ri_fun if they are defined
     # (i.e., wvls, real_ris, and imag_ris are ignored)
     real_ri_fun: Callable[[float],float]
     imag_ri_fun: Callable[[float],float]
@@ -587,25 +587,24 @@ class RefractiveIndex:
     RI_params: Optional[dict] = None
     
 def _add_spec_RI(
-        aero_spec,wvls,
+        aero_spec,wvls=None,
         specdata_path='../../datasets/aerosol/species_data/',
-        spec_modifications={},
-        return_lookup=False,return_params=False):
+        spec_modifications={}):
     
     spec_name = aero_spec.name.upper()
     
     if spec_name != 'H2O':
         RI_params = get_RI_params(spec_name)
         if 'n_550' in spec_modifications.keys():
-            val_550 = spec_modifications['n_550']
+            val_550a = spec_modifications['n_550']
         else:
-            val_550 = copy.deepcopy(RI_params['n_550'])
+            val_550a = copy.deepcopy(RI_params['n_550'])
         if 'alpha_n' in spec_modifications.keys():
-            val_alpha = spec_modifications['alpha_n']
+            val_alphaa = spec_modifications['alpha_n']
         else:
-            val_alpha = copy.deepcopy(RI_params['alpha_n'])
-        real_ri_fun = lambda wvl:  val_550*(wvl/550e-9)**val_alpha
-
+            val_alphaa = copy.deepcopy(RI_params['alpha_n'])
+        real_ri_fun = lambda wvl: RI_fun(wvl, val_550a, val_alphaa)
+        
         if 'k_550' in spec_modifications.keys():
             val_550b = spec_modifications['k_550']
         else:
@@ -614,7 +613,14 @@ def _add_spec_RI(
             val_alphab = spec_modifications['alpha_k']
         else:
             val_alphab = copy.deepcopy(RI_params['alpha_k'])
-        imag_ri_fun = lambda wvl: val_550b*(wvl/550e-9)**(val_alphab)
+        imag_ri_fun = lambda wvl: RI_fun(wvl, val_550b, val_alphab)
+        
+        if type(wvls) == type(None):
+            real_ris = None
+            imag_ris = None
+        else:
+            real_ris = real_ri_fun(wvls)
+            imag_ris = imag_ri_fun(wvls)
     else:
         ri_h2o_filename = specdata_path + 'ri_water.csv'
         wavelength_list = []
@@ -633,23 +639,20 @@ def _add_spec_RI(
         
         real_ri_fun = interpolate.interp1d(wvls, real_ris)# lambda wvl: interpolate.interp1d(wvls, real_ris)(wvl)
         imag_ri_fun = interpolate.interp1d(wvls, imag_ris) # lambda wvl: interpolate.interp1d(wvls, imag_ris)(wvl)#np.interp(wvl, wvls, imag_ris)  
-        
-    if not return_lookup:
-        real_ris = None
-        imag_ris = None
-    
-    if not return_params:
         RI_params = None
-        
+    
     aero_spec.refractive_index = RefractiveIndex(
-        real_ri_fun = real_ri_fun,
-        imag_ri_fun = imag_ri_fun,
         wvls = wvls,
         real_ris = real_ris,
         imag_ris = imag_ris,
+        real_ri_fun = real_ri_fun,
+        imag_ri_fun = imag_ri_fun,
         RI_params = RI_params)
     
     return aero_spec
+
+def RI_fun(wvl, val_550, val_alpha):
+    return val_550*(wvl/550e-9)**val_alpha
 
 def get_RI_params(name):
     if name.upper() in ['SO4','NH4','NO3','NA','CL','MSA','CO3']:
