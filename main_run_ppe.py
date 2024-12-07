@@ -22,7 +22,7 @@ N_samples = 1
 runid_digits=4
 # wvl_grid=np.linspace(350e-9,950e-9,7)
 # rh_grid = 1.-np.logspace(0,-2,13)
-rh_grid = np.hstack([0.38771])
+rh_grid = np.hstack([0.])
 wvl_grid = np.hstack([550e-9])
 
 specs_to_vary=['SOA','SO4','NH4','NO3']

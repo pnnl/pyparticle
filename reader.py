@@ -72,13 +72,13 @@ def populate_RI(ri_dict):
     imag_ris = ri_dict['imag_ris']
     RI_params = ri_dict['RI_params']
     if RI_params == None:
-        real_ri_fun = lambda wvl: PyParticle(
+        real_ri_fun = lambda wvl: PyParticle.RI_fun(
             wvl, ri_dict['RI_params']['n_550'], ri_dict['RI_params']['alpha_n'])
-        imag_ri_fun = lambda wvl: PyParticle(
+        imag_ri_fun = lambda wvl: PyParticle.RI_fun(
             wvl, ri_dict['RI_params']['k_550'], ri_dict['RI_params']['alpha_k'])
     else:
-        real_ri_fun = lambda wvl: interp1d(wvls, real_ris)
-        imag_ri_fun = lambda wvl: interp1d(wvls, imag_ris)
+        real_ri_fun = lambda wvl: interp1d(wvls, real_ris)(wvl)
+        imag_ri_fun = lambda wvl: interp1d(wvls, imag_ris)(wvl)
     
     return PyParticle.RefractiveIndex(
         real_ri_fun, imag_ri_fun, wvls, real_ris, imag_ris, RI_params)
