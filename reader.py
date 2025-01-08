@@ -12,10 +12,9 @@ from importlib import reload
 reload(np)
 
 def read_optical_population(output_filename,morphology='core-shell'):
-    pop_dict = json.load(open(output_filename,'r'))
     
+    pop_dict = json.load(open(output_filename,'r'))
     if morphology == 'core-shell':
-        
         optical_population = PyParticle.CoreShellPopulation(
             species=populate_aero_specs(pop_dict['species']), 
             spec_masses=np.array(pop_dict['spec_masses']), 
@@ -24,6 +23,7 @@ def read_optical_population(output_filename,morphology='core-shell'):
             rh_grid=np.array(pop_dict['rh_grid']),
             wvl_grid=np.array(pop_dict['wvl_grid']), 
             temp=pop_dict['temp'], 
+            core_vols=np.array(pop_dict['core_vols']),
             shell_dry_vols=np.array(pop_dict['shell_dry_vols']),
             h2o_vols=np.array(pop_dict['h2o_vols']), 
             core_ris=np.array(pop_dict['core_ris_real']) + 1j*np.array(pop_dict['core_ris_imag']),
@@ -41,12 +41,12 @@ def read_optical_population(output_filename,morphology='core-shell'):
             gs_bc=np.array(pop_dict['gs_bc']),
             Cprs_bc=np.array(pop_dict['Cprs_bc']),
             Cbacks_bc=np.array(pop_dict['Cbacks_bc']),
-            Cexts_nobc=np.array(pop_dict['Cexts_nobc']),
-            Cscas_nobc=np.array(pop_dict['Cscas_nobc']),
-            Cabss_nobc=np.array(pop_dict['Cabss_nobc']),
-            gs_nobc=np.array(pop_dict['gs_nobc']),
-            Cprs_nobc=np.array(pop_dict['Cprs_nobc']),
-            Cbacks_nobc=np.array(pop_dict['Cbacks_nobc']))
+            Cexts_clear=np.array(pop_dict['Cexts_clear']),
+            Cscas_clear=np.array(pop_dict['Cscas_clear']),
+            Cabss_clear=np.array(pop_dict['Cabss_clear']),
+            gs_clear=np.array(pop_dict['gs_clear']),
+            Cprs_clear=np.array(pop_dict['Cprs_clear']),
+            Cbacks_clear=np.array(pop_dict['Cbacks_clear']))
     else:
         print('error: morphology must be \'core-shell\'')
     return optical_population

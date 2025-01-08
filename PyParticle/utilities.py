@@ -5,6 +5,12 @@ Some basic functions used by the other modules
 
 @author: Laura Fierce
 """
+import sys
+import pickle
+import importlib
+import io
+import traceback
+import subprocess
 
 
 def get_number(string_val):
@@ -25,12 +31,8 @@ def get_number(string_val):
     return number
 
 
-import sys
-import pickle
-import importlib
-import io
-import traceback
-import subprocess
+
+
 
 class Py3Wrapper(object):
     def __init__(self, mod_name, func_name):

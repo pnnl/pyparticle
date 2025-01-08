@@ -23,13 +23,11 @@ class Particle:
     in terms of the amounts of different constituent species """
     species: Tuple[AerosolSpecies, ...]
     masses: Tuple[float, ...]
-    # idx_h2o: Optional[int] = -1
     
     def idx_h2o(self):
         return np.where([
-            spec.name.upper() != 'H2O' for spec in self.species])[0][0]
-        
-        
+            spec.name.upper() == 'H2O' for spec in self.species])[0][0]
+    
     def idx_dry(self):
         idx_all = np.arange(len(self.species))        
         idx_h2o = self.idx_h2o()
@@ -143,7 +141,7 @@ class Particle:
             Dwet = compute_Dwet(
                 self.get_Ddry(), self.get_tkappa(), RH, T, 
                 sigma_h2o=sigma_h2o, rho_h2o=rho_h2o, MW_h2o=MW_h2o)
-            
+        
         return Dwet
     
     # def get_Dwet_from_RH(self,RH):
@@ -173,6 +171,15 @@ class Particle:
         idx_not_h2o, = np.where([one_spec.name.upper()!='H2O' for one_spec in self.species])
         tkappa = np.sum(vks[idx_not_h2o]*spec_kappas[idx_not_h2o])/np.sum(vks[idx_not_h2o])
         return tkappa
+    
+    def get_shell_tkappa(self):
+        # compute effective kappa
+        vks = self.get_vks()
+        spec_kappas = self.get_spec_kappas()
+        idx_not_h2o_or_bc, = np.where([
+            one_spec.name.upper()!='H2O' and one_spec.name.upper()!='BC' for one_spec in self.species])
+        shell_tkappa = np.sum(vks[idx_not_h2o_or_bc]*spec_kappas[idx_not_h2o_or_bc])/np.sum(vks[idx_not_h2o_or_bc])
+        return shell_tkappa
     
     def get_trho(self):
         # compute effective density

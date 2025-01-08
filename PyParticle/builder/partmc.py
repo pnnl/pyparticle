@@ -24,7 +24,7 @@ def build(
     
     partmc_dir = population_settings['partmc_dir']
     timestep = population_settings['timestep']
-    repeat = population_settings['repeat'] 
+    repeat = population_settings['repeat']
     partmc_filepath = get_ncfile(partmc_dir + 'out/', timestep, repeat)
     if specdata_path == None:
         specdata_path = partmc_dir
