@@ -12,6 +12,7 @@
 # scripts and progs
 !*.py
 # config
+!*.toml
 !*.yaml
 !uv.lock
 !*.ini

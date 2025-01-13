@@ -1,0 +1,23 @@
+[project]
+name = "pyparticle"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Laura Fierce" }
+]
+requires-python = ">=3.11"
+dependencies = [ # (explicitly) stated in the code
+    "netcdf4",
+    "pandas",
+    "numpy", "scipy", 
+    "pymc",
+    ]
+[dependency-groups]
+dev = [
+    "PyMieScatt",
+    ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
