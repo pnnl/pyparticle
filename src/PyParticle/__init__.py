@@ -7,7 +7,13 @@ PyParticle python package
 """
 import os
 import numpy as np
-data_path = os.getcwd() + '/datasets/'
+### TODO: this should be an argument for a process
+try: # 'dev' situation
+    from pyprojroot import here
+    data_path = here() / 'datasets'
+except ImportError:
+    raise FileNotFoundError('data_path not set')
+### 
 from .utilities import get_number
 # #from .utilities import Py3Wrapper
 from .aerosol_particle import Particle, make_particle, make_particle_from_masses

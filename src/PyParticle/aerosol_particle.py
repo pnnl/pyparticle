@@ -216,7 +216,7 @@ class Particle:
         
 def make_particle(
         D, aero_spec_names, aero_spec_frac, 
-        specdata_path= data_path + 'species_data/', 
+        specdata_path= data_path / 'species_data',
         species_modifications={}, 
         D_is_wet=True):
     
@@ -249,7 +249,7 @@ def make_particle(
 
 def make_particle_from_masses(
         aero_spec_names, spec_masses,
-        specdata_path= data_path + 'species_data/',
+        specdata_path= data_path / 'species_data',
         species_modifications = {}):
     AeroSpecs = []
     for name in aero_spec_names:

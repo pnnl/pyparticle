@@ -14,10 +14,10 @@ from importlib import reload
 reload(np)
 
 def build(
-        population_settings, n_particles=1, specdata_path = data_path + 'species_data/'):
+        population_settings, n_particles=1, specdata_path = data_path / 'species_data'):
     
     if specdata_path == None:
-        specdata_path = data_path + 'species_data/'
+        specdata_path = data_path / 'species_data'
     
     D = population_settings['D']
     aero_spec_names = population_settings['aero_spec_names']

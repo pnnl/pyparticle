@@ -14,10 +14,10 @@ from scipy.optimize import fsolve
 
 
 def build(
-        population_settings, specdata_path = data_path + 'species_data/'):
+        population_settings, specdata_path = data_path / 'species_data'):
     
     if specdata_path == None:
-        specdata_path = data_path + 'species_data/'
+        specdata_path = data_path / 'species_data'
     log10gmds = np.log10(population_settings['GMDs_dry'])
     log10gsds = np.log10(population_settings['GSDs_dry'])
     Ns = population_settings['Ns']
@@ -45,7 +45,7 @@ def build(
         print(ids[qq])
         particle = make_particle(
             drydias_q[qq], aero_spec_names, aero_spec_fracs[qq,:], 
-            specdata_path= data_path + 'species_data/', D_is_wet=False)
+            specdata_path= data_path / 'species_data', D_is_wet=False)
         quadrature_population.set_particle(particle, ids[qq], nums_q[qq])
     return quadrature_population
 

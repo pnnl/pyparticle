@@ -12,7 +12,7 @@ import os
 from netCDF4 import Dataset
 from importlib import reload
 reload(np)
-
+from pathlib import Path
 
 def build(
         population_settings, 
@@ -22,10 +22,10 @@ def build(
         specdata_path = None,
         suppress_warning=True):
     
-    partmc_dir = population_settings['partmc_dir']
+    partmc_dir = Path(population_settings['partmc_dir'])
     timestep = population_settings['timestep']
     repeat = population_settings['repeat']
-    partmc_filepath = get_ncfile(partmc_dir + 'out/', timestep, repeat)
+    partmc_filepath = get_ncfile(partmc_dir / 'out', timestep, repeat)
     if specdata_path == None:
         specdata_path = partmc_dir
     
@@ -54,7 +54,7 @@ def build(
         particle = make_particle_from_masses(
             aero_spec_names, 
             spec_masses[:,ii],
-            specdata_path=partmc_dir,# data_path + 'species_data/', 
+            specdata_path=partmc_dir / '..'/ 'species_data',
             species_modifications=species_modifications)
         partmc_population.set_particle(
             particle, part_ids[ii], num_concs[ii]*N_tot/np.sum(num_concs[idx]), suppress_warning=suppress_warning)
@@ -69,5 +69,5 @@ def get_ncfile(partmc_output_dir, timestep, repeat):
         preface_string = 'urban_plume_'
     else:
         preface_string = 'YOU_NEED_TO_CHANGE_preface_string_'
-    ncfile = partmc_output_dir + preface_string + str(int(repeat)).zfill(4) + '_' + str(int(timestep)).zfill(8) + '.nc'
+    ncfile = partmc_output_dir / (preface_string + str(int(repeat)).zfill(4) + '_' + str(int(timestep)).zfill(8) + '.nc')
     return ncfile

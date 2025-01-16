@@ -40,7 +40,7 @@ import copy
 def make_optical_particle(
         particle,rh_grid,wvl_grid,
         morphology='core-shell',compute_optics=True,temp=293.15,
-        specdata_path=data_path + 'species_data/',
+        specdata_path=data_path / 'species_data',
         species_modifications={}):
     
     if morphology == 'core-shell':
@@ -64,7 +64,7 @@ def make_optical_population(
         particle_population, rh_grid, wvl_grid,
         morphology='core-shell',compute_optics=True,temp=293.15,
         species_modifications={},
-        specdata_path=data_path + 'species_data/',
+        specdata_path=data_path / 'species_data',
         suppress_warning=True):
         # return_lookup=False,return_params=False):
     optical_population = CoreShellPopulation(
@@ -496,7 +496,7 @@ class CoreShellParticle(Particle):
     Cratio_clear: np.array = None # shape = (N_rh,N_wvl)
     
     def _add_spec_RIs(
-            self,specdata_path=data_path + 'species_data/',
+            self,specdata_path=data_path / 'species_data',
             species_modifications={}):
             # return_lookup=False,return_params=False):
         old_specs = self.species
@@ -749,7 +749,7 @@ def _add_spec_RI(
             real_ris = real_ri_fun(wvls)
             imag_ris = imag_ri_fun(wvls)
     else:
-        ri_h2o_filename = specdata_path + 'ri_water.csv'
+        ri_h2o_filename = specdata_path / 'ri_water.csv'
         wavelength_list = []
         n_list = []
         k_list = []

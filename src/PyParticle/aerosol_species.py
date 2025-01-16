@@ -28,8 +28,8 @@ class AerosolSpecies:
     
     
     def _populate_defaults(
-            self,specdata_path= data_path + 'species_data/'):
-        aero_datafile = specdata_path + 'aero_data.dat'
+            self,specdata_path= data_path / 'species_data'):
+        aero_datafile = specdata_path / 'aero_data.dat'
         name = self.name
         with open(aero_datafile) as data_file:
             for line in data_file:
@@ -39,8 +39,8 @@ class AerosolSpecies:
         self.molecular_weight = float(molecular_weight.replace('d','e'))
         self.kappa = float(kappa)
     
-def retrieve_one_species(name, specdata_path=data_path + 'species_data/', spec_modifications={}):
-    aero_datafile = specdata_path + 'aero_data.dat'
+def retrieve_one_species(name, specdata_path=data_path / 'species_data', spec_modifications={}):
+    aero_datafile = specdata_path / 'aero_data.dat'
     with open(aero_datafile) as data_file:
         for line in data_file:
             if line.upper().startswith(name.upper()):
