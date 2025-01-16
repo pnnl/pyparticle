@@ -11,6 +11,8 @@
 !.gitignore
 # scripts and progs
 !*.py
+!Containerfile*
+!Dockerfile*
 # doc
 !*.md
 # config
@@ -19,3 +21,5 @@
 !uv.lock
 !*.ini
 !.python-version
+!*.envrc
+# idk about !*.env bc you could put secrets in it
