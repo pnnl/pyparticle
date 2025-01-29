@@ -43,7 +43,7 @@ def ex1():
         'aero_spec_fracs':np.array([1.])}
     population_singleAerosolSpecies = PyParticle.builder.binned_lognormal.build(
         population_settings, 
-        ##species_modifications={}, # doesn't work when species_modifications is an empty dictionary, defaults are used
+        species_modifications={}, # when species_modifications is an empty dictionary, defaults are used
         D_is_wet=True) # if False, water content is not specified in the particle. Will be added.
 
     # When computing optical properties, ach particle represented as a homogeneous sphere if no core species are included.

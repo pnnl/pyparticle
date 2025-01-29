@@ -10,9 +10,8 @@ from . import make_particle_from_masses
 import numpy as np
 import os
 from netCDF4 import Dataset
-from importlib import reload
-reload(np)
-from pathlib import Path
+
+
 
 def build(
         population_settings, 
