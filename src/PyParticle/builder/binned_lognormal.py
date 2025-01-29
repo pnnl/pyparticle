@@ -41,7 +41,9 @@ def build(
         species=aero_spec_names,spec_masses=[],num_concs=[],ids=[])
     for dd,(D,N_per_bin) in enumerate(zip(D_mids,N_per_bins)):
         particle = make_particle(
-            D, aero_spec_names, aero_spec_fracs,
+            D,
+            aero_spec_names.copy(),  # w/o cpy the object gets modded
+            aero_spec_fracs.copy(),  # which invalidates assumptions. (assertions in code)
             specdata_path=specdata_path, 
             species_modifications=species_modifications, 
             D_is_wet=D_is_wet)

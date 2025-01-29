@@ -1,10 +1,9 @@
-import marimo
-
 __generated_with = "0.10.17"
-app = marimo.App(width="full")
+#import marimo
+#app = marimo.App(width="full")
 
 
-@app.cell
+#@app.cell
 def ex1():
         #!/usr/bin/env python3
     # -*- coding: utf-8 -*-

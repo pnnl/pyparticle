@@ -225,6 +225,7 @@ def make_particle(
     if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
         aero_spec_names.append('H2O')
         aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
+    assert(len(aero_spec_frac) == len(aero_spec_names))
     
     AeroSpecs = []
     for name in aero_spec_names:
