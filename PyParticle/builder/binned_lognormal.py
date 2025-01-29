@@ -10,10 +10,12 @@ from . import ParticlePopulation
 from . import make_particle
 from scipy.stats import norm
 import numpy as np
+from . import data_path
 
 def build(
         population_settings,
-        specdata_path='../datasets/aerosol/species_data/', 
+        species_modifications={},
+        specdata_path=data_path + 'species_data/', 
         surface_tension=0.072, D_is_wet=False):
     D_min = population_settings['D_min']
     D_max = population_settings['D_max']
@@ -33,13 +35,14 @@ def build(
     aero_spec_names = population_settings['aero_spec_names']
     aero_spec_fracs = population_settings['aero_spec_fracs']
     
+    
     lognormal_population = ParticlePopulation(
         species=aero_spec_names,spec_masses=[],num_concs=[],ids=[])
     for dd,(D,N_per_bin) in enumerate(zip(D_mids,N_per_bins)):
         particle = make_particle(
             D, aero_spec_names, aero_spec_fracs,
             specdata_path=specdata_path, 
-            surface_tension=surface_tension,
+            species_modifications=species_modifications, 
             D_is_wet=D_is_wet)
         part_id = dd
         lognormal_population.set_particle(

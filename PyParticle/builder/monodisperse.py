@@ -11,7 +11,6 @@ from . import make_particle
 from . import data_path
 import numpy as np
 from importlib import reload
-reload(np)
 
 def build(
         population_settings, n_particles=1, specdata_path = data_path + 'species_data/'):

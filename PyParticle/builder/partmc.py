@@ -10,8 +10,8 @@ from . import make_particle_from_masses
 import numpy as np
 import os
 from netCDF4 import Dataset
-from importlib import reload
-reload(np)
+# from importlib import reload
+# reload(np)
 
 
 def build(
