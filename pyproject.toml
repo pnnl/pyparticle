@@ -16,7 +16,9 @@ dependencies = [ # (explicitly) stated in the code
 [dependency-groups]
 dev = [
     # interactive computing
-    "ipython", "ipdb", 'marimo',
+    "ipython", 'marimo',
+    # debugging
+    "ipdb", "icecream",
     # plotting
     'holoviews',
     # utils
