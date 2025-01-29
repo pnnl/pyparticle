@@ -11,8 +11,13 @@ from . import data_path
 import numpy as np
 import os
 from netCDF4 import Dataset
+<<<<<<< HEAD:src/PyParticle/builder/partmc.py
 from pathlib import Path
 
+=======
+# from importlib import reload
+# reload(np)
+>>>>>>> 7cbaa2e (lognormal builder with fixed bug):PyParticle/builder/partmc.py
 
 
 def build(

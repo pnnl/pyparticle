@@ -14,6 +14,9 @@ from .. import make_particle_from_masses
 
 from . import monodisperse
 from . import partmc
+<<<<<<< HEAD:src/PyParticle/builder/__init__.py
 from . import quadrature
+=======
+>>>>>>> 7cbaa2e (lognormal builder with fixed bug):PyParticle/builder/__init__.py
 from . import binned_lognormal
 from . import quadrature
