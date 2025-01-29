@@ -1,7 +1,7 @@
 [project]
 name = "pyparticle"
 version = "0.1.0"
-description = "Add your description here"
+description = "Describing and analyzing aerosol particles and particle populations"
 readme = "README.md"
 authors = [
     { name = "Laura Fierce" }
@@ -15,8 +15,13 @@ dependencies = [ # (explicitly) stated in the code
     ]
 [dependency-groups]
 dev = [
-    "ipython", "ipdb",
-    "pyprojroot",
+    # interactive computing
+    "ipython", "ipdb", 'marimo',
+    # plotting
+    'holoviews',
+    # utils
+    "pyprojroot",  # getting root dir
+    # for comparisons
     "PyMieScatt",
     ]
 

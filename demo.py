@@ -5,7 +5,7 @@ Demonstration script for using PyParticle to compute particle properties
 
 @author: Laura Fierce
 """
-import patch
+from PyParticle._patch import patch_pymiescatt; patch_pymiescatt(); del patch_pymiescatt
 import numpy as np
 import PyParticle
 from importlib import reload

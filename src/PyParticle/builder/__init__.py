@@ -15,3 +15,4 @@ from .. import make_particle_from_masses
 from . import monodisperse
 from . import partmc
 from . import quadrature
+from . import binned_lognormal

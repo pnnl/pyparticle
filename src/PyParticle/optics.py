@@ -5,7 +5,7 @@ Wrapper for connecting the ParticlePopulation package to optics models
 
 @author: Laura Fierce
 """
-
+from ._patch import patch_pymiescatt; patch_pymiescatt(); del patch_pymiescatt
 import sys
 import numpy as np
 from scipy import interpolate

@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*-
 """
 Functions to create
-
 @author: Laura Fierce
 """
-
 from . import ParticlePopulation
 from . import make_particle
 from scipy.stats import norm
 import numpy as np
 
+
+from pyprojroot import here
 def build(
         population_settings,
-        specdata_path='../datasets/aerosol/species_data/', 
+        specdata_path=here() / 'datasets/species_data',
         surface_tension=0.072, D_is_wet=False):
     D_min = population_settings['D_min']
     D_max = population_settings['D_max']
@@ -32,6 +32,7 @@ def build(
     # assume same mass fraction across the population
     aero_spec_names = population_settings['aero_spec_names']
     aero_spec_fracs = population_settings['aero_spec_fracs']
+    assert(len(aero_spec_fracs) == len(aero_spec_names))
     
     lognormal_population = ParticlePopulation(
         species=aero_spec_names,spec_masses=[],num_concs=[],ids=[])
@@ -39,7 +40,7 @@ def build(
         particle = make_particle(
             D, aero_spec_names, aero_spec_fracs,
             specdata_path=specdata_path, 
-            surface_tension=surface_tension,
+            #surface_tension=surface_tension,
             D_is_wet=D_is_wet)
         part_id = dd
         lognormal_population.set_particle(

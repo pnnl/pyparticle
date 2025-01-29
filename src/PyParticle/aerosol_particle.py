@@ -23,6 +23,9 @@ class Particle:
     in terms of the amounts of different constituent species """
     species: Tuple[AerosolSpecies, ...]
     masses: Tuple[float, ...]
+
+    def __post_init__(self):
+        assert(len(self.species) == len(self.masses) )
     
     def idx_h2o(self):
         return np.where([
@@ -219,7 +222,6 @@ def make_particle(
         specdata_path= data_path / 'species_data',
         species_modifications={}, 
         D_is_wet=True):
-    
     if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
         aero_spec_names.append('H2O')
         aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
@@ -234,6 +236,7 @@ def make_particle(
             spec_modifications = {}
         AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, spec_modifications=spec_modifications))
     
+    assert(len(aero_spec_frac) == len(AeroSpecs))
     if D_is_wet:# or 'H2O' not in aero_spec_names or 'h2o' not in aero_spec_names:
         vol = np.pi/6.*D**3.
         mass = effective_density(aero_spec_frac,AeroSpecs)*vol
@@ -279,4 +282,5 @@ def compute_Dwet(Ddry, kappa, RH, T, sigma_h2o=0.072, rho_h2o=1000., MW_h2o=18e-
         return Ddry
     
 def effective_density(aero_spec_fracs,AeroSpecs):
-    return 1./np.sum([aero_spec_fracs[kk]/AeroSpecs[kk].density for kk in range(len(AeroSpecs))])
+    _ = [aero_spec_fracs[kk]/AeroSpecs[kk].density for kk in range(len(AeroSpecs))]
+    return 1./np.sum(_)
