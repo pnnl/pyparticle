@@ -1,9 +1,9 @@
 __generated_with = "0.10.17"
-#import marimo
-#app = marimo.App(width="full")
+import marimo
+app = marimo.App(width="full")
 
 
-#@app.cell
+@app.cell
 def ex1():
         #!/usr/bin/env python3
     # -*- coding: utf-8 -*-
@@ -31,7 +31,7 @@ def ex1():
     # N_bins specifies number of bins used to descritize the size distribution
     # GMD = geometric mean diameter
     # GSD = geometric standard deviation 
-    population_settings = {
+    single_population_settings = {
         'D_min':1e-9,
         'D_max':1e-6, 
         'N_bins':100,
@@ -41,7 +41,7 @@ def ex1():
         'aero_spec_names':['BC'], # one aerosol species, organic carbon (OC)
         'aero_spec_fracs':np.array([1.])}
     population_singleAerosolSpecies = PyParticle.builder.binned_lognormal.build(
-        population_settings, 
+        single_population_settings,
         species_modifications={}, # when species_modifications is an empty dictionary, defaults are used
         D_is_wet=True) # if False, water content is not specified in the particle. Will be added.
 
@@ -57,14 +57,14 @@ def ex1():
     bscat_singleAerosolSpecies = optical_population_singleAerosolSpecies.get_optical_coeff('total_scat')
 
 
-#@app.cell
-def ex2():
+@app.cell
+def ex2(PyParticle, wvl_grid, rh_grid, np):
     # =============================================================================
     # Example 2: lognormal distribution with two components
     # - assume all particles contain the same mass fraction of dry aerosol species
     # 
     # =============================================================================
-    population_settings = {
+    two_population_settings = {
         'D_min':1e-9,
         'D_max':1e-6,
         'N_bins':100,
@@ -83,8 +83,8 @@ def ex2():
     # other components are assumed to be a well-mixed shell
 
     population_twoAerosolSpecies = PyParticle.builder.binned_lognormal.build(
-        population_settings, 
-        species_modifications, # setting species_modifications modifies the properties as different from the default
+        two_population_settings, 
+        species_modifications=species_modifications, # setting species_modifications modifies the properties as different from the default
         D_is_wet=False)
     optical_population_twoAerosolSpecies = PyParticle.make_optical_population(
         population_twoAerosolSpecies, rh_grid, wvl_grid,
@@ -95,10 +95,15 @@ def ex2():
     babs_twoAerosolSpecies = optical_population_twoAerosolSpecies.get_optical_coeff('total_abs')
     bscat_twoAerosolSpecies = optical_population_twoAerosolSpecies.get_optical_coeff('total_scat')
 
-#@app.cell
-def plt(): # (ex1, ex2)
+
+@app.cell
+def plt( wvl_grid,
+    babs_singleAerosolSpecies,
+    babs_twoAerosolSpecies,
+    bscat_twoAerosolSpecies,
+    bscat_singleAerosolSpecies,):
     import matplotlib.pyplot as plt
-    fig,axs = fig,axs = plt.subplots(2,1,sharex=True)
+    fig,axs = plt.subplots(2,1,sharex=True)
     axs[0].plot(wvl_grid, babs_singleAerosolSpecies.transpose(), label='single species')
     axs[0].plot(wvl_grid, babs_twoAerosolSpecies.transpose(), label='two species')
 
@@ -111,8 +116,8 @@ def plt(): # (ex1, ex2)
     axs[0].legend()
 
     axs[0].set_xlim([min(wvl_grid),max(wvl_grid)])
+    axs[0]
 
 
 if __name__ == "__main__":
-    #app.run()
-    ex1()
+    app.run()
