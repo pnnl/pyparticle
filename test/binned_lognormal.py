@@ -1,15 +1,11 @@
-__generated_with = "0.10.17"
 import marimo
+
+__generated_with = "0.10.19"
 app = marimo.App(width="full")
 
 
 @app.cell
 def ex1():
-        #!/usr/bin/env python3
-    # -*- coding: utf-8 -*-
-    """
-    @author: Laura Fierce
-    """
     import numpy as np
     import PyParticle
 
@@ -55,10 +51,21 @@ def ex1():
     # absorption and scattering coefficients at each wavelength
     babs_singleAerosolSpecies = optical_population_singleAerosolSpecies.get_optical_coeff('total_abs')
     bscat_singleAerosolSpecies = optical_population_singleAerosolSpecies.get_optical_coeff('total_scat')
+    return (
+        PyParticle,
+        babs_singleAerosolSpecies,
+        bscat_singleAerosolSpecies,
+        np,
+        optical_population_singleAerosolSpecies,
+        population_singleAerosolSpecies,
+        rh_grid,
+        single_population_settings,
+        wvl_grid,
+    )
 
 
 @app.cell
-def ex2(PyParticle, wvl_grid, rh_grid, np):
+def ex2(PyParticle, np, rh_grid, wvl_grid):
     # =============================================================================
     # Example 2: lognormal distribution with two components
     # - assume all particles contain the same mass fraction of dry aerosol species
@@ -94,14 +101,24 @@ def ex2(PyParticle, wvl_grid, rh_grid, np):
     # absorption and scattering coefficients at each wavelength
     babs_twoAerosolSpecies = optical_population_twoAerosolSpecies.get_optical_coeff('total_abs')
     bscat_twoAerosolSpecies = optical_population_twoAerosolSpecies.get_optical_coeff('total_scat')
+    return (
+        babs_twoAerosolSpecies,
+        bscat_twoAerosolSpecies,
+        optical_population_twoAerosolSpecies,
+        population_twoAerosolSpecies,
+        species_modifications,
+        two_population_settings,
+    )
 
 
 @app.cell
-def plt( wvl_grid,
+def plt(
     babs_singleAerosolSpecies,
     babs_twoAerosolSpecies,
+    bscat_singleAerosolSpecies,
     bscat_twoAerosolSpecies,
-    bscat_singleAerosolSpecies,):
+    wvl_grid,
+):
     import matplotlib.pyplot as plt
     fig,axs = plt.subplots(2,1,sharex=True)
     axs[0].plot(wvl_grid, babs_singleAerosolSpecies.transpose(), label='single species')
@@ -117,6 +134,8 @@ def plt( wvl_grid,
 
     axs[0].set_xlim([min(wvl_grid),max(wvl_grid)])
     axs[0]
+    return axs, fig, plt
+
 
 
 if __name__ == "__main__":

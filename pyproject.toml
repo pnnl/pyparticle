@@ -20,11 +20,13 @@ dev = [
     # debugging
     "ipdb", "icecream",
     # plotting
-    'holoviews',
+    'holoviews', "matplotlib", # continue to use mpl?
     # utils
     "pyprojroot",  # getting root dir
     # for comparisons
     "PyMieScatt",
+    # testing
+    "pytest", "pytest-regressions[num]",
     ]
 
 [build-system]
