@@ -14,7 +14,7 @@ from netCDF4 import Dataset
 
 
 def build(
-        population_settings, 
+        population_settings, *,
         n_particles = None,
         N_tot = None,
         species_modifications = {},

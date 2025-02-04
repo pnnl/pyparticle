@@ -12,7 +12,8 @@ from . import data_path
 
 
 def build(
-        population_settings, n_particles=1, specdata_path = data_path / 'species_data'):
+        population_settings, *,
+        n_particles=1, specdata_path = data_path / 'species_data'):
     
     if specdata_path == None:
         specdata_path = data_path / 'species_data'

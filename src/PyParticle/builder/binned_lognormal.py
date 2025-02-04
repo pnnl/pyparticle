@@ -13,7 +13,7 @@ from . import data_path
 
 from .. import data_path
 def build(
-        population_settings,
+        population_settings, *,
         specdata_path=data_path / 'species_data',
         species_modifications={},
         surface_tension=0.072, D_is_wet=False):
