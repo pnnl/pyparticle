@@ -14,5 +14,5 @@ Map them to a data structure that will be saved.
 Implementation:
 1. `cd` into [this dir](.).
 2. Use `marimo` to edit notebooks. Edit 'library' code.
-3. Run `pytest`. Regression testing data lives in [regression](./regression).
+3. Run `pytest`. Regression testing data lives in [regression](./data/regression).
 

@@ -3,7 +3,7 @@
 
 from pathlib import Path
 _ = Path(__file__).parent
-_ = _ / 'regression'
+_ = _ / 'data' / 'regression'
 data = _
 import pytest
 @pytest.fixture(scope="session")
@@ -20,6 +20,9 @@ def nb():
     return _ 
 
 def test(num_regression, nb):
-    #                                                                only 1d arrays supported
-    _ = {'babs_singleAerosolSpecies':  nb['babs_singleAerosolSpecies'].flatten() }
+    from itertools import product
+    _ = product(['babs', 'bscat'],  ['single', 'two',] )
+    _ = map(lambda ss: ss[0]+'_'+ss[1]+'AerosolSpecies', _)
+    # only 1d arrays supported
+    _ = {s:nb[s].flatten() for  s in _}
     num_regression.check(_)
