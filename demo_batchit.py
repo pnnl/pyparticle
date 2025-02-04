@@ -9,8 +9,6 @@ from PyParticle._patch import patch_pymiescatt; patch_pymiescatt(), del patch_py
 
 import numpy as np
 import PyParticle
-from importlib import reload
-reload(np)
 
 rh_grid = np.hstack([0.,0.99])
 # wvl_grid = np.hstack([350e-9,550e-9,750e-9])

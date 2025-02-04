@@ -14,8 +14,6 @@ import numpy as np
 from scipy.constants import R
 import scipy.optimize as opt
 
-from importlib import reload
-reload(np)
 
 @dataclass
 class Particle:

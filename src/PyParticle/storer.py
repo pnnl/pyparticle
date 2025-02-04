@@ -1,6 +1,4 @@
 import numpy as np
-from importlib import reload
-reload(np)
 from dataclasses import asdict
 from . import RI_fun
 

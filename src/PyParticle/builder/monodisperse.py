@@ -9,8 +9,7 @@ Functions to create a monodisperse population
 from . import ParticlePopulation
 from . import make_particle
 from . import data_path
-import numpy as np
-from importlib import reload
+
 
 def build(
         population_settings, n_particles=1, specdata_path = data_path / 'species_data'):
