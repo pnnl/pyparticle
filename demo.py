@@ -38,12 +38,17 @@ import json
 # species_modifications = {
 #     'BC':{'kappa':1.2,'k_550':0.1,'alpha_k':0}}
 from pyprojroot import here
-datadir = here() / 'datasets' / 'partmc'
+# datadir = here() / 'datasets' / 'partmc'
+# By design, the PartMC data is not stored as part of the github project. 
+# I've sent you 1 relatively small datafile, but we will have hundreds of scenarios, each with 100s to 1000s of datafiles. 
+# Too big to store on github, and too big to be synced with OneDrive (slows down the computer)
+
+partmc_dir = '/Users/fier887/Downloads/box_simulations3/library_18_abs2/0060/'
 
 species_modifications = {
     'SOA':{'k_550':1e-3,'alpha_k':0}}
 population_settings = {
-    'partmc_dir': datadir ,
+    'partmc_dir': partmc_dir ,
     'timestep':13, 'repeat':1}
 particle_population = PyParticle.builder.partmc.build(
     population_settings,n_particles=None,species_modifications=species_modifications)

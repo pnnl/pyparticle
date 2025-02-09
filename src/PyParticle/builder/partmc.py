@@ -7,9 +7,11 @@
 
 from . import ParticlePopulation
 from . import make_particle_from_masses
+from . import data_path
 import numpy as np
 import os
 from netCDF4 import Dataset
+from pathlib import Path
 
 
 
@@ -53,13 +55,14 @@ def build(
         particle = make_particle_from_masses(
             aero_spec_names, 
             spec_masses[:,ii],
-            specdata_path=partmc_dir / '..'/ 'species_data',
+            specdata_path= data_path / 'species_data',
             species_modifications=species_modifications)
         partmc_population.set_particle(
             particle, part_ids[ii], num_concs[ii]*N_tot/np.sum(num_concs[idx]), suppress_warning=suppress_warning)
     return partmc_population
 
 def get_ncfile(partmc_output_dir, timestep, repeat):
+    print(partmc_output_dir)
     for root, dirs, files in os.walk(partmc_output_dir):
         f = files[0]
     if f.startswith('urban_plume_wc_'):
