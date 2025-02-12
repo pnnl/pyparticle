@@ -13,18 +13,9 @@ from . import data_path
 
 from .. import data_path
 def build(
-<<<<<<< HEAD:src/PyParticle/builder/binned_lognormal.py
         population_settings, *,
         specdata_path=data_path / 'species_data',
         species_modifications={},
-=======
-        population_settings,
-        species_modifications={},
-        specdata_path=data_path + 'species_data/', 
-<<<<<<< HEAD:src/PyParticle/builder/binned_lognormal.py
->>>>>>> 7cbaa2e (lognormal builder with fixed bug):PyParticle/builder/binned_lognormal.py
-=======
->>>>>>> main:PyParticle/builder/binned_lognormal.py
         surface_tension=0.072, D_is_wet=False):
     D_min = population_settings['D_min']
     D_max = population_settings['D_max']
