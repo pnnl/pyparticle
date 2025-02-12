@@ -9,15 +9,8 @@ Functions to create a monodisperse population
 from . import ParticlePopulation
 from . import make_particle
 from . import data_path
-<<<<<<< HEAD:src/PyParticle/builder/monodisperse.py
-
-=======
 import numpy as np
 from importlib import reload
-<<<<<<< HEAD:src/PyParticle/builder/monodisperse.py
->>>>>>> 7cbaa2e (lognormal builder with fixed bug):PyParticle/builder/monodisperse.py
-=======
->>>>>>> main:PyParticle/builder/monodisperse.py
 
 def build(
         population_settings, *,
