@@ -6,13 +6,11 @@
 
 import PyParticle
 import numpy as np
-from importlib import reload
-reload(np)
 from reader import read_optical_population
 import os
 
 import distutils
-from pymc3 import Model, glm, sample
+from pymc import Model, sample
 import bambi
 from scipy.stats import norm
 import pandas as pd
@@ -28,9 +26,12 @@ def train_models(ensemble_dir):
 def train_Eabs_clear_dry_onewvl(df_training, num_tune=1000, num_samples=3000):
     num_spinup = int(num_tune*1.5)
     
-    with Model() as model2:
-        glm.GLM.from_formula('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + 0', df_training)
-        trace2 = sample(num_samples,tune=num_tune,cores=1)
+    # with Model() as model2:
+    #     glm.GLM.from_formula('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + 0', df_training)
+    #     trace2 = sample(num_samples,tune=num_tune,cores=1)
+    # with Model() as model2:
+    model2 = bambi.Model('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + 0', data=df_training)
+    trace2 = sample(num_samples,tune=num_tune,cores=1)
     
     model_params2 = {}
     for varname in trace2.varnames:
@@ -48,9 +49,10 @@ def train_Eabs_clear_dry_onewvl(df_training, num_tune=1000, num_samples=3000):
     #     'Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + np.log(1 / (1 + Rbc_dry)):shell_real_ri_dry_bc + 0', df_training)
     # results = model2.fit(draws=num_tune)
     
-    with Model() as model:
-        glm.GLM.from_formula('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + np.log(1 / (1 + Rbc_dry)):shell_real_ri_dry_bc + 0', df_training)
-        trace = sample(num_samples,tune=num_tune,cores=1)
+    # with Model() as model:
+    #     glm.GLM.from_formula('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + np.log(1 / (1 + Rbc_dry)):shell_real_ri_dry_bc + 0', df_training)
+    #     trace = sample(num_samples,tune=num_tune,cores=1)
+    model = bambi.Model('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + np.log(1 / (1 + Rbc_dry)):shell_real_ri_dry_bc + 0', data=df_training)
     
     model_params = {}
     for varname in trace.varnames:

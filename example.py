@@ -1,8 +1,6 @@
 import PyParticle
 import json
 import numpy as np
-from importlib import reload
-reload(np)
 partmc_dir = '/Users/fier887/Downloads/box_simulations3/library_18_abs2/0003/'
 run_num = 3
 timestep = 18

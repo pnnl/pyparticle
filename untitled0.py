@@ -6,8 +6,6 @@
 
 import PyParticle
 import numpy as np
-from importlib import reload
-reload(np)
 from reader import read_optical_population
 import os
 

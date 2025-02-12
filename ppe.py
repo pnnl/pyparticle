@@ -6,8 +6,6 @@
 import numpy as np
 import os
 import PyParticle
-from importlib import reload
-reload(np)
 from dataclasses import asdict
 import json
 import netCDF4

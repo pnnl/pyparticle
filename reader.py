@@ -8,8 +8,6 @@ import json
 import PyParticle
 from scipy.interpolate import interp1d
 import numpy as np
-from importlib import reload
-reload(np)
 
 def read_optical_population(output_filename,morphology='core-shell'):
     
