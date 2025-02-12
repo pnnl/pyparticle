@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Demonstration script for using PyParticle to compute particle properties 
+
+@author: Laura Fierce
+"""
+from PyParticle._patch import patch_pymiescatt; patch_pymiescatt(); del patch_pymiescatt
+import numpy as np
+import PyParticle
+
+rh_grid = np.hstack([0.,0.99])
+# wvl_grid = np.hstack([350e-9,550e-9,750e-9])
+wvl_grid = np.hstack([550e-9])
+
+# from dataclasses import asdict
+import json 
+
+# D = 100e-9
+# aero_spec_names = ['BC','SO4','OC','H2O']
+# aero_spec_fracs = np.hstack([0.7,0.15,0.05,0.1])
+# particle = PyParticle.make_particle(D, aero_spec_names, aero_spec_fracs)
+
+
+# cs_particle = PyParticle.make_optical_particle(particle, rh_grid, wvl_grid)
+
+# print(cs_particle)
+
+# population_settings = {
+#     'D':100e-9,
+#     'num_conc':10e9,
+#     'aero_spec_names':['BC','OC','SO4','H2O'],
+#     'aero_spec_fracs':np.array([0.1,0.2,0.7,0.])}
+# particle_population = PyParticle.monodisperse.build(
+#     population_settings, n_sd=3, specdata_path = PyParticle.data_path + 'species_data/')
+
+# optical_population = PyParticle.make_optical_population(particle_population, rh_grid, wvl_grid)
+# species_modifications = {
+#     'BC':{'kappa':1.2,'k_550':0.1,'alpha_k':0}}
+from pyprojroot import here
+# datadir = here() / 'datasets' / 'partmc'
+# By design, the PartMC data is not stored as part of the github project. 
+# I've sent you 1 relatively small datafile, but we will have hundreds of scenarios, each with 100s to 1000s of datafiles. 
+# Too big to store on github, and too big to be synced with OneDrive (slows down the computer)
+
+partmc_dir = '/Users/fier887/Downloads/box_simulations3/library_18_abs2/0060/'
+
+species_modifications = {
+    'SOA':{'k_550':1e-3,'alpha_k':0}}
+population_settings = {
+    'partmc_dir': partmc_dir ,
+    'timestep':13, 'repeat':1}
+particle_population = PyParticle.builder.partmc.build(
+    population_settings,n_particles=None,species_modifications=species_modifications)
+optical_population = PyParticle.make_optical_population(
+    particle_population, rh_grid, wvl_grid,species_modifications=species_modifications)
+
+from dataclasses import asdict
+optical_pop_dict = asdict(optical_population, )
+optical_pop_dict['population_settings'] = population_settings
+optical_pop_dict['species_modifications'] = species_modifications
+# pckle bc numpy arrays in there dont serialize
+output_file = 'sample.pickle'
+import pickle
+pickle.dump(optical_pop_dict, open(output_file, 'wb') )
+
