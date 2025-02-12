@@ -14,7 +14,10 @@ from . import data_path
 =======
 import numpy as np
 from importlib import reload
+<<<<<<< HEAD:src/PyParticle/builder/monodisperse.py
 >>>>>>> 7cbaa2e (lognormal builder with fixed bug):PyParticle/builder/monodisperse.py
+=======
+>>>>>>> main:PyParticle/builder/monodisperse.py
 
 def build(
         population_settings, *,

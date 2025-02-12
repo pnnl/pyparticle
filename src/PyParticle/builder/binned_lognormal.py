@@ -21,7 +21,10 @@ def build(
         population_settings,
         species_modifications={},
         specdata_path=data_path + 'species_data/', 
+<<<<<<< HEAD:src/PyParticle/builder/binned_lognormal.py
 >>>>>>> 7cbaa2e (lognormal builder with fixed bug):PyParticle/builder/binned_lognormal.py
+=======
+>>>>>>> main:PyParticle/builder/binned_lognormal.py
         surface_tension=0.072, D_is_wet=False):
     D_min = population_settings['D_min']
     D_max = population_settings['D_max']
@@ -41,6 +44,7 @@ def build(
     aero_spec_names = population_settings['aero_spec_names']
     aero_spec_fracs = population_settings['aero_spec_fracs']
     assert(len(aero_spec_fracs) == len(aero_spec_names))
+    
     
     
     
