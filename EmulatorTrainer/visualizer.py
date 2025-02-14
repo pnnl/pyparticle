@@ -4,20 +4,28 @@
 @author: Laura Fierce
 """
 import matplotlib.pyplot as plt
+
 import scipy.stats as st
 import numpy as np
 import arviz as az
 # from pymc3 import set_data, sample_posterior_predictive
 
 def plot1d_withCI(x, y, y_std,confidence_level=None):
-    lower_bound, upper_bound
+    if confidence_level == None:
+        # y_lower = y-y_std
+        
+        lower_bound = y-y_std/2.
+        upper_bound = y+y_std/2.
+    else:
+        
+        # lower_bound, upper_bound = get_CI_from_data(data,confidence_level,weights=None)
+        get_CI_from_stats(y, y_std, confidence_level, sample_size=None)
     
-    y_lower = y-y_std
     
 
 def get_testing_predictions(trace, model, df_testing, varnames):
-    dataset = get_model_data(model, df, varnames)
-    model.set_data(dataset)
+    dataset = get_model_data(model, df_testing, varnames)
+    # model.set_data(dataset)
     
 def get_model_data(model, df, varnames):
     dataset = {}
