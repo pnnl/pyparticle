@@ -30,8 +30,10 @@ def train_Eabs_clear_dry_onewvl(df_training, num_tune=1000, num_samples=3000):
     #     glm.GLM.from_formula('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + 0', df_training)
     #     trace2 = sample(num_samples,tune=num_tune,cores=1)
     # with Model() as model2:
-    model2 = bambi.Model('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + 0', data=df_training)
-    trace2 = sample(num_samples,tune=num_tune,cores=1)
+    df_training['Eclear_dry_minus1'] = df_training['Eclear_dry'] - 1.
+    model2 = bambi.Model('Eclear_dry_minus1 ~ np.log1p(1 / (1 + Rbc_dry)) + 0', data=df_training)
+    trace2 = model2.fit(draws=num_samples, tune=num_tune)
+    # trace2 = sample(num_samples,tune=num_tune,cores=1)
     
     model_params2 = {}
     for varname in trace2.varnames:

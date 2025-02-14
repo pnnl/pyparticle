@@ -10,4 +10,6 @@ ensemble_dir = '/Users/fier887/Downloads/processed_ensembles/library_18_abs2/000
 df_training, filenames, completed_filenames = read_ensemble(ensemble_dir,'training')
 df_testing, filenames, completed_filenames = read_ensemble(ensemble_dir,'testing')
 
-train_Eabs_clear_dry_onewvl(df_training, num_tune=1000, num_samples=3000)
+num_tune=1000
+num_samples=3000
+# train_Eabs_clear_dry_onewvl(df_training, num_tune=num_tune, num_samples=num_samples)
