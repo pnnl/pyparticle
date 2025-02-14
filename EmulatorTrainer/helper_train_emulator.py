@@ -31,21 +31,23 @@ def train_Eabs_clear_dry_onewvl(df_training, num_tune=1000, num_samples=3000):
     #     trace2 = sample(num_samples,tune=num_tune,cores=1)
     # with Model() as model2:
     df_training['Eclear_dry_minus1'] = df_training['Eclear_dry'] - 1.
-    model2 = bambi.Model('Eclear_dry_minus1 ~ np.log1p(1 / (1 + Rbc_dry)) + 0', data=df_training)
+    model2 = bambi.Model('Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + 0', data=df_training)
     trace2 = model2.fit(draws=num_samples, tune=num_tune)
+    model_params2 = {}
+    
     # trace2 = sample(num_samples,tune=num_tune,cores=1)
     
     model_params2 = {}
-    for varname in trace2.varnames:
-        model_params2[varname] = np.mean(trace2[varname][num_spinup:])
-        model_params2[varname + '_sd'] = np.std(trace2[varname][num_spinup:])
-    model_params2['sd'] = np.mean(trace2['sd'][num_spinup:])
+    for varname in model2.components['mu'].terms.keys():
+        model_params2[varname] = np.mean(trace2.posterior[varname][num_spinup:])
+        model_params2[varname + '_sd'] = np.std(trace2.posterior[varname][num_spinup:])
+    model_params2['sigma'] = np.mean(trace2.posterior['sigma'][num_spinup:])
     
     # Edry_fun2 = (
     #     lambda Rbc: model_params['np.log(1 / (1 + Rbc_dry))']*np.log(1/(1+Rbc)) + 1.)
     Edry_fun2 = (
         lambda Rbc: model_params2['np.log(1 / (1 + Rbc_dry))']*np.log(1/(1+Rbc)) + 1.)
-    Edry_sd2 = model_params2['sd']
+    Edry_sd2 = model_params2['sigma']
     
     # model2 = bambi.Model(
     #     'Eclear_dry_minus1 ~ np.log(1 / (1 + Rbc_dry)) + np.log(1 / (1 + Rbc_dry)):shell_real_ri_dry_bc + 0', df_training)
