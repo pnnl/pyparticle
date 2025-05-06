@@ -26,7 +26,6 @@ class AerosolSpecies:
     molar_mass: float
     surface_tension: Optional[float] = 0.072
     
-    
     def _populate_defaults(
             self,specdata_path= data_path / 'species_data'):
         aero_datafile = specdata_path / 'aero_data.dat'

@@ -21,10 +21,23 @@ class Particle:
     in terms of the amounts of different constituent species """
     species: Tuple[AerosolSpecies, ...]
     masses: Tuple[float, ...]
-
+    
     def __post_init__(self):
         assert(len(self.species) == len(self.masses) )
     
+    def _equilibrate_h2o(
+            self, RH,T,maxRH=0.99,
+            sigma_h2o=0.072, rho_h2o=1000., MW_h2o=18e-3):
+        
+        if RH>maxRH:
+            RH=maxRH
+            
+        Ddry = self.get_Ddry()
+        Dwet = compute_Dwet(Ddry, self.get_tkappa(), RH, T, 
+                     sigma_h2o=sigma_h2o, rho_h2o=rho_h2o, MW_h2o=MW_h2o)
+        mass_h2o = compute_mass_h2o(Ddry,Dwet,rho_h2o=1000.)
+        self.masses[self.idx_h2o()] = mass_h2o
+        
     def idx_h2o(self):
         return np.where([
             spec.name.upper() == 'H2O' for spec in self.species])[0][0]
@@ -40,7 +53,7 @@ class Particle:
         else:    
             idx_not_h2o = np.hstack([idx_all[:idx_h2o],idx_all[idx_h2o:][1:]])
         return idx_not_h2o
-        
+    
     def idx_core(self,core_specs=['BC']):
         return np.where([
             spec.name in core_specs for spec in self.species])[0]
@@ -145,6 +158,7 @@ class Particle:
         
         return Dwet
     
+    
     # def get_Dwet_from_RH(self,RH):
     #     pass # need to fix this; maybe add Kohler as a separate package? 
     def get_Ddry(self):
@@ -223,6 +237,7 @@ def make_particle(
     if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
         aero_spec_names.append('H2O')
         aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
+    
     assert(len(aero_spec_frac) == len(aero_spec_names))
     
     AeroSpecs = []
@@ -279,6 +294,10 @@ def compute_Dwet(Ddry, kappa, RH, T, sigma_h2o=0.072, rho_h2o=1000., MW_h2o=18e-
         return Ddry*opt.brentq(zero_this,1.,10000000.)
     else:
         return Ddry
+
+def compute_mass_h2o(Ddry,Dwet,rho_h2o=1000.):
+    return np.pi/6.*(Dwet**3-Ddry**3)*rho_h2o
+    
     
 def effective_density(aero_spec_fracs,AeroSpecs):
     _ = [aero_spec_fracs[kk]/AeroSpecs[kk].density for kk in range(len(AeroSpecs))]

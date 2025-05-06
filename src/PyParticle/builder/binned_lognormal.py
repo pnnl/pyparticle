@@ -11,12 +11,12 @@ import numpy as np
 from . import data_path
 
 
-from .. import data_path
 def build(
         population_settings, *,
         specdata_path=data_path / 'species_data',
         species_modifications={},
         surface_tension=0.072, D_is_wet=False):
+    
     D_min = population_settings['D_min']
     D_max = population_settings['D_max']
     N_bins = population_settings['N_bins']
@@ -34,8 +34,9 @@ def build(
     # assume same mass fraction across the population
     aero_spec_names = population_settings['aero_spec_names']
     aero_spec_fracs = population_settings['aero_spec_fracs']
-    assert(len(aero_spec_fracs) == len(aero_spec_names))
+    #assert(len(aero_spec_fracs) == len(aero_spec_names))
     
+    assert(len(aero_spec_fracs) == len(aero_spec_names))
     
     
     
@@ -52,5 +53,4 @@ def build(
         part_id = dd
         lognormal_population.set_particle(
             particle, part_id, N_per_bin)
-    
     return lognormal_population

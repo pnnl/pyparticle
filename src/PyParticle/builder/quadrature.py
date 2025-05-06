@@ -27,7 +27,7 @@ def build(
     aero_spec_fracs = population_settings['aero_spec_fracs']
     N_quads = population_settings['N_quads']
         
-    drydias_q, nums_q, modes_q = construct_quadrature(Ns,log10gmds,log10gsds,N_quads)
+    drydias_q, nums_q, modes_q, ids_qq = construct_quadrature(Ns,log10gmds,log10gsds,N_quads,return_weights=False)
     aero_species = []
     for spec_name in aero_spec_names:
         aero_species.append(retrieve_one_species(spec_name, specdata_path=specdata_path))
@@ -36,16 +36,14 @@ def build(
     
     ids = []
     for mode_num in modes_q:
-        print(aero_spec_fracs[mode_num,:].shape,spec_fracs_q.shape)
         spec_fracs_q = np.vstack([spec_fracs_q,aero_spec_fracs[mode_num,:]])
-        for ii in range(N_quads[mode_num]):
-            ids.append((mode_num+1)*10 + ii+1)
-    
+        # for ii in range(N_quads[mode_num]):
+        #     ids.append((mode_num+1)*10 + ii+1)
+    ids = ids_qq
     quadrature_population = ParticlePopulation(species=aero_species,spec_masses=[],num_concs=[],ids=[])
     for qq in range(len(drydias_q)):
-        print(ids[qq])
         particle = make_particle(
-            drydias_q[qq], aero_spec_names, aero_spec_fracs[qq,:], 
+            drydias_q[qq], aero_spec_names, spec_fracs_q[qq,:], 
             specdata_path= data_path / 'species_data', D_is_wet=False)
         quadrature_population.set_particle(particle, ids[qq], nums_q[qq])
     return quadrature_population
@@ -55,17 +53,22 @@ def construct_quadrature(Ns,log10gmds,log10gsds,N_quads,return_weights=True):
     nums_q = np.array([])
     drydias_q = np.array([])
     modes_q = []
+    qq = 0
+    ids_qq = []
     for jj,(N,mu,sig) in enumerate(zip(Ns,log10gmds,log10gsds)):
         x_q,w_q = np.polynomial.hermite.hermgauss(N_quads[jj])
         for q,(x,w) in enumerate(zip(x_q,w_q)):
             nums_q = np.append(nums_q,N*w/np.sqrt(np.pi))
             drydias_q = np.append(drydias_q,10**(mu+np.sqrt(2)*sig*x))
+            ids_qq.append(qq)
             modes_q.append(jj)
+            qq += 1
+            print(qq)
     if return_weights:
         weights_q = nums_q/sum(nums_q)
-        return drydias_q, weights_q, modes_q
+        return drydias_q, weights_q, modes_q, ids_qq
     else:
-        return drydias_q, nums_q, modes_q
+        return drydias_q, nums_q, modes_q, ids_qq
     
     
 def get_drydias(

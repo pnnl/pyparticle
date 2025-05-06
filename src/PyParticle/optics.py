@@ -39,7 +39,9 @@ import copy
         
 def make_optical_particle(
         particle,rh_grid,wvl_grid,
-        morphology='core-shell',compute_optics=True,temp=293.15,
+        morphology='core-shell',
+        mixing_state='part_res',
+        compute_optics=True,temp=293.15,
         specdata_path=data_path / 'species_data',
         species_modifications={}):
     
@@ -94,12 +96,19 @@ def make_optical_population(
 
 # todo: need to rethink this
 # @dataclass_json
+
+# fixme: add different mixing state approximations here
+# - mixing state approximation --> uniform BC-containing (MAM5), uniform all particles (MAM4)
+
+
 @dataclass
 class CoreShellPopulation(ParticlePopulation):
     # species: Tuple[AerosolSpecies, ...] # shape = N_species
     # spec_masses: np.array # shape = (N_particles, N_species)
     # num_concs: np.array # shape = N_particles
     # ids: Tuple[int, ...] # shape = N_particles
+    
+    # mixing_state: str = 'part_res'
     
     rh_grid: np.array# = None
     wvl_grid: np.array #= None
@@ -152,7 +161,8 @@ class CoreShellPopulation(ParticlePopulation):
             idx = len(self.ids)
         return idx
     
-    def set_particle(self, optical_particle, part_id, num_conc,suppress_warning=False):    
+    def set_particle(self, optical_particle, part_id, num_conc, suppress_warning=False):
+        
         idx = self.find_particle(part_id)
         if not isinstance(self.core_vols, np.ndarray):
         # type(self.core_vols) == type(None):

@@ -245,6 +245,7 @@ def run_ppe__splitToNodes(
     
     return all_population_settings, all_species_modifications
 
+# fixme: make a function like this that modifies the mixing state and stores a new optical population
 def run_one(
         sample_id_str, population_settings, species_modifications, 
         rh_grid, wvl_grid, processed_output_dir, run_file_dir,
@@ -264,7 +265,7 @@ def run_one(
             partmc_dir[(len(partmc_dir)-(runid_digits+1)):(len(partmc_dir)-1)])),
         'timestep = ' + str(population_settings['timestep']),
         'repeat_num = ' + str(population_settings['repeat']),
-        'particle_population = PyParticle.builder.partmc.build(' + str(population_settings) + ',n_particles=None, species_modifications=' + str(species_modifications) + ')',
+        'particle_population = PyParticle.builder.partmc.build(' + str(population_settings) + ',n_particles=None, species_modifications=' + str(species_modifications) + ')',        
         'optical_population = PyParticle.make_optical_population(particle_population, ' + get_array_str(rh_grid) + ', '  + get_array_str(wvl_grid) + ', species_modifications=' + str(species_modifications) + ')',
         'optical_pop_dict = PyParticle.make_population_dictionary(optical_population)',
         'optical_pop_dict = PyParticle.separate_ris(optical_pop_dict)',

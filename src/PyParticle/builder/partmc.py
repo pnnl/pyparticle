@@ -20,7 +20,8 @@ def build(
         N_tot = None,
         species_modifications = {},
         specdata_path = None,
-        suppress_warning=True):
+        suppress_warning=True,
+        add_mixing_ratios=True):
     
     partmc_dir = Path(population_settings['partmc_dir'])
     timestep = population_settings['timestep']
@@ -58,17 +59,30 @@ def build(
             species_modifications=species_modifications)
         partmc_population.set_particle(
             particle, part_ids[ii], num_concs[ii]*N_tot/np.sum(num_concs[idx]), suppress_warning=suppress_warning)
+   
+    if add_mixing_ratios:
+        gas_mixing_ratios = np.array(currnc.variables['gas_mixing_ratio'][:])
+        partmc_population.gas_mixing_ratios = gas_mixing_ratios
     return partmc_population
 
 def get_ncfile(partmc_output_dir, timestep, repeat):
     print(partmc_output_dir)
     for root, dirs, files in os.walk(partmc_output_dir):
         f = files[0]
+    
     if f.startswith('urban_plume_wc_'):
         preface_string = 'urban_plume_wc_' #''.join([c for idx,c in enumerate(f) if idx<f.find('0')])
     elif f.startswith('urban_plume_'):
         preface_string = 'urban_plume_'
     else:
-        preface_string = 'YOU_NEED_TO_CHANGE_preface_string_'
+        try:
+            idx = partmc_output_dir[(partmc_output_dir.find('/')+1):].find('/')
+            prefix_str = partmc_output_dir[(partmc_output_dir.find('/')+1):][:idx] + '_'
+        except:
+            try:
+                preface_string,repeat2,timestep2 = f.split('_')
+                preface_string += '_'
+            except:
+                preface_string = 'YOU_NEED_TO_CHANGE_preface_string_'
     ncfile = partmc_output_dir / (preface_string + str(int(repeat)).zfill(4) + '_' + str(int(timestep)).zfill(8) + '.nc')
     return ncfile

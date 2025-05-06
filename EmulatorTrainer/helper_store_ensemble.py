@@ -177,6 +177,7 @@ def append_ensemble_dataframe(
     
     return df
 
+
 def dataframe_to_dict(df):
     data_dict = {}
     for varname in df.keys():
@@ -221,6 +222,15 @@ def get_population_variable(optical_population, varname, wvl=350e-9, rh=0.):
         vardat = mass_shell/mass_bc
     elif varname == 'Rbc_vol_dry':
         vardat = optical_population.shell_dry_vols/optical_population.core_vols
+        
+    elif varname == 'Rbc_dry_std':
+        idx_bc = optical_population.idx_bc()
+        idx_bc_containing, = np.where(optical_population.spec_masses[:,idx_bc]>0)
+        vol_shell = optical_population.num_concs[idx_bc_containing]*(optical_population.shell_dry_vols[idx_bc_containing]+optical_population.h2o_vols[idx_bc_containing,idx_rh])
+        vol_core = optical_population.num_concs[idx_bc_containing]*optical_population.core_vols[idx_bc_containing]
+        
+        vardat = vol_shell/vol_core
+        
     elif varname == 'shell_imag_ri':
         vardat = optical_population.get_average_ri(
             morph_component='shell', ri_component='imag', rh=rh, wvl=wvl, bconly=False)
@@ -379,7 +389,8 @@ def get_population_variable(optical_population, varname, wvl=350e-9, rh=0.):
     elif varname == 'Eabs_unclear_wet_over_dry':
         babs_unclear_wet = optical_population.get_optical_coeff(optics_type='total_abs',rh=float(rh),wvl=float(wvl),bconly=True)
         babs_unclear_dry = optical_population.get_optical_coeff(optics_type='total_abs',rh=0.,wvl=float(wvl),bconly=True)
-        vardat = babs_unclear_wet/babs_unclear_dry    
+        vardat = babs_unclear_wet/babs_unclear_dry
+    
     return vardat
 
 

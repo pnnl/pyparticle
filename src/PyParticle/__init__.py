@@ -7,10 +7,15 @@ PyParticle python package
 """
 import os
 import numpy as np
+from pathlib import Path
 ### TODO: this should be an argument for a process
 try: # 'dev' situation
-    from pyprojroot import here
-    data_path = here() / 'datasets'
+    laura_datapath = '/Users/fier887/OneDrive - PNNL/Code/PyParticle/datasets'
+    if os.path.exists(laura_datapath):
+        data_path = Path(laura_datapath)
+    else:
+        from pyprojroot import here
+        data_path = here() / 'datasets'
 except ImportError:
     raise FileNotFoundError('data_path not set')
 ### 

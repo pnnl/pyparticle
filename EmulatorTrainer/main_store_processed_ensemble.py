@@ -53,11 +53,20 @@ if not os.path.exists(ensemble_dir):
 #     'Eabs_unclear','Eabs_unclear_wet_over_dry']
 
 varnames = [
-    'rh','wvl','Rbc','Rbc_dry','shell_tkappa_bc','tkappa_bc','tkappa_bcfree',
+    'rh','wvl','Rbc','Rbc_dry','Rbc_vol','Rbc_dry_vol','Rbc_vol','Rbc_dry_vol',
+    # fixme: add these
+    'Rbc_dry_sigma', # BC-weighted standard deviation
+    'corr_bcmass_Rbc_dry', # correlation between Rbc and BC mass
+    'GMD_bc', # GMD of BC-containing particles
+    'GSD_bc', # GSD of BC-containing particles
+    'shell_tkappa_bc','tkappa_bc','tkappa_bcfree',
     'shell_real_ri_dry_bc','shell_imag_ri_dry_bc','shell_real_ri_bc','shell_imag_ri_bc',
     'shell_real_ri_dry_bcfree','shell_imag_ri_dry_bcfree','shell_real_ri_bcfree','shell_imag_ri_bcfree',
     'Eclear_dry','Edry','Eclear','Eabs_unclear',
-    'MAC_bc','MAC_bcfree','MAC_bcfree_dry']
+    'MAC_bc','MAC_bcfree','MAC_bcfree_dry',
+    # fixme: add these
+    'Eclear_dry_uniform','Edry_uniform','Eclear_uniform','Eabs_unclear_uniform',
+    ]
 
 frac_testing=0.1
 frac_validation=0.
