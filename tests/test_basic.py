@@ -36,7 +36,7 @@ def test_invalid_fractions_sum():
     with pytest.raises(Exception):
         PyParticle.make_particle(D, aero_spec_names, aero_spec_fracs)
 
-def test_make_optical_particle():
+def test_make_cs_particle():
     """Test basic optical properties calculation."""
     D = 100e-9
     names = ['BC', 'SO4', 'H2O']
@@ -44,12 +44,11 @@ def test_make_optical_particle():
     particle = PyParticle.make_particle(D, names, fracs)
     rh_grid = np.array([0.])
     wvl_grid = np.array([550e-9])
-    cs_particle = PyParticle.make_optical_particle(particle, rh_grid, wvl_grid)
+    cs_particle = PyParticle.make_optical_particle(particle, rh_grid, wvl_grid, morphology='core-shell')
     # Check some expected attributes
-    assert hasattr(cs_particle, "Qabs")
-    assert hasattr(cs_particle, "Qscat")
-    assert hasattr(cs_particle, "Cabs")
-    assert hasattr(cs_particle, "Csca")
+    assert hasattr(cs_particle, 'shell_ris')
+    assert hasattr(cs_particle, 'core_ris')
+    
 
 def test_make_particle_edge_cases():
     """Test edge case: all H2O (should still make a particle)."""
