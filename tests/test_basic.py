@@ -57,5 +57,5 @@ def test_make_particle_edge_cases():
     fracs = [1.0]
     particle = PyParticle.make_particle(D, names, fracs)
     assert particle is not None
-    assert np.isclose(particle.get_diameter, D)
+    assert np.isclose(particle.get_Dwet(), D)
     assert particle.aero_spec_names == ['H2O']
