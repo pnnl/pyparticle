@@ -18,11 +18,12 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           environment-file: environment.yml
-          activate-environment: pyparticle  # <-- Replace with your env name if different
+          activate-environment: pyparticle  # <-- Ensure this matches the 'name:' in your environment.yml
           auto-activate-base: false
           python-version: 3.10
 
       - name: Show environment info
+        shell: bash -l {0}
         run: |
           conda info
           conda list
