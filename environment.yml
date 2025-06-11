@@ -18,5 +18,3 @@ dependencies:
       - pytest-cov
       - codecov
       - pymiescatt
-      # Add ppe if it is a public package, otherwise leave commented
-      # - ppe
