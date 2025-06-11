@@ -12,7 +12,7 @@ def test_make_particle_basic():
     assert hasattr(particle, 'masses')
     assert hasattr(particle, 'species')
     assert np.isclose(particle.get_Dwet(), D)
-    assert set(particle.aero_spec_names) == set(aero_spec_names)
+    assert all([spec.name for (spec,spec_name) in zip(particle.species,aero_spec_names)])
     assert np.isclose(np.sum(particle.aero_spec_fracs), 1.0)
 
 def test_make_particle_dry():
@@ -24,7 +24,7 @@ def test_make_particle_dry():
     assert particle is not None
     assert hasattr(particle, 'masses')
     assert np.isclose(particle.get_Ddry(), D)
-    assert set(particle.aero_spec_names) == set(aero_spec_names + ['H2O'])
+    assert particle.species[-1].name == 'H2O'
     assert np.isclose(np.sum(particle.aero_spec_fracs), 1.0)
     
 def test_invalid_fractions_sum():
@@ -58,4 +58,4 @@ def test_make_particle_edge_cases():
     particle = PyParticle.make_particle(D, names, fracs)
     assert particle is not None
     assert np.isclose(particle.get_Dwet(), D)
-    assert particle.aero_spec_names == ['H2O']
+    assert [spec.name for spec in particle.species] == ['H2O']    
