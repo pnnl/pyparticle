@@ -1,0 +1,22 @@
+name: pyparticle
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - pyprojroot
+  - arviz
+  # Uncomment if you want to install pytest via conda:
+  # - pytest
+  # - pytest-cov
+  - pip:
+      - pytest
+      - pytest-cov
+      - codecov
+      - pymiescatt
+      # Add ppe if it is a public package, otherwise leave commented
+      # - ppe
