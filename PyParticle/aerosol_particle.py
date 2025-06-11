@@ -234,6 +234,11 @@ def make_particle(
         specdata_path= data_path / 'species_data',
         species_modifications={}, 
         D_is_wet=True):
+    
+    aero_spec_frac = np.array(aero_spec_frac, dtype=float)
+    if not np.isclose(np.sum(aero_spec_frac), 1.0):
+        raise ValueError("Fractions must sum to 1.0")
+    
     if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
         aero_spec_names.append('H2O')
         aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
