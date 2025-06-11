@@ -1,7 +1,7 @@
 # PyParticle
 Python package for describing and analyzing aerosol particles and particle populations
 
-[![codecov](https://codecov.io/gh/lfierce2/PyParticle/branch/refactor/graph/badge.svg?token=${{ secrets.CODECOV_TOKEN }})](https://codecov.io/gh/lfierce2/PyParticle)
+[![codecov](https://codecov.io/gh/lfierce2/PyParticle/branch/refactor/graph/badge.svg?token=828a42c6-a93e-4169-be01-a14498d0fdd9)](https://codecov.io/gh/lfierce2/PyParticle)
 
 ## Dev
 
