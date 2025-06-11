@@ -9,11 +9,24 @@ def test_make_particle_basic():
     aero_spec_fracs = [0.7, 0.25, 0.05]
     particle = PyParticle.make_particle(D, aero_spec_names, aero_spec_fracs)
     assert particle is not None
-    assert hasattr(particle, 'diameter')
-    assert np.isclose(particle.get_diameter(), D)
+    assert hasattr(particle, 'masses')
+    assert hasattr(particle, 'species')
+    assert np.isclose(particle.get_Dwet(), D)
     assert set(particle.aero_spec_names) == set(aero_spec_names)
     assert np.isclose(np.sum(particle.aero_spec_fracs), 1.0)
 
+def test_make_particle_dry():
+    """Test creation of a particle with basic species and fractions."""
+    D = 100e-9
+    aero_spec_names = ['BC', 'SO4']
+    aero_spec_fracs = [0.7, 0.25]
+    particle = PyParticle.make_particle(D, aero_spec_names, aero_spec_fracs, D_is_wet=False)
+    assert particle is not None
+    assert hasattr(particle, 'masses')
+    assert np.isclose(particle.get_Ddry(), D)
+    assert set(particle.aero_spec_names) == set(aero_spec_names + ['H2O'])
+    assert np.isclose(np.sum(particle.aero_spec_fracs), 1.0)
+    
 def test_invalid_fractions_sum():
     """Check error raised if species fractions do not sum to 1."""
     D = 100e-9
