@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Laura Fierce" }
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [ # (explicitly) stated in the code
     "netcdf4",
     "pandas",
