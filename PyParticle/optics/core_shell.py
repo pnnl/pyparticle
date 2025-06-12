@@ -1,7 +1,7 @@
 import numpy as np
 from .base import OpticalParticle
 from .utils import OPTICS_TYPE_MAP
-from PyMieScatt.CoreShell import MieQCoreShell
+# from PyMieScatt.CoreShell import MieQCoreShell
 
 class CoreShellParticle(OpticalParticle):
     """
@@ -41,6 +41,16 @@ class CoreShellParticle(OpticalParticle):
         """
         Compute optical properties using Mie theory for core-shell particles.
         """
+        
+        # import MieQCoreShell only if needed
+        try:
+            from PyMieScatt import  MieQCoreShell
+        except ImportError:
+            raise ImportError(
+                "PyMieScatt is required for 'PyParticle.optics.core_shell.compute_optics'. "
+                "Please install it with 'pip install PyMieScatt'."
+            )
+        
         dCore_nm = 100.0  # placeholder
         dShell_nm = 200.0  # placeholder
         for rr, _ in enumerate(self.rh_grid):

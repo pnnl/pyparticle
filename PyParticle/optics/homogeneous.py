@@ -1,7 +1,8 @@
 import numpy as np
 from .base import OpticalParticle
 from .utils import OPTICS_TYPE_MAP
-from PyMieScatt import MieQ
+
+#from PyMieScatt import MieQ
 
 class HomogeneousParticle(OpticalParticle):
     """
@@ -34,6 +35,16 @@ class HomogeneousParticle(OpticalParticle):
         """
         Compute optical properties using Mie theory for homogeneous spheres.
         """
+        
+        # import MieQ only if needed
+        try:
+            from PyMieScatt import  MieQ
+        except ImportError:
+            raise ImportError(
+                "PyMieScatt is required for 'PyParticle.optics.homogeneous.compute_optics'. "
+                "Please install it with 'pip install PyMieScatt'."
+            )
+        
         diameter_nm = 150.0  # placeholder value
         for rr, _ in enumerate(self.rh_grid):
             crossect = np.pi/4. * (diameter_nm * 1e-9) ** 2

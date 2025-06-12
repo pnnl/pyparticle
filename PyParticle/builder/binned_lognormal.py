@@ -17,15 +17,15 @@ def build(
         species_modifications={},
         surface_tension=0.072, D_is_wet=False):
     
-    D_min = population_settings['D_min']
-    D_max = population_settings['D_max']
-    N_bins = population_settings['N_bins']
-    D_mids = np.logspace(np.log10(D_min),np.log10(D_max),num=N_bins)
+    D_min = float(population_settings['D_min'])
+    D_max = float(population_settings['D_max'])
+    N_bins = int(population_settings['N_bins'])
+    D_mids = np.logspace(np.log10(D_min), np.log10(D_max), num=N_bins)
     bin_width = D_mids[1] - D_mids[0]
     
-    Ntot = population_settings['Ntot']
-    log10_GMD = np.log10(population_settings['GMD'])
-    log10_GSD = np.log10(population_settings['GSD'])
+    Ntot = float(population_settings['Ntot'])
+    log10_GMD = np.log10(float(population_settings['GMD']))
+    log10_GSD = np.log10(float(population_settings['GSD']))
     
     pdf_wrt_logD = norm(loc=log10_GMD, scale=log10_GSD)
     N_per_bins = pdf_wrt_logD.pdf(np.log10(D_mids))*bin_width
