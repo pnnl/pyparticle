@@ -49,13 +49,12 @@ def make_optical_population(
     (which is expected to have .particles and .num_concs attributes).
     """
     optical_population = OpticalPopulation(rh_grid, wvl_grid)
-    # Accept both a "particles" attribute or an iterable passed directly
-    particles = getattr(particle_population, "particles", particle_population)
+    
+    part_ids = getattr(particle_population, "ids", particle_population)
     num_concs = getattr(particle_population, "num_concs", None)
-    if num_concs is None:
-        # Try to get from attribute or parallel list/array argument
-        num_concs = kwargs.get("num_concs", [1.0] * len(particles))
-    for particle, num_conc in zip(particles, num_concs):
+    
+    for part_id, num_conc in zip(part_ids, num_concs):
+        particle = particle_population.get_particle(part_id)
         optical_particle = make_optical_particle(
             particle,
             rh_grid,

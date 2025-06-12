@@ -79,7 +79,7 @@ species_modifications = {
 
 population_twoAerosolSpecies = PyParticle.builder.binned_lognormal.build(
     population_settings, 
-    species_modifications, # setting species_modifications modifies the properties as different from the default
+    species_modifications=species_modifications, # setting species_modifications modifies the properties as different from the default
     D_is_wet=False)
 optical_population_twoAerosolSpecies = PyParticle.make_optical_population(
     population_twoAerosolSpecies, rh_grid, wvl_grid,
