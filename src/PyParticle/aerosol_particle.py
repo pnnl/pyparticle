@@ -2,17 +2,27 @@
 # -*- coding: utf-8 -*-
 """
 @author: Laura Fierce
-"""
+# """
 
-from .aerosol_species import AerosolSpecies
-from .aerosol_species import retrieve_one_species
+from .species.base import AerosolSpecies
+from .species.registry import get_species, retrieve_one_species
 from . import data_path
 from dataclasses import dataclass
 from typing import Tuple
-# from typing import Optional
 import numpy as np
 from scipy.constants import R
 import scipy.optimize as opt
+
+
+# from .aerosol_species import AerosolSpecies
+# from .aerosol_species import retrieve_one_species
+# from . import data_path
+# from dataclasses import dataclass
+# from typing import Tuple
+# # from typing import Optional
+# import numpy as np
+# from scipy.constants import R
+# import scipy.optimize as opt
 
 
 @dataclass
@@ -243,31 +253,56 @@ class Particle:
         else:
             return s_critical
         
-def make_particle(
-        D, aero_spec_names, aero_spec_frac, 
-        specdata_path= data_path / 'species_data',
-        species_modifications={}, 
-        D_is_wet=True):
+# def make_particle(
+#         D, aero_spec_names, aero_spec_frac, 
+#         specdata_path= data_path / 'species_data',
+#         species_modifications={}, 
+#         D_is_wet=True):
     
+#     aero_spec_frac = np.array(aero_spec_frac, dtype=float)
+#     if not np.isclose(np.sum(aero_spec_frac), 1.0):
+#         raise ValueError("Fractions must sum to 1.0")
+    
+#     if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
+#         aero_spec_names.append('H2O')
+#         aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
+    
+#     assert(len(aero_spec_frac) == len(aero_spec_names))
+    
+#     AeroSpecs = []
+#     for name in aero_spec_names:
+#         if name in species_modifications.keys():
+#             spec_modifications = species_modifications[name]
+#         elif 'SOA' in species_modifications.keys() and name in ['MSA','ARO1','ARO2','ALK1','OLE1','API1','API2','LIM1','LIM2']:
+#             spec_modifications = species_modifications['SOA']
+#         else:
+#             spec_modifications = {}
+#         AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, spec_modifications=spec_modifications))
+    
+def make_particle(
+        D, aero_spec_names, aero_spec_frac,
+        specdata_path= data_path / 'species_data',
+        species_modifications={},
+        D_is_wet=True):
+
+    # Always treat as list of strings for names
+    aero_spec_names = [s if isinstance(s, str) else s.name for s in aero_spec_names]
+
     aero_spec_frac = np.array(aero_spec_frac, dtype=float)
     if not np.isclose(np.sum(aero_spec_frac), 1.0):
         raise ValueError("Fractions must sum to 1.0")
-    
-    if not 'H2O' in aero_spec_names and not 'h2o' in aero_spec_names:
+
+    if not any(s.upper() == 'H2O' for s in aero_spec_names):
+        aero_spec_names = list(aero_spec_names)
         aero_spec_names.append('H2O')
         aero_spec_frac = np.hstack([aero_spec_frac, np.array([0.])])
-    
+
     assert(len(aero_spec_frac) == len(aero_spec_names))
     
     AeroSpecs = []
     for name in aero_spec_names:
-        if name in species_modifications.keys():
-            spec_modifications = species_modifications[name]
-        elif 'SOA' in species_modifications.keys() and name in ['MSA','ARO1','ARO2','ALK1','OLE1','API1','API2','LIM1','LIM2']:
-            spec_modifications = species_modifications['SOA']
-        else:
-            spec_modifications = {}
-        AeroSpecs.append(retrieve_one_species(name, specdata_path=specdata_path, spec_modifications=spec_modifications))
+        mods = species_modifications.get(name, {})
+        AeroSpecs.append(get_species(name, **mods))
     
     assert(len(aero_spec_frac) == len(AeroSpecs))
     if D_is_wet:# or 'H2O' not in aero_spec_names or 'h2o' not in aero_spec_names:
