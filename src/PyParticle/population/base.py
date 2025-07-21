@@ -41,7 +41,7 @@ class ParticlePopulation:
         else:
             raise ValueError(str(part_id) + ' not in ids')
 
-    def set_particle(self, particle, part_id, num_conc, suppress_warning=False):
+    def set_particle(self, particle, part_id, num_conc, suppress_warning=True):
         part_id = int(part_id)
         if part_id not in self.ids:
             if not suppress_warning:
@@ -65,12 +65,18 @@ class ParticlePopulation:
             self.spec_masses = np.vstack([self.spec_masses, particle.masses.reshape(1,-1)])
             self.num_concs = np.hstack([self.num_concs, num_conc])
             self.ids.append(part_id)
-
-    def _equilibrate_h20(self,S,T,rho_h2o=1000., MW_h2o=18e-3):
+    
+    def get_species_idx(self, spec_name):
+        idx, = np.where([
+            spec.name in spec_name for spec in self.species])
+        return idx[0]
+    
+    def _equilibrate_h2o(self,S,T,rho_h2o=1000., MW_h2o=18e-3):
         for (part_id,num_conc) in zip(self.ids,self.num_concs):
             particle = self.get_particle(part_id)
             particle._equilibrate_h2o(S,T)
             self.set_particle(particle, part_id, num_conc)
+    # fixme: add "equilibrate" for other species, too.
 
     def get_effective_radius(self):
         rs = []

@@ -209,6 +209,7 @@ class Particle:
         spec_kappas = self.get_spec_kappas()
         idx_not_h2o, = np.where([one_spec.name.upper()!='H2O' for one_spec in self.species])
         tkappa = np.sum(vks[idx_not_h2o]*spec_kappas[idx_not_h2o])/np.sum(vks[idx_not_h2o])
+        print(tkappa)
         return tkappa
     
     def get_shell_tkappa(self):

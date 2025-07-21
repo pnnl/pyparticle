@@ -4,6 +4,7 @@ from .utils import OPTICS_TYPE_MAP
 
 #from PyMieScatt import MieQ
 
+# fixme: check this
 class HomogeneousParticle(OpticalParticle):
     """
     Homogeneous sphere morphology optical particle model.

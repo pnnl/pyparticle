@@ -12,20 +12,21 @@ import numpy as np
 import os
 from netCDF4 import Dataset
 from pathlib import Path
+from .registry import register
 
-def build(
-        population_settings, *,
-        n_particles=None,
-        N_tot=None,
-        species_modifications={},
-        specdata_path=None,
-        suppress_warning=True,
-        add_mixing_ratios=True):
-    partmc_dir = Path(population_settings['partmc_dir'])
-    timestep = population_settings['timestep']
-    repeat = population_settings['repeat']
+@register("partmc")
+def build(config):
+    partmc_dir = Path(config['partmc_dir'])
+    timestep = config['timestep']
+    repeat = config['repeat']
+    n_particles = config.get('n_particles', None)
+    N_tot = config.get('N_tot', None)
+    species_modifications = config.get('species_modifications', {})
+    specdata_path = config.get('specdata_path', None)
+    suppress_warning = config.get('suppress_warning', True)
+    add_mixing_ratios = config.get('add_mixing_ratios', True)
+
     partmc_filepath = get_ncfile(partmc_dir / 'out', timestep, repeat)
-
     currnc = Dataset(partmc_filepath)
     aero_spec_names = currnc.variables['aero_species'].names.split(',')
     # Get AerosolSpecies objects with modifications if any
@@ -57,13 +58,11 @@ def build(
             species_list, 
             spec_masses[:, ii],
             species_modifications=species_modifications,
-
         )
         partmc_population.set_particle(
             particle, part_ids[ii], num_concs[ii] * N_tot / np.sum(num_concs[idx]), suppress_warning=suppress_warning
         )
-        
-
+    
     if add_mixing_ratios:
         gas_mixing_ratios = np.array(currnc.variables['gas_mixing_ratio'][:])
         partmc_population.gas_mixing_ratios = gas_mixing_ratios

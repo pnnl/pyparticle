@@ -9,20 +9,22 @@ from ..base import ParticlePopulation
 from PyParticle import make_particle
 from PyParticle.species.registry import get_species
 import numpy as np
+from .registry import register
 
-def build(
-        population_settings, *,
-        specdata_path=None,
-        species_modifications={},
-        D_is_wet=False):
-    aero_spec_names = population_settings['aero_spec_names']
+@register("monodisperse")
+def build(config):
+    aero_spec_names = config['aero_spec_names']
+    species_modifications = config.get('species_modifications', {})
+    N = config['N']
+    D = config['D']
+    aero_spec_fracs = config['aero_spec_fracs']
+    D_is_wet = config.get('D_is_wet', False)
+    specdata_path = config.get('specdata_path', None)
+
     species_list = tuple(
         get_species(name, **species_modifications.get(name, {}))
         for name in aero_spec_names
     )
-    N = population_settings['N']
-    D = population_settings['D']
-    aero_spec_fracs = population_settings['aero_spec_fracs']
 
     monodisp_population = ParticlePopulation(
         species=species_list, spec_masses=[], num_concs=[], ids=[])
