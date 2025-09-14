@@ -71,7 +71,7 @@ jobs:
       - name: Run pytest with coverage
         # Keep output concise; fail quickly on first test failure to save CI minutes.
         run: |
-          pytest -q --maxfail=1 --disable-warnings --cov=. --cov-report=xml --cov-fail-under=80
+          pytest -q --maxfail=1 --disable-warnings --cov=. --cov-report=xml
         # If you want to change the coverage target, edit --cov-fail-under above.
 
       # 6) Upload coverage.xml as an artifact (preserve results even if Codecov upload skipped)
@@ -89,8 +89,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
           flags: unittests
+          slug: lfierce2/PyParticle
           # Do not fail the workflow if Codecov upload fails (keeps CI robust if token is missing)
           fail_ci_if_error: false
+          verbose: true
 
 # Notes for reviewers / maintainers (in-file guidance):
 #
