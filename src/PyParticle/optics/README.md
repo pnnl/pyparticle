@@ -1,49 +1,21 @@
-# PyParticle Optics Submodule
+# PyParticle.optics
 
-This submodule implements modular, extensible optical models for particle populations.
+Purpose: Optical particle abstractions, builders, utilities, and morphology implementations.
 
-## Adding a New Morphology
+Contents
 
-1. **Create a new file** in `PyParticle/optics/`, e.g. `my_model.py`.
-2. **Subclass `OpticalParticle`** from `base.py` and implement:
-   - `compute_optics()`
-   - `get_cross_sections()`
-   - `get_refractive_indices()`
-   - `get_cross_section(optics_type, rh_idx=None, wvl_idx=None)`
-3. **Register your class** in `MORPHOLOGY_REGISTRY` in `factory.py`.
-4. **Use** via `create_optical_particle("my_model", ...)` or through the population manager.
+- `base.py` — `OpticalParticle` (ABC) and `OpticalPopulation` (array-backed, aggregated coefficients)
+- `builder.py` — `build_optical_particle`, `build_optical_population` via factory discovery
+- `utils.py` — mapping of optics type names, array extraction helpers
+- `refractive_index.py` — simple refractive index class and stub function
+- `population.py` — legacy/alternate `OpticalPopulation` (list of particles, aggregator)
+- `factory/` — morphology registry and implementations:
+  - `registry.py` — `register()` decorator and `discover_morphology_types()`
+  - `core_shell.py` — core-shell morphology implementation
+  - `homogeneous.py` — homogeneous sphere morphology implementation
+  - `fractal.py` — placeholder fractal aggregate
 
-## Example Usage
+Usage
 
-```python
-from PyParticle.optics import create_optical_particle
-
-optical_particle = create_optical_particle(
-    morphology="core-shell",
-    species=species,
-    masses=masses,
-    rh_grid=rh_grid,
-    wvl_grid=wvl_grid,
-    temp=293.15,
-    specdata_path=specdata_path,
-    species_modifications=species_modifications
-)
-optical_particle.compute_optics()
-cross_sections = optical_particle.get_cross_sections()
-```
-
-## Maintaining and Extending
-
-- **Centralize mapping** of string options (like `optics_type`) in `utils.py` and per-model as needed.
-- **Document new models** in this README.
-- **Raise exceptions** for unsupported options rather than printing warnings.
-
-## DRY Cross-section Lookups
-
-All models and populations use centralized dictionary-based cross-section lookups,
-so new optical property types can be added by updating the mapping in `utils.py`
-or in a model's `OPTICS_TYPE_MAP`.
-
-## Testing
-
-Add or update unit tests to verify that all models produce correct results for their optical properties.
+- Provide a base population and a config dict with keys like `type`, `rh_grid`, `wvl_grid` (meters), and options specific to each morphology.
+- Example: see `examples/*_binned_lognormal.py`.

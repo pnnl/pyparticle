@@ -5,15 +5,11 @@ name: CI / pytest + codecov
 # Edit the `branches` list below to change which branches trigger the workflow.
 on:
   push:
-    branches:
-      - main
-      - master
-      - refactor_removeBNN
+    # Run on all branches so branch-specific badges (CI/Codecov) stay up to date
+    branches: ["**"]
   pull_request:
-    branches:
-      - main
-      - master
-      - refactor_removeBNN
+    # Run for PRs targeting any branch
+    branches: ["**"]
 
 jobs:
   pytest-codecov:

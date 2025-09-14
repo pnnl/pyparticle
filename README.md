@@ -1,0 +1,50 @@
+# PyParticle
+
+Branch-aware CI and coverage
+
+- CI (pytest): ![CI](https://github.com/lfierce2/PyParticle/actions/workflows/ci-codecov.yml/badge.svg?branch=tests_scaffold)
+- Coverage (Codecov): [![codecov](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold/graph/badge.svg)](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold)
+
+Notes:
+- The badges above show status for the current working branch `tests_scaffold`. Replace the `branch=` query with any branch name to get per-branch stats, e.g. `main`, `refactor_removeBNN`.
+- CI runs on all branches (configured in `.github/workflows/ci-codecov.yml`).
+
+Overview
+
+PyParticle provides particle, species, population, and optics modeling utilities.
+
+Key modules (see per-module READMEs):
+- `src/PyParticle/` — core package overview
+- `src/PyParticle/optics/` — optical particle models and builders
+- `src/PyParticle/population/` — population classes and builders
+- `src/PyParticle/species/` — species definitions and registry
+- `examples/` — runnable examples using JSON configs
+
+Quick start
+
+1) Install (editable):
+
+```bash
+pip install -e .
+```
+
+2) Run tests with coverage:
+
+```bash
+pytest -q --maxfail=1 --disable-warnings --cov=. --cov-report=term
+```
+
+3) Examples (optional, gated by env):
+
+```bash
+PYPARTICLE_RUN_EXAMPLES=1 python examples/homogeneous_binned_lognormal.py
+```
+
+Data
+
+Species property lookups expect data under `datasets/species_data/` (e.g., `aero_data.dat`). See `src/PyParticle/species/base.py`.
+
+Contributing
+
+- Open PRs from feature branches; CI and Codecov badges can be made branch-specific by appending `?branch=<your-branch>` to the badge URLs.
+- See `tests/README.md` for the deterministic test scaffold.
