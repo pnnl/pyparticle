@@ -78,8 +78,9 @@ from .species.registry import (
 from .population.base import ParticlePopulation
 from .population import build_population
 
-from .optics import make_optical_particle, make_optical_population
-from .optics import RefractiveIndex, RI_fun
+from .optics.builder import build_optical_particle, build_optical_population
+# from .optics import make_optical_particle, make_optical_population
+# from .optics import RefractiveIndex, RI_fun
 # from .optics import CoreShellParticle, CoreShellPopulation
 
 from .storer import (

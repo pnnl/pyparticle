@@ -16,6 +16,7 @@ from .registry import register
 
 @register("partmc")
 def build(config):
+    # partmc_dir = Path(config['partmc_dir'])
     partmc_dir = Path(config['partmc_dir'])
     timestep = config['timestep']
     repeat = config['repeat']
@@ -25,7 +26,7 @@ def build(config):
     specdata_path = config.get('specdata_path', None)
     suppress_warning = config.get('suppress_warning', True)
     add_mixing_ratios = config.get('add_mixing_ratios', True)
-
+    
     partmc_filepath = get_ncfile(partmc_dir / 'out', timestep, repeat)
     currnc = Dataset(partmc_filepath)
     aero_spec_names = currnc.variables['aero_species'].names.split(',')
@@ -55,7 +56,7 @@ def build(config):
     partmc_population = ParticlePopulation(species=species_list, spec_masses=[], num_concs=[], ids=[])
     for ii in idx:
         particle = make_particle_from_masses(
-            species_list, 
+            aero_spec_names, 
             spec_masses[:, ii],
             species_modifications=species_modifications,
         )

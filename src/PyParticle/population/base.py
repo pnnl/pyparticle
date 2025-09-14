@@ -89,6 +89,21 @@ class ParticlePopulation:
 
     def get_Ntot(self):
         return np.sum(self.num_concs)
+    
+    def get_particle_var(self, varname, *kwargs):
+        return np.array([self.get_particle(part_id).get_variable(varname, *kwargs) for part_id in self.ids])
+    
+    def get_num_dist_1d(
+            self, varname = 'wet_diameter', 
+            density=True, weights=None, method='hist', 
+            N_bins=20, x_range=None, *kwargs):
+       
+        vardat = self.get_particle_var(varname, *kwargs)
+        if method == 'hist':
+            return np.histogram(vardat,bins=N_bins, range=x_range, density=density, weights=weights)
+        else:
+            raise NotImplementedError(f"{method} not yet implemented")
+    
 
     def get_mass_conc(self,spec_name):
         idx, = np.where([spec.name == spec_name for spec in self.species])

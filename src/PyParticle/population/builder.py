@@ -1,5 +1,5 @@
 from .factory.registry import discover_population_types
-import inspect
+# import inspect
 
 class PopulationBuilder:
     def __init__(self, config):

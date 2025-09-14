@@ -27,6 +27,7 @@ class AerosolSpeciesRegistry:
             for k, v in modifications.items():
                 setattr(base, k, v)
             return base
+        
         # fallback to retrieve_one_species (file-based) if not registered
         return retrieve_one_species(name, spec_modifications=modifications)
 
@@ -67,7 +68,7 @@ def retrieve_one_species(name, specdata_path=data_path / 'species_data', spec_mo
                 density = spec_modifications.get('density', density)
                 surface_tension = spec_modifications.get('surface_tension', 0.072)
                 molar_mass_val = spec_modifications.get('molar_mass', molar_mass)
-
+                
                 return AerosolSpecies(
                     name=name,
                     density=float(density),
@@ -75,4 +76,5 @@ def retrieve_one_species(name, specdata_path=data_path / 'species_data', spec_mo
                     molar_mass=float(str(molar_mass_val).replace('d','e')),
                     surface_tension=float(surface_tension)
                 )
+
     raise ValueError(f"Species data for '{name}' not found in data file.")

@@ -6,6 +6,7 @@ Some basic functions used by the other modules
 @author: Laura Fierce
 """
 
+import numpy as np
 
 def get_number(string_val):
     if string_val.endswith('\n'):
@@ -25,3 +26,8 @@ def get_number(string_val):
     return number
 
 
+def power_moments_from_lognormal(k,N,gmd,gsd):
+    return N*np.exp(k*np.log(gmd) + k**2 * np.log(gsd)/2)
+
+def power_moments_from_lognormals(k, Ns, GMDs, GSDs):
+    return np.sum([power_moments_from_lognormal(k,N,gmd,gsd) for (N,gmd,gsd) in zip(Ns,GMDs,GSDs)])

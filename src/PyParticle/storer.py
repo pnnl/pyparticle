@@ -1,6 +1,7 @@
 import numpy as np
 from dataclasses import asdict
-from . import RI_fun
+# from . import RI_fun
+
 
 def get_output_filename(
         processed_output_dir, sample_id_str, run_num, timestep, 

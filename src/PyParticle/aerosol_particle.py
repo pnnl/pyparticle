@@ -48,6 +48,17 @@ class Particle:
         mass_h2o = compute_mass_h2o(Ddry,Dwet,rho_h2o=1000.)
         self.masses[self.idx_h2o()] = mass_h2o
         
+    # fixme: should some of this be moved out? 
+    def get_variable(self, varname, *kwargs):
+        if varname == 'wet_diameter':
+            return self.get_Dwet(*kwargs)
+        elif varname == 'dry_diameter':
+            return self.get_Ddry()
+        elif varname == 'tkappa':
+            return self.get_tkappa()
+        elif varname == 'critical_supersaturation' or varname == 's_c':
+            return self.get_critical_supersaturation(T, return_D_crit=False)
+    
     def idx_h2o(self):
         return np.where([
             spec.name.upper() == 'H2O' for spec in self.species])[0][0]
@@ -195,11 +206,11 @@ class Particle:
         Dcore = (vol_core*6./np.pi)**(1./3.)
         return Dcore
     
+    # todo: fix this later
     def get_rho_w(self):
-        return 1000. # kg/m^3 -- todo: fix this later
+        return 1000. # kg/m^3
     # def get_rho_w(self):
     #     idx_h2o, = np.where([one_spec.name.upper()=='H2O' for one_spec in self.species])
-    #     print(idx_h2o)
     #     rho_w = float(self.species[idx_h2o].density)
     #     return rho_w
     
@@ -209,7 +220,6 @@ class Particle:
         spec_kappas = self.get_spec_kappas()
         idx_not_h2o, = np.where([one_spec.name.upper()!='H2O' for one_spec in self.species])
         tkappa = np.sum(vks[idx_not_h2o]*spec_kappas[idx_not_h2o])/np.sum(vks[idx_not_h2o])
-        print(tkappa)
         return tkappa
     
     def get_shell_tkappa(self):
@@ -229,14 +239,14 @@ class Particle:
         
         return trho
     
-    def get_critical_supersaturation(self, return_D_crit=False):
-        idx_h2o, = np.where([AeroSpec.name.upper()=='H2O' for AeroSpec in self.AeroSpecs])
-        Ddry=self.Ddry
-        tkappa=self.tkappa
-        T=self.T
+    def get_critical_supersaturation(self, T, return_D_crit=False):
+        idx_h2o, = np.where([AeroSpec.name.upper()=='H2O' for AeroSpec in self.species])
+        Ddry=self.get_Ddry()
+        tkappa=self.get_tkappa()
+        # T=self.T
         sigma_h2o=self.surface_tension
-        rho_h2o=self.AeroSpecs[idx_h2o].density
-        MW_h2o=self.AeroSpecs[idx_h2o].molar_mass
+        rho_h2o=self.species[idx_h2o].density
+        MW_h2o=self.species[idx_h2o].molar_mass
         
         A = 4.*sigma_h2o*MW_h2o/(R*T*rho_h2o);
         
@@ -288,7 +298,6 @@ def make_particle(
 
     # Always treat as list of strings for names
     aero_spec_names = [s if isinstance(s, str) else s.name for s in aero_spec_names]
-
     aero_spec_frac = np.array(aero_spec_frac, dtype=float)
     if not np.isclose(np.sum(aero_spec_frac), 1.0):
         raise ValueError("Fractions must sum to 1.0")

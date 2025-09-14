@@ -1,4 +1,5 @@
 import numpy as np
+# fixme: is this here?
 from .factory import create_optical_particle
 
 class OpticalPopulation:
@@ -44,3 +45,4 @@ class OpticalPopulation:
                 total = np.zeros_like(arr)
             total += arr * self.num_concs[i]
         return total
+

@@ -12,7 +12,7 @@ def register(name):
 
 def discover_population_types():
     """Discover all population type modules in the types/ submodule."""
-    types_pkg = __package__ #+ ".types"
+    types_pkg = __package__  # The current package
     types_path = os.path.dirname(__file__)
     population_types = {}
     for _, module_name, _ in pkgutil.iter_modules([types_path]):
