@@ -1,7 +1,21 @@
+"""Builder helpers to create optical particles and optical populations.
+
+This module wraps a morphology discovery registry to construct per-particle
+optical objects and aggregate them into an `OpticalPopulation`.
+"""
+
 from .factory.registry import discover_morphology_types
 from .base import OpticalPopulation
 
+
 class OpticalParticleBuilder:
+    """Construct an optical particle instance from a config.
+
+    Parameters
+    ----------
+    config : dict
+        Configuration dictionary with a 'type' key indicating morphology.
+    """
     def __init__(self, config):
         self.config = config
     
@@ -16,10 +30,27 @@ class OpticalParticleBuilder:
         # Expect a class or callable that accepts (base_particle, config)
         return cls_or_factory(base_particle, self.config)
 
+
 def build_optical_particle(base_particle, config):
+    """Helper: build and return an optical particle from base particle and config."""
     return OpticalParticleBuilder(config).build(base_particle)
 
+
 def build_optical_population(base_population, config):
+    """Build an OpticalPopulation from a base ParticlePopulation and config.
+
+    Parameters
+    ----------
+    base_population : ParticlePopulation
+        Base population containing species, masses, concentrations, and ids.
+    config : dict
+        Optics configuration (rh_grid, wvl_grid, and morphology type).
+
+    Returns
+    -------
+    OpticalPopulation
+        Aggregated optics for the population.
+    """
     rh_grid = config.get('rh_grid', [0.0])
     wvl_grid = config.get('wvl_grid', [550e-9])
     

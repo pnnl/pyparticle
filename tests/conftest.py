@@ -11,6 +11,15 @@ from typing import Iterator
 import pytest
 
 
+def pytest_addoption(parser):
+    parser.addoption("--input", action="store", default="examples/configs/binned_lognormal.json",
+                     help="Path to example JSON/YAML config to run comparisons")
+    parser.addoption("--compare", action="store", default="both",
+                     choices=["pyrcel", "pymiescatt", "both"], help="Which reference library to compare against")
+    parser.addoption("--output", action="store", default="reports/reference_report.json",
+                     help="Path to write aggregated JSON report")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _deterministic_session_env():
     """

@@ -1,3 +1,5 @@
+import importlib
 import pytest
 
-pytest.skip("Integration with Pyrcel pending", allow_module_level=True)
+if importlib.util.find_spec("pyrcel") is None:
+	pytest.skip("pyrcel not installed: integration tests skipped", allow_module_level=True)

@@ -1,0 +1,12 @@
+test_name: ccn_single_na_cl
+type: ccn_single
+particle:
+  diameter_m: 100e-9
+  species:
+    - name: NaCl
+      mass_fraction: 1.0
+environment:
+  T_K: 298.15
+tolerances:
+  s_relative: 0.02
+  s_absolute: 1e-3

@@ -1,7 +1,14 @@
+"""Population builder wrapper used to construct particle populations from configs.
+
+Supports discovery of population types via a registry and instantiates the
+appropriate population class using the provided configuration dictionary.
+"""
+
 from .factory.registry import discover_population_types
-# import inspect
+
 
 class PopulationBuilder:
+    """Construct a ParticlePopulation instance from a configuration dict."""
     def __init__(self, config):
         self.config = config
     
@@ -13,11 +20,9 @@ class PopulationBuilder:
         if type_name not in types:
             raise ValueError(f"Unknown population type: {type_name}")
         cls = types[type_name]
-        #sig = inspect.signature(cls.__init__)
-        # Exclude 'self' and 'type' from kwargs
-        #valid_params = [p for p in sig.parameters if p != 'self' and p != 'type']
-        #filtered_kwargs = {k: v for k, v in self.config.items() if k in valid_params}
         return cls(self.config)
 
+
 def build_population(config):
+    """Convenience: build and return a population for given config."""
     return PopulationBuilder(config).build()

@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Core aerosol particle data structures and helpers.
+
+This module defines the `Particle` dataclass which represents an
+individual aerosol particle by its constituent species and masses and
+provides methods to compute wet/dry diameters, effective kappa and
+critical supersaturation. Primary functions used by examples/tests:
+- make_particle(D, aero_spec_names, aero_spec_frac, ...)
+- make_particle_from_masses(aero_spec_names, spec_masses, ...)
+
+Note: functions use NumPy and SciPy for numerical operations.
 """
-@author: Laura Fierce
-# """
 
 from .species.base import AerosolSpecies
 from .species.registry import get_species, retrieve_one_species
@@ -27,8 +35,18 @@ import scipy.optimize as opt
 
 @dataclass
 class Particle:
-    """Particle: the definition of an individual aerosol particle
-    in terms of the amounts of different constituent species """
+    """Represent an aerosol particle by species composition and masses.
+
+    Attributes
+    ----------
+    species : tuple[AerosolSpecies,...]
+        Sequence of species objects that make up the particle.
+    masses : tuple[float,...]
+        Mass of each species in SI units (kg).
+
+    Methods provide convenient accessors for dry/wet diameters, volumes,
+    effective kappa, and critical supersaturation.
+    """
     species: Tuple[AerosolSpecies, ...]
     masses: Tuple[float, ...]
     
@@ -50,6 +68,15 @@ class Particle:
         
     # fixme: should some of this be moved out? 
     def get_variable(self, varname, *kwargs):
+        """Return a named variable for convenience.
+
+        Parameters
+        ----------
+        varname : str
+            One of 'wet_diameter', 'dry_diameter', 'tkappa', 'critical_supersaturation'.
+        *kwargs : tuple
+            Additional arguments forwarded to the underlying method.
+        """
         if varname == 'wet_diameter':
             return self.get_Dwet(*kwargs)
         elif varname == 'dry_diameter':

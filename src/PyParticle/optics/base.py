@@ -1,3 +1,10 @@
+"""Optical particle and population base classes.
+
+Defines abstract `OpticalParticle` interface and `OpticalPopulation` which
+aggregates per-particle cross-sections into population-level optical
+coefficients (extinction, scattering, absorption, asymmetry).
+"""
+
 from abc import abstractmethod
 import numpy as np
 
@@ -13,7 +20,10 @@ class OpticalParticle(Particle):
 
     @abstractmethod
     def compute_optics(self):
-        pass
+        """Compute per-particle optical cross-sections across RH and wavelength grids.
+
+        Implementations should populate attributes like `Cabs`, `Csca`, `Cext`, and `g`.
+        """
     
     @abstractmethod
     def get_cross_sections(self):
@@ -45,7 +55,7 @@ class OpticalPopulation(ParticlePopulation):
 
         self.rh_grid = np.asarray(rh_grid, dtype=float)
         self.wvl_grid = np.asarray(wvl_grid, dtype=float)
-
+        # Prepare storage for per-particle cross-section cubes
         N_part = len(self.ids)
         N_rh = len(self.rh_grid)
         N_wvl = len(self.wvl_grid)
@@ -53,7 +63,6 @@ class OpticalPopulation(ParticlePopulation):
         self.Csca = np.zeros((N_part, N_rh, N_wvl), dtype=float)
         self.Cext = np.zeros((N_part, N_rh, N_wvl), dtype=float)
         self.g    = np.zeros((N_part, N_rh, N_wvl), dtype=float)
-        
     def add_optical_particle(self, optical_particle, part_id, **kwargs):
         optical_particle.compute_optics()
         idx = self.find_particle(part_id)

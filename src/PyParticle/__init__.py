@@ -39,10 +39,19 @@
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-PyParticle python package
+"""PyParticle package
 
-@author: Laura Fierce
+Lightweight package providing aerosol particle, species, population, and
+optics builders. This module exposes the high-level API used by examples
+and tests: particle constructors, species registry, population builders,
+and optics builders.
+
+Exports (selected):
+- Particle, make_particle, make_particle_from_masses
+- AerosolSpecies and registry helpers (get_species, register_species, ...)
+- build_population, build_optical_particle, build_optical_population
+
+See package submodules for implementation details.
 """
 import os
 import numpy as np
@@ -60,6 +69,7 @@ try:  # 'dev' situation
 except ImportError:
     raise FileNotFoundError('data_path not set')
 
+# Public helpers
 from .utilities import get_number
 # #from .utilities import Py3Wrapper
 

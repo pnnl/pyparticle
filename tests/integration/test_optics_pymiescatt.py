@@ -1,3 +1,5 @@
+import importlib
 import pytest
 
-pytest.skip("Integration with PyMieScatt pending", allow_module_level=True)
+if importlib.util.find_spec("PyMieScatt") is None:
+	pytest.skip("PyMieScatt not installed: integration tests skipped", allow_module_level=True)

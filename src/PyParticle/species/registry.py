@@ -1,12 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-AerosolSpecies registry for runtime extension and lookup.
+"""Runtime AerosolSpecies registry and file-based fallback lookup.
+
+This module provides an in-memory registry allowing users to register
+custom species at runtime and a `retrieve_one_species` fallback that
+reads `datasets/species_data/aero_data.dat` for default species.
 """
 
 import copy
 from .base import AerosolSpecies
 from .. import data_path
+
 
 class AerosolSpeciesRegistry:
     def __init__(self):
@@ -55,7 +57,22 @@ def extend_species(species: AerosolSpecies):
     _registry.extend(species)
 
 def retrieve_one_species(name, specdata_path=data_path / 'species_data', spec_modifications={}):
-    """Retrieve a species from file, applying modifications."""
+    """Retrieve a species from data file and apply optional modifications.
+
+    Parameters
+    ----------
+    name : str
+        Species name to lookup (case-insensitive).
+    specdata_path : pathlib.Path
+        Directory containing `aero_data.dat`.
+    spec_modifications : dict
+        Optional overrides for species properties (kappa, density, etc.).
+
+    Returns
+    -------
+    AerosolSpecies
+        Constructed species dataclass.
+    """
     aero_datafile = specdata_path / 'aero_data.dat'
     with open(aero_datafile) as data_file:
         for line in data_file:

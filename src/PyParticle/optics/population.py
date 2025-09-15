@@ -1,6 +1,6 @@
 import numpy as np
-# fixme: is this here?
-from .factory import create_optical_particle
+# Use the builder API to construct optical particles
+from .builder import build_optical_particle
 
 class OpticalPopulation:
     """
@@ -15,16 +15,15 @@ class OpticalPopulation:
         self.ids = []
 
     def add_particle(self, particle, num_conc, morphology="core-shell", **kwargs):
-        optical_particle = create_optical_particle(
-            morphology,
-            particle.species,
-            particle.masses,
-            rh_grid=self.rh_grid,
-            wvl_grid=self.wvl_grid,
-            temp=getattr(particle, "temp", 293.15),
-            specdata_path=kwargs.get("specdata_path", None),
-            species_modifications=kwargs.get("species_modifications", None),
-        )
+        config = {
+            "type": morphology,
+            "rh_grid": list(self.rh_grid),
+            "wvl_grid": list(self.wvl_grid),
+            "temp": getattr(particle, "temp", 293.15),
+            "specdata_path": kwargs.get("specdata_path", None),
+            "species_modifications": kwargs.get("species_modifications", None),
+        }
+        optical_particle = build_optical_particle(particle, config)
         optical_particle.compute_optics()
         self.particles.append(optical_particle)
         self.num_concs.append(num_conc)

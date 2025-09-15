@@ -1,6 +1,19 @@
+"""Serialization helpers for optical populations and species.
+
+Provides small helpers to convert numpy arrays to lists and to create
+serializable dictionaries for optical population outputs used by
+examples and downstream analysis.
+"""
+
 import numpy as np
 from dataclasses import asdict
-# from . import RI_fun
+try:
+    from .refractive_index import RI_fun
+except Exception:
+    # Fallback stub for documentation/testing when refractive index
+    # implementation is not present. Returns constant value array.
+    def RI_fun(wvls, val, alpha=None):
+        return np.full_like(wvls, float(val), dtype=float)
 
 
 def get_output_filename(
@@ -24,6 +37,18 @@ def arrays_to_lists(dictionary):
     return dictionary
 
 def make_population_dictionary(optical_population):
+    """Create a JSON-serializable dictionary from an OpticalPopulation.
+
+    Parameters
+    ----------
+    optical_population : OpticalPopulation
+        Instance providing optics arrays and metadata.
+
+    Returns
+    -------
+    dict
+        Dictionary of arrays and metadata suitable for JSON serialization.
+    """
     optical_pop_dict = {}
     
     optical_pop_dict['species'] = make_specs_dictionary(optical_population.species)
