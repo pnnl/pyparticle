@@ -48,3 +48,5 @@ Contributing
 
 - Open PRs from feature branches; CI and Codecov badges can be made branch-specific by appending `?branch=<your-branch>` to the badge URLs.
 - See `tests/README.md` for the deterministic test scaffold.
+  
+Note about integration tests: the repository provides a separate `tests/README.md` that documents two test modes (fast default tests and full integration tests). By default CI and the quick test command above run the fast tests only. Integration tests that exercise third-party parcel-model/solver stacks (for example, `pyrcel`'s `ParcelModel.run` which may require Assimulo/CVODE) are intentionally gated behind the developer environment; they are not required for normal development or CI runs unless you opt in and provision the developer environment described in `tests/README.md`.
