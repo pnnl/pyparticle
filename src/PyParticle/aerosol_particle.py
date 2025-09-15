@@ -267,7 +267,15 @@ class Particle:
         return trho
     
     def get_critical_supersaturation(self, T, return_D_crit=False):
-        idx_h2o, = np.where([AeroSpec.name.upper()=='H2O' for AeroSpec in self.species])
+        # find index of water species (helper idx_h2o returns integer)
+        try:
+            idx_h2o = self.idx_h2o()
+        except Exception:
+            # fallback: locate index via comprehension
+            idxs = np.where([AeroSpec.name.upper()=='H2O' for AeroSpec in self.species])[0]
+            if len(idxs) == 0:
+                raise ValueError("No H2O species found in particle")
+            idx_h2o = int(idxs[0])
         Ddry=self.get_Ddry()
         tkappa=self.get_tkappa()
         # T=self.T

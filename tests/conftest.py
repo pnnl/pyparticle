@@ -10,6 +10,12 @@ from typing import Iterator
 
 import pytest
 
+# Make 'src' importable so 'PyParticle' can be imported without install
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+_src_dir = os.path.join(_repo_root, "src")
+if os.path.isdir(_src_dir) and _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
 
 def pytest_addoption(parser):
     parser.addoption("--input", action="store", default="examples/configs/binned_lognormal.json",

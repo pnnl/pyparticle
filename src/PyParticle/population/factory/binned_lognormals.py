@@ -6,6 +6,7 @@ Build a binned lognormal population
 """
 
 from ..base import ParticlePopulation
+from ..utils import expand_compounds_for_population
 from PyParticle import make_particle
 from PyParticle.species.registry import get_species
 from .registry import register
@@ -36,6 +37,10 @@ def build(config):
     
     aero_spec_names_list = config['aero_spec_names']
     aero_spec_fracs_list = config['aero_spec_fracs']
+    # Support compound-like species names (e.g., NaCl, (NH4)2SO4)
+    aero_spec_names_list, aero_spec_fracs_list = expand_compounds_for_population(
+        aero_spec_names_list, aero_spec_fracs_list
+    )
     species_modifications = config.get('species_modifications', {})
     surface_tension = config.get('surface_tension', 0.072)
     D_is_wet = config.get('D_is_wet', False)

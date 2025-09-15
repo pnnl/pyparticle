@@ -111,35 +111,29 @@ def run():
 
     pop_cfg = cfg["population"]
     population = build_population(pop_cfg)
-    # Derive D_grid and n_D from the population configuration or discretize first mode if present
+    # Derive D_grid and n_D from the population configuration if possible. The config's
+    # GMD (geometric mean diameter) is commonly expressed in micrometers. The
+    # lognormal_mode_to_bins helper expects the geometric mean RADIUS in meters.
     try:
         modes = list(zip(pop_cfg.get("GMD", []), pop_cfg.get("GSD", []), pop_cfg.get("N", [])))
         if len(modes) > 0:
-            r0 = float(modes[0][0])
+            gmd = float(modes[0][0])
             sigma = float(modes[0][1])
             Ntot = float(modes[0][2])
-            D_grid, n_D = lognormal_mode_to_bins(r0, sigma, Ntot, n_bins=100)
+            # Interpret units: treat values > 1e-6 as micrometers
+            if gmd > 1e-6:
+                gmd_m = gmd * 1e-6
+            else:
+                gmd_m = gmd
+            r0_m = 0.5 * gmd_m
+            D_grid, n_D = lognormal_mode_to_bins(r0_m, sigma, Ntot, n_bins=100)
         else:
+            # Fallback to using particle diameters from the built population
             D_grid = np.array([population.get_particle(pid).get_Ddry() for pid in population.ids])
             n_D = np.array(population.num_concs if hasattr(population, "num_concs") else [1.0 for _ in population.ids])
     except Exception:
         D_grid = np.array([population.get_particle(pid).get_Ddry() for pid in population.ids])
         n_D = np.array(population.num_concs if hasattr(population, "num_concs") else [1.0 for _ in population.ids])
-    else:
-        population = build_population(pop_cfg)
-        # Convert population modes to D_grid,n_D using first mode if necessary
-        # Prefer using population.spec_masses / num_concs if available
-        # For now, create D_grid and n_D by discretizing the first mode in the config
-        modes = list(zip(pop_cfg.get("GMD", []), pop_cfg.get("GSD", []), pop_cfg.get("N", [])))
-        if len(modes) > 0:
-            r0 = float(modes[0][0])
-            sigma = float(modes[0][1])
-            Ntot = float(modes[0][2])
-            D_grid, n_D = lognormal_mode_to_bins(r0, sigma, Ntot, n_bins=100)
-        else:
-            # fallback: use population's particles
-            D_grid = np.array([population.get_particle(pid).get_Ddry() for pid in population.ids])
-            n_D = np.array(population.num_concs if hasattr(population, "num_concs") else [1.0 for _ in population.ids])
 
     # Compute PyParticle s_crit per particle using population.get_particle and Particle.get_critical_supersaturation
     Tval = float(T)

@@ -45,6 +45,11 @@ def run():
         rc = subprocess.call(cmd, env=env)
         sys.exit(rc)
     
+    # Ensure repo root is on sys.path so we can import tools.plot_helpers
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="examples/configs/optics_homogeneous.json")
     ap.add_argument("--rh", type=float, default=None, help="RH (fraction) to plot; default first grid value")
@@ -102,26 +107,42 @@ def run():
 
     np.random.seed(0)
 
-    # Build a D_grid and n_D from population config (use first mode of binned_lognormals)
-    if isinstance(pop_cfg, dict) and "GMD" in pop_cfg:
-        try:
-            GMD = float(pop_cfg.get("GMD")[0])
-            GSD = float(pop_cfg.get("GSD")[0])
-            Ntot = float(pop_cfg.get("N")[0])
-        except Exception:
-            GMD = 100e-9
-            GSD = 1.2
-            Ntot = 1e8
-    else:
-        GMD = 100e-9
-        GSD = 1.2
-        Ntot = 1e8
-
-    D_grid, n_D = lognormal_mode_to_bins(GMD, GSD, Ntot, n_bins=100)
+    # Build a D_grid and n_D from population config (use first mode if available).
+    try:
+        modes = list(zip(pop_cfg.get("GMD", []), pop_cfg.get("GSD", []), pop_cfg.get("N", [])))
+        if len(modes) > 0:
+            gmd = float(modes[0][0])
+            gsd = float(modes[0][1])
+            ntot = float(modes[0][2])
+            # Interpret units: if gmd > 1e-6 treat as micrometers
+            if gmd > 1e-6:
+                gmd_m = gmd * 1e-6
+            else:
+                gmd_m = gmd
+            r0_m = 0.5 * gmd_m
+            D_grid, n_D = lognormal_mode_to_bins(r0_m, gsd, ntot, n_bins=100)
+        else:
+            raise KeyError("no modes")
+    except Exception:
+        # Fallback: use particle diameters from built population
+        D_grid = np.array([p.get_Ddry() for p in pop.particles]) if hasattr(pop, "particles") else np.array([p.get_Ddry() for p in pop._particles])
+        n_D = np.ones_like(D_grid)
 
     # wavelengths in meters
     wvl_m = np.array(wvl_grid, dtype=float)
     wvl_um = wvl_m * 1e6
+
+    # Prepare wavelength-dependent refractive index from optics_cfg
+    n_550 = float(optics_cfg.get("n_550", 1.54))
+    k_550 = float(optics_cfg.get("k_550", 0.0))
+    alpha_n = float(optics_cfg.get("alpha_n", 0.0))
+    alpha_k = float(optics_cfg.get("alpha_k", 0.0))
+    # wavelengths in micrometers for scaling
+    wvl_um = wvl_m * 1e6
+    # power-law scaling around 0.55 um (550 nm)
+    ref_um = 0.55
+    n_lambda = n_550 * (wvl_um / ref_um) ** (alpha_n)
+    k_lambda = k_550 * (wvl_um / ref_um) ** (alpha_k)
 
     # Try to use PyMieScatt if available
     import importlib
@@ -144,9 +165,9 @@ def run():
                         from PyMieScatt import MieQ
                         Dnm = float(Dval * 1e9)
                         lamnm = float(lam_m * 1e9)
-                        # approximate refractive index from optics_cfg if provided
-                        n = float(optics_cfg.get("n_550", 1.54))
-                        k = float(optics_cfg.get("k_550", 0.0))
+                        # Use wavelength-dependent refractive index
+                        n = float(n_lambda[ww])
+                        k = float(k_lambda[ww])
                         m = complex(n, k)
                         out = MieQ(m, lamnm, Dnm, asDict=True, asCrossSection=False)
                         Qext = out.get("Qext", 2.0)
