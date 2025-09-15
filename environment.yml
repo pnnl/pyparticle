@@ -9,6 +9,7 @@ dependencies:
   - scipy
   - matplotlib
   - pyprojroot
+  - pyyaml
   - arviz
   # Uncomment if you want to install pytest via conda:
   # - pytest
