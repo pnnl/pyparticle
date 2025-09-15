@@ -28,6 +28,28 @@ Quick start
 pip install -e .
 ```
 
+Install from GitHub (public):
+
+```bash
+pip install git+https://github.com/lfierce2/PyParticle.git
+```
+
+Install from GitHub (private) using a personal access token (replace placeholders):
+
+```bash
+pip install git+https://<USERNAME>:<TOKEN>@github.com/lfierce2/PyParticle.git
+```
+
+Install from GitHub using SSH (requires SSH key access):
+
+```bash
+pip install git+ssh://git@github.com/lfierce2/PyParticle.git
+```
+
+Notes on private installs:
+- Use a GitHub Personal Access Token with `repo` scope for private repositories.
+- Avoid embedding long-lived tokens in scripts. Use environment variables or deploy keys when possible.
+
 2) Run tests with coverage:
 
 ```bash
