@@ -1,0 +1,23 @@
+name: pyparticle-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - pyprojroot
+  - pyyaml
+  - arviz
+  - pip:
+    - pytest
+    - pytest-cov
+    - codecov
+    - pymiescatt
+    - pyrcel
+    - PyMieScatt
+    - jupyter
+  - pytest
+  - pytest-cov
