@@ -32,7 +32,7 @@ import scipy.optimize as opt
 # from scipy.constants import R
 # import scipy.optimize as opt
 
-
+#f fixme: 
 @dataclass
 class Particle:
     """Represent an aerosol particle by species composition and masses.
@@ -84,7 +84,7 @@ class Particle:
         elif varname == 'tkappa':
             return self.get_tkappa()
         elif varname == 'critical_supersaturation' or varname == 's_c':
-            return self.get_critical_supersaturation(T, return_D_crit=False)
+            return self.get_critical_supersaturation(T, return_D_crit=False, sigma_h2o=0.072)
     
     def idx_h2o(self):
         return np.where([
@@ -266,7 +266,7 @@ class Particle:
         
         return trho
     
-    def get_critical_supersaturation(self, T, return_D_crit=False):
+    def get_critical_supersaturation(self, T, return_D_crit=False, sigma_h2o=0.072):
         # find index of water species (helper idx_h2o returns integer)
         try:
             idx_h2o = self.idx_h2o()
@@ -279,7 +279,7 @@ class Particle:
         Ddry=self.get_Ddry()
         tkappa=self.get_tkappa()
         # T=self.T
-        sigma_h2o=self.surface_tension
+        # sigma_h2o=self.get_surface_tension()
         rho_h2o=self.species[idx_h2o].density
         MW_h2o=self.species[idx_h2o].molar_mass
         
@@ -298,6 +298,7 @@ class Particle:
             return s_critical,D_critical
         else:
             return s_critical
+    
         
 # def make_particle(
 #         D, aero_spec_names, aero_spec_frac, 

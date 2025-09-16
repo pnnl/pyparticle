@@ -1,44 +1,3 @@
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-"""
-# PyParticle python package
-
-# @author: Laura Fierce
-"""
-# import os
-# import numpy as np
-# from pathlib import Path
-# ### TODO: this should be an argument for a process
-# try: # 'dev' situation
-#     laura_datapath = '/Users/fier887/OneDrive - PNNL/Code/PyParticle/datasets'
-#     if os.path.exists(laura_datapath):
-#         data_path = Path(laura_datapath)
-#     else:
-#         from pyprojroot import here
-#         data_path = here() / 'datasets'
-# except ImportError:
-#     raise FileNotFoundError('data_path not set')
-# ### 
-# from .utilities import get_number
-# # #from .utilities import Py3Wrapper
-# from .aerosol_particle import Particle, make_particle, make_particle_from_masses
-# from .aerosol_species import AerosolSpecies, retrieve_one_species
-# from .particle_population import ParticlePopulation
-
-# from .optics import make_optical_particle, make_optical_population
-# from .optics import RefractiveIndex, RI_fun
-# #from .optics import CoreShellParticle, CoreShellPopulation
-
-# from .storer import ( 
-#     arrays_to_lists, make_population_dictionary, make_specs_dictionary, 
-#     separate_ris, get_output_filename, get_sample_padding)
-
-# from . import builder
-# from .builder import monodisperse
-# # from .builder import partmc
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """PyParticle package
 
 Lightweight package providing aerosol particle, species, population, and
@@ -58,20 +17,42 @@ import numpy as np
 from pathlib import Path
 
 
-### TODO: this should be an argument for a process
-try:  # 'dev' situation
-    laura_datapath = '/Users/fier887/OneDrive - PNNL/Code/PyParticle/datasets'
-    if os.path.exists(laura_datapath):
-        data_path = Path(laura_datapath)
-    else:
-        from pyprojroot import here
-        data_path = here() / 'datasets'
-except ImportError:
-    raise FileNotFoundError('data_path not set')
+def _get_data_path():
+    """Resolve the package datasets path.
+
+    Resolution order:
+    1. Environment override via PYPARTICLE_DATA_PATH (absolute path to datasets dir).
+    2. Package-local datasets directory (based on this file's location).
+
+    This is robust when PyParticle is imported from other packages: it will
+    locate the datasets bundled with this package rather than using the
+    current working directory.
+    """
+    env = os.getenv("PYPARTICLE_DATA_PATH")
+    if env:
+        return Path(env)
+
+    # Default: prefer datasets directory next to this package's source files
+    pkg_root = Path(__file__).resolve().parent
+    candidate = pkg_root / "datasets"
+    if candidate.exists():
+        return candidate
+
+    # Otherwise, look for a top-level 'datasets' directory in ancestor folders
+    for parent in pkg_root.parents:
+        cand = parent / "datasets"
+        if cand.exists():
+            return cand
+
+    # Final fallback: use CWD/datasets to preserve backwards compatibility
+    return Path.cwd() / "datasets"
+
+
+# Exported path for modules that expect a pathlib-like object.
+data_path = _get_data_path()
 
 # Public helpers
 from .utilities import get_number
-# #from .utilities import Py3Wrapper
 
 from .aerosol_particle import Particle, make_particle, make_particle_from_masses
 

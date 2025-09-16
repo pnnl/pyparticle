@@ -217,7 +217,6 @@ def expand_compounds_for_population(
 
     out_names_list: List[List[str]] = []
     out_fracs_list: List[List[float]] = []
-
     for names, fracs in zip(names_list, fracs_list):
         if len(names) != len(fracs):
             raise ValueError("Each names sublist must match length of fracs sublist")

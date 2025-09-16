@@ -38,15 +38,14 @@ def build(config):
     aero_spec_names_list = config['aero_spec_names']
     aero_spec_fracs_list = config['aero_spec_fracs']
     # Support compound-like species names (e.g., NaCl, (NH4)2SO4)
-    aero_spec_names_list, aero_spec_fracs_list = expand_compounds_for_population(
-        aero_spec_names_list, aero_spec_fracs_list
-    )
+    # aero_spec_names_list, aero_spec_fracs_list = expand_compounds_for_population(
+    #     aero_spec_names_list, aero_spec_fracs_list
+    # )
     species_modifications = config.get('species_modifications', {})
     surface_tension = config.get('surface_tension', 0.072)
     D_is_wet = config.get('D_is_wet', False)
     specdata_path = config.get('specdata_path', None)
     
-    print(D_is_wet)
     # Build master species list for the *population*, preserving order
     pop_species_names = []
     for mode_names in aero_spec_names_list:
