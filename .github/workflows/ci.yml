@@ -55,3 +55,33 @@ jobs:
           files: coverage.xml
           flags: unittests
           fail_ci_if_error: false
+
+  conda-tests:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-activate-base: false
+          use-mamba: true
+
+      - name: Create pyparticle environment from environment.yml
+        run: |
+          mamba env create -f environment.yml -n pyparticle
+
+      - name: Install package into conda env
+        run: |
+          conda run -n pyparticle python -m pip install --upgrade pip
+          conda run -n pyparticle python -m pip install -e .
+
+      - name: Run unit tests inside pyparticle env
+        env:
+          MPLBACKEND: Agg
+          PYPARTICLE_RUN_EXAMPLES: "0"
+          PYTEST_SEED: "1337"
+        run: |
+          conda run -n pyparticle pytest -q tests/unit -q
