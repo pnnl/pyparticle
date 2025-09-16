@@ -209,7 +209,16 @@ class Particle:
     
     def get_Dwet(
             self,RH=None,T=None,
-            sigma_h2o=0.072, rho_h2o=1000., MW_h2o=18e-3):
+            sigma_sa=None, # more general than sigma_h2o
+            sigma_h2o=None, # todo: remove sigma_h2o
+            rho_h2o=1000., MW_h2o=18e-3):
+        
+        if sigma_sa == None: 
+            if sigma_h2o == None:
+                sigma_sa = self.get_surface_tension()
+            else:
+                sigma_sa = sigma_h2o
+                
         if RH==None:
             vol_wet = self.get_vol_tot()
             Dwet = (vol_wet*6./np.pi)**(1./3.)
@@ -258,7 +267,11 @@ class Particle:
         shell_tkappa = np.sum(vks[idx_not_h2o_or_bc]*spec_kappas[idx_not_h2o_or_bc])/np.sum(vks[idx_not_h2o_or_bc])
         return shell_tkappa
     
-    def get_trho(self):
+    def get_surface_tension(self):
+        raise Warning("Surface tension not implemented; returning default 0.072 N/m")
+        return 0.072 # N/m
+
+    def get_trho(self): 
         # compute effective density
         mks = self.masses
         vks = self.get_vks()
@@ -266,7 +279,7 @@ class Particle:
         
         return trho
     
-    def get_critical_supersaturation(self, T, return_D_crit=False, sigma_h2o=0.072):
+    def get_critical_supersaturation(self, T, return_D_crit=False):
         # find index of water species (helper idx_h2o returns integer)
         try:
             idx_h2o = self.idx_h2o()
@@ -278,12 +291,13 @@ class Particle:
             idx_h2o = int(idxs[0])
         Ddry=self.get_Ddry()
         tkappa=self.get_tkappa()
+        sigma_sa = self.get_surface_tension()
         # T=self.T
         # sigma_h2o=self.get_surface_tension()
         rho_h2o=self.species[idx_h2o].density
         MW_h2o=self.species[idx_h2o].molar_mass
         
-        A = 4.*sigma_h2o*MW_h2o/(R*T*rho_h2o);
+        A = 4.*sigma_sa*MW_h2o/(R*T*rho_h2o);
         
         if tkappa>0.2 and not return_D_crit:
             s_critical = (np.exp((4.*A**3./(27.*Ddry**3.*tkappa))**(0.5))-1.)*100.
