@@ -150,7 +150,7 @@ def prepare_dNdlnD(population, var_cfg: dict) -> PlotDat:
 
 def prepare_Nccn(population, var_cfg: dict) -> PlotDat:
     cfg = dict(var_cfg or {})
-    s_eval = np.asarray(cfg.get("s_eval", np.logspace(-2, 1. 50)))
+    s_eval = np.asarray(cfg.get("s_eval", np.linspace(0.01, 1.0, 50)))
     vardat = compute_Nccn(population, s_eval, cfg.get("T", 298.15))
     x = np.asarray(vardat["s"])  # fractional supersaturation
     y = np.asarray(vardat["Nccn"])
@@ -159,7 +159,7 @@ def prepare_Nccn(population, var_cfg: dict) -> PlotDat:
 
 def prepare_frac_ccn(population, var_cfg: dict) -> PlotDat:
     cfg = dict(var_cfg or {})
-    s_eval = np.asarray(cfg.get("s_eval", np.logspace(-2, 1. 50)))
+    s_eval = np.asarray(cfg.get("s_eval", np.linspace(0.01, 1.0, 50)))
     vardat = compute_Nccn(population, s_eval, cfg.get("T", 298.15))
     total = np.sum(population.num_concs)
     y = np.asarray(vardat["Nccn"]) if total == 0 else np.asarray(vardat["Nccn"]) / float(total)
@@ -247,7 +247,5 @@ def build_default_var_cfg(varname: str):
             "rh_select": None,
             "wvl_select": None,
         }
-    elif varname == "Ntot":
-        return {}
-    else:
+    
         raise NotImplementedError(f"varname={varname} not yet implemented")
