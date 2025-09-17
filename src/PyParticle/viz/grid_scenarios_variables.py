@@ -76,7 +76,8 @@ def make_grid_scenarios_variables_same_timestep(
 
     fig, axarr = make_grid(rows, cols, figsize=figsize, layout_spec=layout_spec,
                            hspace=(0.3 if hspace is None else hspace),
-                           wspace=(0.3 if wspace is None else wspace))
+                           wspace=(0.3 if wspace is None else wspace),
+                           sharex=True, sharey=False)
 
     # normalize axarr to NumPy array shape (rows, cols)
     axarr = np.asarray(axarr)

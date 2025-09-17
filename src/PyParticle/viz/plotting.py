@@ -11,7 +11,7 @@ from typing import Sequence, Optional, Tuple, Union
 import matplotlib.axes
 import matplotlib.pyplot as plt
 from ..population.base import ParticlePopulation  
-from ..analysis import compute_variable as get_variable, build_default_var_cfg
+from ..analysis import compute_variable, build_default_var_cfg
 
 # fixme: link directly with PyParticle populations
 
@@ -64,9 +64,10 @@ def plot_lines(varname,
         # merge with defaults
         for k, v in default_var_cfg.items():
             var_cfg.setdefault(k, v)
-    x, y, labs = get_variable(particle_population, varname, var_cfg, return_plotdat=True)
-    print(x,y,labs)
+    x, y, labs, xscale, yscale = compute_variable(particle_population, varname, var_cfg, return_plotdat=True)
     line, = ax.plot(x, y, color=color, linestyle=linestyle,
                     linewidth=linewidth, marker=marker)
+    ax.set_xscale(xscale)
+    ax.set_yscale(yscale)
     
     return line, labs

@@ -163,7 +163,10 @@ def _select_index_from_grid(grid: Sequence[float], selector: Any) -> int:
     return int(idx)
 
 
-def compute_variable(particle_population, varname: str, var_cfg: Dict[str, Any], return_plotdat: bool = False):
+def compute_variable(particle_population, 
+                     varname: str, 
+                     var_cfg: Dict[str, Any], 
+                     return_plotdat: bool = False):
     """High-level variable accessor used by plotting helpers.
 
     When plotting optical coefficients (2-D arrays) this function will select
@@ -171,6 +174,8 @@ def compute_variable(particle_population, varname: str, var_cfg: Dict[str, Any],
     controlled with `rh_select` or `wvl_select` in `var_cfg`. If not present
     the first grid value is used.
     """
+    xscale = 'linear'
+    yscale = 'linear'
     if varname == "dNdlnD":
         diam_scale = var_cfg.get("diam_scale", "log")
         vardat = compute_dNdlnD(
@@ -186,12 +191,14 @@ def compute_variable(particle_population, varname: str, var_cfg: Dict[str, Any],
         y = vardat["dNdlnD"]
         x = vardat["D"]
         labs = ["D (m)", "dN/dlnD (1/m$^3$)"]
+        xscale = diam_scale
 
     elif varname == "Nccn":
         vardat = compute_Nccn(particle_population, var_cfg["s_eval"], var_cfg.get("T", 298.15))
         y = vardat["Nccn"]
         x = np.asarray(var_cfg["s_eval"])
         labs = ["s (%)", "Nccn (1/m$^3$)"]
+        xscale = var_cfg.get("xscale", "log")
 
     elif varname == "frac_ccn":
         vardat = compute_Nccn(particle_population, var_cfg["s_eval"], var_cfg.get("T", 298.15))
@@ -201,7 +208,9 @@ def compute_variable(particle_population, varname: str, var_cfg: Dict[str, Any],
         y = vardat["Nccn"]
         x = np.asarray(var_cfg["s_eval"])
         labs = ["s (%)", "fraction CCN"]
-
+        xscale = var_cfg.get("xscale", "log")
+    
+    # fixme: this is a mess
     elif varname in ["b_abs", "b_scat", "b_ext", "total_abs", "total_scat", "total_ext"]:
         coeff_key = varname
         wvls = np.asarray(var_cfg.get("wvls", [550e-9]))
@@ -220,11 +229,11 @@ def compute_variable(particle_population, varname: str, var_cfg: Dict[str, Any],
 
         # human-friendly axis label
         if varname in ["b_abs", "total_abs"]:
-            var_label = "abs. coeff."
+            var_label = "abs. coeff. [1/m]"
         elif varname in ["b_scat", "total_scat"]:
-            var_label = "scat. coeff."
+            var_label = "scat. coeff. [1/m]"
         else:
-            var_label = "ext. coeff."
+            var_label = "ext. coeff. [1/m]"
 
         # choose plotting axis: vs wavelength or vs RH
         if var_cfg.get("vs_rh", False):
@@ -260,7 +269,7 @@ def compute_variable(particle_population, varname: str, var_cfg: Dict[str, Any],
         raise NotImplementedError(f"varname={varname} not yet implemented")
 
     if return_plotdat:
-        return x, y, labs
+        return x, y, labs, xscale, yscale
     else:
         # return the raw data structure when not requested for plotting
         return locals().get("vardat", None)
