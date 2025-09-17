@@ -23,7 +23,7 @@ from .plotting import plot_lines
 from .formatting import format_axes, add_legend
 from ..population.builder import build_population
 from ..population.base import ParticlePopulation
-from ..analysis import build_default_var_cfg
+from .data_prep import build_default_var_cfg
 
 
 def _load_config_from_path(p: str) -> dict:

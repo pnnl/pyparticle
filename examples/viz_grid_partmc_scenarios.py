@@ -14,7 +14,10 @@ from pathlib import Path
 import json
 
 from PyParticle.population import build_population
-from PyParticle.viz import make_grid_scenarios_variables_same_timestep
+from PyParticle.viz import data_prep
+from PyParticle.viz.data_prep import build_default_var_cfg
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def main():
@@ -41,16 +44,50 @@ def main():
     variables = ["dNdlnD", "frac_ccn"]
     timestep = base_cfg.get("timestep", 0)
 
-    fig, axarr = make_grid_scenarios_variables_same_timestep(
-        scenarios,
-        variables,
-        timestep,
-        figsize=(10, 6),
-        hspace=0.35,
-        wspace=0.25,
-    )
+    # Build populations and precompute plot-ready data using data_prep.
+    pops = []
+    for cfg in scenarios:
+        cfg_local = dict(cfg)
+        cfg_local["timestep"] = timestep
+        pop = build_population(cfg_local)
+        pops.append((cfg_local, pop))
+
+    nrows = len(pops)
+    ncols = len(variables)
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(4 * ncols, 3 * nrows))
+    if nrows == 1 and ncols == 1:
+        axes = np.array([[axes]])
+    elif nrows == 1:
+        axes = np.array([axes])
+    elif ncols == 1:
+        axes = np.array([[a] for a in axes])
+
+    for i, (cfg_local, pop) in enumerate(pops):
+        for j, var in enumerate(variables):
+            ax = axes[i, j]
+            # merge defaults
+            var_cfg = build_default_var_cfg(var)
+            # allow variable-specific overrides if desired (not used here)
+            if var == "dNdlnD":
+                dat = data_prep.prepare_dNdlnD(pop, var_cfg)
+            elif var == "frac_ccn":
+                dat = data_prep.prepare_frac_ccn(pop, var_cfg)
+            else:
+                dat = data_prep.prepare_Nccn(pop, var_cfg)
+
+            x, y, labs = dat["x"], dat["y"], dat["labs"]
+            if x is None:
+                ax.bar([0], y)
+            else:
+                ax.plot(x, y)
+            ax.set_xscale(dat.get("xscale", "linear"))
+            ax.set_yscale(dat.get("yscale", "linear"))
+            ax.set_xlabel(labs[0])
+            if j == 0:
+                ax.set_ylabel(labs[1])
 
     out = repo_root / "examples" / "out_grid_partmc_scenarios.png"
+    fig.tight_layout()
     fig.savefig(out, dpi=200, bbox_inches="tight")
     print("Wrote:", out)
 
