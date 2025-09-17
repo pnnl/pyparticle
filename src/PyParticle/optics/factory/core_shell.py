@@ -119,6 +119,32 @@ class CoreShellParticle(OpticalParticle):
                     self.Csca[rr, ww] = Csca
                     self.Cabs[rr, ww] = Cabs
                     self.g[rr, ww]    = g
+    def get_cross_sections(self):
+        return {
+            "Cabs": self.Cabs,
+            "Csca": self.Csca,
+            "Cext": self.Cext,
+            "g": self.g,
+        }
+    
+    def get_refractive_indices(self):
+        return {"ri": self.ri}
+    
+    def get_cross_section(self, optics_type, rh_idx=None, wvl_idx=None):
+        key = str(optics_type).lower()
+        if key in ("b_abs", "absorption", "abs"):
+            arr = self.Cabs
+        elif key in ("b_scat", "scattering", "scat"):
+            arr = self.Csca
+        elif key in ("b_ext", "extinction", "ext"):
+            arr = self.Cext
+        elif key in ("g", "asymmetry"):
+            arr = self.g
+        else:
+            raise ValueError(f"Unknown optics_type: {optics_type}")
+        if rh_idx is not None and wvl_idx is not None:
+            return arr[rh_idx, wvl_idx]
+        return arr
 
 def build(base_particle, config):
     return CoreShellParticle(base_particle, config)

@@ -1,4 +1,4 @@
-# viz — Flexible Plotting Package
+# PyParticle/viz — Flexible Plotting Package
 
 This small package provides a modular framework for creating figures in
 Python using `matplotlib`. The goal is to separate layout, plotting,
