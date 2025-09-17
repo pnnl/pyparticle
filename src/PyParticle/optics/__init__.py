@@ -1,72 +1,12 @@
-# # from .factory import create_optical_particle, MORPHOLOGY_REGISTRY
-# from .base import OpticalParticle
-# from .utils import get_cross_section_array_from_population, OPTICS_TYPE_MAP
-# from .population import OpticalPopulation
-# from .refractive_index import RefractiveIndex, RI_fun
+"""
+Optics package public API.
 
-# def make_optical_particle(
-#     particle,
-#     rh_grid,
-#     wvl_grid,
-#     morphology="core-shell",
-#     compute_optics=True,
-#     temp=293.15,
-#     specdata_path=None,
-#     species_modifications=None,
-#     **kwargs
-# ):
-#     """
-#     Factory to create and optionally compute optics for an optical particle.
-#     """
-#     optical_particle = create_optical_particle(
-#         morphology,
-#         particle.species,
-#         particle.masses,
-#         rh_grid=rh_grid,
-#         wvl_grid=wvl_grid,
-#         temp=temp,
-#         specdata_path=specdata_path,
-#         species_modifications=species_modifications,
-#         **kwargs
-#     )
-#     if compute_optics:
-#         optical_particle.compute_optics()
-#     return optical_particle
+Expose a minimal set of builder functions and types at package level so
+other modules can import them via `from PyParticle.optics import ...`.
+"""
 
-# def make_optical_population(
-#     particle_population,
-#     rh_grid,
-#     wvl_grid,
-#     morphology="core-shell",
-#     compute_optics=True,
-#     temp=293.15,
-#     specdata_path=None,
-#     species_modifications=None,
-#     **kwargs
-# ):
-#     """
-#     Factory to create an OpticalPopulation from a particle population object
-#     (which is expected to have .particles and .num_concs attributes).
-#     """
-#     optical_population = OpticalPopulation(rh_grid, wvl_grid)
-    
-#     part_ids = getattr(particle_population, "ids", particle_population)
-#     num_concs = getattr(particle_population, "num_concs", None)
-    
-#     for part_id, num_conc in zip(part_ids, num_concs):
-#         particle = particle_population.get_particle(part_id)
-#         optical_particle = make_optical_particle(
-#             particle,
-#             rh_grid,
-#             wvl_grid,
-#             morphology=morphology,
-#             compute_optics=compute_optics,
-#             temp=temp,
-#             specdata_path=specdata_path,
-#             species_modifications=species_modifications,
-#             **kwargs
-#         )
-#         optical_population.particles.append(optical_particle)
-#         optical_population.num_concs.append(num_conc)
-#         optical_population.ids.append(getattr(particle, "id", len(optical_population.ids)))
-#     return optical_population
+from .builder import build_optical_particle, build_optical_population
+from .base import OpticalPopulation
+
+__all__ = ["build_optical_particle", "build_optical_population", "OpticalPopulation"]
+

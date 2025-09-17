@@ -20,6 +20,7 @@ from typing import Tuple
 import numpy as np
 from scipy.constants import R
 import scipy.optimize as opt
+import warnings
 
 
 # from .aerosol_species import AerosolSpecies
@@ -268,7 +269,7 @@ class Particle:
         return shell_tkappa
     
     def get_surface_tension(self):
-        raise Warning("Surface tension not implemented; returning default 0.072 N/m")
+        warnings.warn("Surface tension not implemented; returning default 0.072 N/m", UserWarning)
         return 0.072 # N/m
 
     def get_trho(self): 

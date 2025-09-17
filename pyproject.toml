@@ -2,63 +2,30 @@
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
-markers = [
-  "unit: fast unit tests",
-  "examples: example discovery or execution",
-  "integration: slower integration tests",
-]
-filterwarnings = [
-  "ignore::DeprecationWarning",
-]
-
-[tool.coverage.run]
-branch = true
-source = ["PyParticle", "src/PyParticle"]
-omit = [
-  "tests/*",
-  "setup.py",
-]
-
-[tool.coverage.report]
-show_missing = true
-skip_covered = false
-fail_under = 0
-
 [project]
 name = "pyparticle"
 version = "0.1.0"
-description = "Describing and analyzing aerosol particles and particle populations"
 readme = "README.md"
-requires-python = ">=3.9"
+description = "Describing and analyzing aerosol particles and particle populations"
 license = { text = "MIT" }
 authors = [ { name = "Laura Fierce" } ]
-classifiers = [
-  "Development Status :: 4 - Beta",
-  "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
-  "Operating System :: OS Independent",
-]
-keywords = ["aerosol", "particles", "optics", "population"]
+requires-python = ">=3.9"
 dependencies = [
-  "numpy>=1.24",
-  "scipy>=1.10",
-  "PyYAML>=6.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=7.0",
-  "PyMieScatt>=1.14",
-  "pyrcel>=0.4",
-  "matplotlib",
+    "pytest>=7.0",
+    "PyMieScatt>=1.14",
+    "pyrcel>=0.4",
+    "matplotlib",
 ]
 optics = ["PyMieScatt>=1.14"]
 integration = ["pyrcel>=0.4"]
+partmc = ["netCDF4"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
