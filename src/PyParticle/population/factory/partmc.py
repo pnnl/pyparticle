@@ -79,7 +79,6 @@ if _HAS_NETCDF4:
 
 
     def get_ncfile(partmc_output_dir, timestep, repeat):
-        print(partmc_output_dir)
         for root, dirs, files in os.walk(partmc_output_dir):
             f = files[0]
         if f.startswith('urban_plume_wc_'):

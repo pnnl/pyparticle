@@ -77,7 +77,7 @@ if _HAS_NETCDF4:
         else:
             lognormals_cfg['GMD'] = GMDs #dgn_a[:,timestep]
 
-        print(lognormals_cfg['GMD'])
+    # debug: GMDs computed above
         # fixme: limited species for now
         lognormals_cfg['aero_spec_names'] = [['SO4','OC','H2O'],['SO4','OC','H2O'],['SO4','OC','H2O'],['SO4','OC','H2O']]
         # fixme: mam4 species not totally aligned
