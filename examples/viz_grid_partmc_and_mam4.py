@@ -1,25 +1,13 @@
-"""Example: Compare PartMC vs MAM4 populations across multiple scenarios (no pandas).
+"""Example: Compare PartMC vs MAM4 populations across scenarios using viz grid helpers.
 
-This refactored example intentionally avoids any DataFrame/pandas layer and instead
-uses the existing ``viz.data_prep`` + ``viz.plotting.plot_lines`` APIs directly.
+Refactored to use `viz.grids.make_grid_scenarios_models` for declarative layout:
+    * Rows = scenario config dicts
+    * Columns = variable names (e.g. dNdlnD, frac_ccn)
+    * Multiple model populations (PartMC + MAM4) per axis with shared scenario color
 
-Workflow:
- 1. Load comparison config JSON (``examples/configs/partmc_mam4_example.json``).
- 2. For each scenario id build:
-            - PartMC population (``type: partmc``) pointing at the scenario directory.
-            - MAM4 population (via ``population.factory.mam4``) from a NetCDF file.
- 3. Create a grid (rows = scenarios, columns = selected variables) and for each
-        cell call ``plot_lines`` once with both populations. Scenario color is shared
-        across both origins; origins are distinguished by linestyle (PartMC='-', MAM4='--').
-
-Grid semantics:
-    rows    -> scenario id
-    columns -> variable name (e.g., dNdlnD, frac_ccn)
-    lines   -> model origin (PartMC vs MAM4)
-
-Output written to: ``examples/out_grid_partmc_mam4.png``
-
-If your MAM4 filename differs, adjust `_build_mam4_cfg` accordingly.
+No mock data: raises if required PartMC or MAM4 files are missing.
+Surface tension warning from particle hygroscopic growth is suppressed explicitly.
+Output: `examples/out_grid_partmc_mam4.png`
 """
 from __future__ import annotations
 
@@ -30,11 +18,11 @@ from typing import Dict, Any, List, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 
-from PyParticle.population import build_population  # PartMC factory (PartMC)
-from PyParticle.viz.plotting import plot_lines
-from PyParticle.viz.layout import make_grid
-from PyParticle.viz.formatting import format_axes, add_legend
-from PyParticle.viz.stylemap import map_colors_for_scenarios, map_linestyles_for_series
+import warnings
+from PyParticle.population import build_population
+from PyParticle.analysis import compute_variable  # Demonstration (not strictly needed in grid path)
+from PyParticle.viz.grids import make_grid_scenarios_models
+from PyParticle.viz.stylemap import map_linestyles_for_series  # if needed for custom legend
 
 
 def _build_partmc_cfg(base_cfg: Dict[str, Any], scenario_id: str, partmc_root: Path) -> Dict[str, Any]:
@@ -54,27 +42,23 @@ def _build_mam4_cfg(mam4_defaults: Dict[str, Any], scenario_id: str, mam4_root: 
     return cfg
 
 
-def _try_build_partmc(cfg: Dict[str, Any]) -> Any:
-    run_dir = Path(cfg["partmc_dir"]) if "partmc_dir" in cfg else None
+def _build_partmc_population(cfg: Dict[str, Any]):
     pop = build_population(cfg)
-    pop.label = run_dir.name
-    pop.origin = "partmc"
+    pop.origin = "PartMC"
     return pop
 
-def _try_build_mam4(cfg: Dict[str, Any]) -> Any:
+def _build_mam4_population(cfg: Dict[str, Any]):
     from PyParticle.population.factory.mam4 import build as build_mam4
-    out_file = Path(cfg.get("output_filename", ""))
     pop = build_mam4(cfg)
-    pop.label = out_file.parent.name or "mam4"
-    pop.origin = "mam4"
+    pop.origin = "MAM4"
     return pop
 
 def _variable_varcfg(varname: str, overrides: Dict[str, Any] | None) -> Dict[str, Any]:
     """Return a var_cfg dict for a variable applying optional overrides."""
     base_defaults = {
         "dNdlnD": {"wetsize": True, "N_bins": 40, "D_min": 10e-9, "D_max": 2e-6},
-        "frac_ccn": {"s_eval": np.linspace(5e-4, 0.02, 40)},
-        "Nccn": {"s_eval": np.linspace(5e-4, 0.02, 40)},
+        "frac_ccn": {"s_eval": np.logspace(-2, 1, 40)},
+        "Nccn": {"s_eval": np.logspace(-2, 1, 40)},
     }.get(varname, {})
     cfg = dict(base_defaults)
     if overrides:
@@ -105,55 +89,68 @@ def main():
     mam4_defaults = cfg_all.get("mam4_defaults", {})
     mam4_defaults.setdefault("timestep", timestep)
 
-    variables = cfg_all.get("variables", ["dNdlnD", "frac_ccn"])  # default two variables
+    variables = cfg_all.get("variables", ["dNdlnD", "frac_ccn"])  # default two variables (optics use b_ext/b_abs/b_scat)
 
     if not scenario_ids:
         raise SystemExit("No scenarios specified in config.")
 
-    # Build populations for each scenario (store tuples so we only build once per row)
-    built: List[Tuple[str, Any, Any]] = []  # (scenario_id, partmc_pop, mam4_pop)
+    # Build list of scenario config dicts for grid helper
+    scenario_cfgs: List[dict] = []
     for sid in scenario_ids:
-        partmc_pop = _try_build_partmc(_build_partmc_cfg(partmc_base, sid, partmc_root))
-        mam4_pop = _try_build_mam4(_build_mam4_cfg(mam4_defaults, sid, mam4_root))
-        built.append((sid, partmc_pop, mam4_pop))
+        partmc_cfg = _build_partmc_cfg(partmc_base, sid, partmc_root)
+        mam4_cfg = _build_mam4_cfg(mam4_defaults, sid, mam4_root)
+        # Pre-flight existence checks (no mock):
+        if not Path(partmc_cfg["partmc_dir"]).exists():
+            raise FileNotFoundError(f"Missing PartMC directory: {partmc_cfg['partmc_dir']}")
+        if not Path(mam4_cfg["output_filename"]).exists():
+            raise FileNotFoundError(f"Missing MAM4 file: {mam4_cfg['output_filename']}")
+        # Fuse configs by namespacing keys for builders (builders only use relevant keys)
+        scenario_cfgs.append({**partmc_cfg, **mam4_cfg})
 
-    nrows = len(built)
-    ncols = len(variables)
-    fig, axes = make_grid(nrows, ncols, figsize=(4 * ncols, 3 * nrows))
+    # Variable-specific overrides mapping
+    overrides_map = cfg_all.get("var_cfg_overrides", {}) or {}
+    # Leverage dispatcher defaults; only pass explicit overrides when present
+    var_cfg_mapping = {v: (overrides_map.get(v) or {}) for v in variables}
 
-    # Styling maps (deterministic)
-    scenario_colors = map_colors_for_scenarios([sid for sid, _, _ in built])
-    origin_linestyles = map_linestyles_for_series(["PartMC", "MAM4"])  # e.g., {'PartMC': '-', 'MAM4': '--'}
+    # Suppress surface tension warning explicitly
+    warnings.filterwarnings(
+        "ignore",
+        message="Surface tension not implemented; returning default",
+        category=UserWarning,
+        module="PyParticle.aerosol_particle",
+    )
 
-    for irow, (sid, partmc_pop, mam4_pop) in enumerate(built):
-        for jcol, varname in enumerate(variables):
-            ax = axes[irow, jcol]
-            var_overrides = (cfg_all.get("var_cfg_overrides", {}) or {}).get(varname, {})
-            var_cfg = _variable_varcfg(varname, var_overrides)
+    def partmc_builder(cfg):
+        # Extract only PartMC-relevant keys
+        part_cfg = {k: v for k, v in cfg.items() if k in partmc_base or k in ("partmc_dir",)}
+        return _build_partmc_population(part_cfg)
 
-            # scenario color applied to both origins; linestyle distinguishes origin
-            color = scenario_colors[sid]
-            linestyles = [origin_linestyles.get("PartMC", "-"), origin_linestyles.get("MAM4", "--")]
-            # plot both populations in one call
-            line, labs = plot_lines(varname, (partmc_pop, mam4_pop), var_cfg=var_cfg, ax=ax,
-                                    colors=[color, color], linestyles=linestyles)
+    def mam4_builder(cfg):
+        mam4_keys = set(mam4_defaults.keys()) | {"output_filename", "timestep"}
+        mam_cfg = {k: v for k, v in cfg.items() if k in mam4_keys}
+        return _build_mam4_population(mam_cfg)
 
-            xlabel = labs[0] if isinstance(labs, (list, tuple)) and labs else None
-            ylabel = labs[1] if isinstance(labs, (list, tuple)) and len(labs) > 1 else None
-            title = f"{sid} – {varname}"
-            format_axes(ax, xlabel=xlabel, ylabel=ylabel, title=title, grid=False)
-            # legend: add only once per row (rightmost cell) or every cell? choose once per row last column
-            if jcol == ncols - 1:
-                # Manually create legend entries for origins
-                from matplotlib.lines import Line2D
-                legend_lines = [Line2D([0], [0], color=color, linestyle=origin_linestyles.get("PartMC", "-"), label="PartMC"),
-                                Line2D([0], [0], color=color, linestyle=origin_linestyles.get("MAM4", "--"), label="MAM4")]
-                ax.legend(handles=legend_lines, fontsize=8, loc="upper right")
+    fig, axes = make_grid_scenarios_models(
+        scenario_cfgs,
+        variables,
+        model_cfg_builders=[partmc_builder, mam4_builder],
+        var_cfg=var_cfg_mapping,
+        figsize=(4 * len(variables), 3 * len(scenario_cfgs)),
+    )
 
-    out = repo_root / "examples" / "out_grid_partmc_mam4.png"
+    fig.suptitle("PartMC vs MAM4 scenario comparison")
     fig.tight_layout()
-    fig.savefig(out, dpi=175)
-    print("Wrote:", out)
+    out = repo_root / "examples" / "out_grid_partmc_mam4.png"
+    fig.savefig(out, dpi=180)
+    print(f"Wrote: {out}")
+
+    # Demonstrate direct variable computation (first scenario, PartMC population) for orientation
+    try:
+        demo_pop = partmc_builder(scenario_cfgs[0])
+        demo_sd = compute_variable(demo_pop, "dNdlnD", {"N_bins": 20})
+        print("Demo size distribution keys:", demo_sd.keys())
+    except Exception as e:
+        print("Demo compute_variable failed (non-fatal):", e)
 
 
 if __name__ == "__main__":

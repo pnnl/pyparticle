@@ -11,121 +11,69 @@ numerical behavior while providing a clearer API to the viz layer.
 from __future__ import annotations
 
 from typing import Dict, Any
+import warnings
 import numpy as np
-from ..optics.builder import build_optical_population
+from ..analysis import compute_variable as _compute_variable, list_variables as _list_variables  # Dispatcher
+
+# NOTE: Legacy direct compute_* functions retained temporarily for backward compatibility
+# but now emit DeprecationWarning and delegate to analysis dispatcher-based
+# implementations. They will be removed in a future minor release.
 
 PlotDat = Dict[str, Any]
 
 
-# --- Core computation functions (moved from analysis.py) -----------------
-def compute_particle_variable(particle_population, varname: str, var_cfg: Dict[str, Any], return_plotdat: bool = False):
-    particles = [particle_population.get_particle(part_id) for part_id in particle_population.ids]
-    if varname in ('D', 'Dwet', 'wet_diameter', 'diameter'):
-        x = [particle.get_Dwet() for particle in particles]
-        lab = 'diameter [m]'
-    elif varname in ('Ddry', 'dry_diameter'):
-        x = [particle.get_Ddry() for particle in particles]
-        lab = 'dry diameter [m]'
-    elif varname in ('tkappa', 'kappa'):
-        x = [particle.get_tkappa() for particle in particles]
-        lab = 'hygroscopicity parameter, $\\kappa$'
-    else:
-        raise NotImplementedError(f"varname={varname} not yet implemented")
-    if return_plotdat:
-        return x, lab
-    else:
-        return x
+############################
+# Deprecated direct compute #
+############################
+
+def _deprecated(msg: str):
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
 
 
-def compute_dNdlnD(
-    particle_population,
-    wetsize: bool = True,
-    normalize: bool = False,
-    method: str = "hist",
-    N_bins: int = 30,
-    D_min: float = 1e-9,
-    D_max: float = 1e-4,
-    diam_scale: str = "log",
-) -> Dict[str, np.ndarray]:
-    import scipy.stats  # local import keeps top-level import cheap
-
-    if diam_scale != "log":
-        raise NotImplementedError(f"diam_scale={diam_scale} not implemented")
-
-    edges = np.logspace(np.log10(D_min), np.log10(D_max), N_bins + 1)
-
-    if wetsize:
-        Ds = compute_particle_variable(particle_population, 'Dwet', {}, return_plotdat=False)
-    else:
-        Ds = compute_particle_variable(particle_population, 'Ddry', {}, return_plotdat=False)
-
-    weights = np.asarray(particle_population.num_concs, dtype=float)
-
-    if normalize and weights.sum() > 0:
-        weights = weights / weights.sum()
-
-    if method == "hist":
-        hist, _ = np.histogram(Ds, bins=edges, weights=weights)
-        dln = np.log(edges[1:]) - np.log(edges[:-1])
-        with np.errstate(divide="ignore", invalid="ignore"):
-            dNdlnD = np.where(dln > 0, hist / dln, 0.0)
-    elif method == "kde":
-        logD = np.log(Ds)
-        kde = scipy.stats.gaussian_kde(logD, weights=weights, bw_method="scott")
-        centers = np.sqrt(edges[:-1] * edges[1:])
-        dNdlnD = kde.evaluate(np.log(centers))
-    else:
-        raise NotImplementedError(f"method={method} not implemented")
-
-    centers = np.sqrt(edges[:-1] * edges[1:])
-    return {"D": centers, "dNdlnD": dNdlnD}
+def compute_dNdlnD(*args, **kwargs):  # pragma: no cover - legacy shim
+    _deprecated("viz.data_prep.compute_dNdlnD is deprecated; use analysis.compute_variable('dNdlnD', cfg)")
+    population = args[0]
+    cfg = dict(
+        wetsize=kwargs.get("wetsize", True),
+        normalize=kwargs.get("normalize", False),
+        method=kwargs.get("method", "hist"),
+        N_bins=kwargs.get("N_bins", 80),
+        D_min=kwargs.get("D_min", 1e-9),
+        D_max=kwargs.get("D_max", 2e-6),
+        diam_scale=kwargs.get("diam_scale", "log"),
+    )
+    return _compute_variable(population, "dNdlnD", cfg)
 
 
-def compute_Nccn(particle_population, s_eval: np.ndarray, T: float) -> Dict[str, np.ndarray]:
-    s_eval = np.asarray(s_eval, dtype=float)
-    ccn_spectrum = np.zeros_like(s_eval, dtype=float)
-    for idx, s_env in enumerate(s_eval):
-        ccn_count = 0.0
-        for i, part_id in enumerate(particle_population.ids):
-            particle = particle_population.get_particle(part_id)
-            s_crit = particle.get_critical_supersaturation(T, return_D_crit=False)
-            num_conc = float(particle_population.num_concs[i])
-            if s_env >= s_crit:
-                ccn_count += num_conc
-        ccn_spectrum[idx] = ccn_count
-    return {"s": s_eval, "Nccn": ccn_spectrum}
+def compute_Nccn(population, s_eval, T):  # pragma: no cover - legacy shim
+    _deprecated("viz.data_prep.compute_Nccn deprecated; use analysis.compute_variable('Nccn', cfg)")
+    return _compute_variable(population, "Nccn", {"s_eval": s_eval, "T": T})
 
 
-def compute_optical_coeffs(
-    particle_population,
-    coeff_types: Any = ("total_scat", "total_abs"),
-    wvls: Any = None,
-    rh_grid: Any = None,
-    morphology: str = "core-shell",
-    temp: float = 298.15,
-    species_modifications: Any = None,
-) -> Dict[str, Any]:
-    if wvls is None:
-        wvls = [550e-9]
-    if rh_grid is None:
-        rh_grid = [0.0]
-    if species_modifications is None:
-        species_modifications = {}
-
-    # Normalize morphology name to registered identifiers (registry uses underscores)
-    morph = str(morphology).strip()
-    if morph.lower() == "core-shell":  # alias -> registry name
-        morph = "core_shell"
-    cfg = {"rh_grid": list(rh_grid), "wvl_grid": list(wvls), "type": morph, "temp": temp, "species_modifications": species_modifications}
-
-    # delegate to optics builder (imported at module level so tests can monkeypatch)
-    optical_pop = build_optical_population(particle_population, cfg)
-
-    out: Dict[str, Any] = {"wvls": np.asarray(wvls), "rh_grid": np.asarray(rh_grid)}
+def compute_optical_coeffs(population, coeff_types=("b_ext",), wvls=None, rh_grid=None, morphology="core-shell", temp=298.15, species_modifications=None):  # pragma: no cover
+    _deprecated("viz.data_prep.compute_optical_coeffs deprecated; call analysis.compute_variable for each coeff (e.g. 'b_ext')")
+    if not isinstance(coeff_types, (list, tuple)):
+        coeff_types = [coeff_types]
+    results = {}
     for coeff in coeff_types:
-        arr = optical_pop.get_optical_coeff(optics_type=coeff, rh=None, wvl=None)
-        out[coeff] = np.asarray(arr)
-    return out
+        dat = _compute_variable(
+            population,
+            coeff,
+            {
+                "wvls": wvls or [550e-9],
+                "rh_grid": rh_grid or [0.0],
+                "morphology": morphology,
+                "species_modifications": species_modifications or {},
+                "T": temp,
+            },
+        )
+        # unify shape keys
+        if "wvls" in dat:
+            results.setdefault("wvls", dat["wvls"])
+        if "rh_grid" in dat:
+            results.setdefault("rh_grid", dat["rh_grid"])
+        results[coeff] = dat[coeff]
+    return results
 
 # -------------------------------------------------------------------------
 
@@ -137,15 +85,18 @@ def prepare_dNdlnD(population, var_cfg: dict) -> PlotDat:
     """
     cfg = dict(var_cfg or {})
     diam_scale = cfg.get("diam_scale", "log")
-    vardat = compute_dNdlnD(
+    vardat = _compute_variable(
         population,
-        wetsize=cfg.get("wetsize", True),
-        normalize=cfg.get("normalize", False),
-        method=cfg.get("method", "hist"),
-        N_bins=cfg.get("N_bins", 30),
-        D_min=cfg.get("D_min", 1e-9),
-        D_max=cfg.get("D_max", 1e-4),
-        diam_scale=diam_scale,
+        "dNdlnD",
+        {
+            "wetsize": cfg.get("wetsize", True),
+            "normalize": cfg.get("normalize", False),
+            "method": cfg.get("method", "hist"),
+            "N_bins": cfg.get("N_bins", 80),
+            "D_min": cfg.get("D_min", 1e-9),
+            "D_max": cfg.get("D_max", 2e-6),
+            "diam_scale": diam_scale,
+        },
     )
     x = np.asarray(vardat["D"])
     y = np.asarray(vardat["dNdlnD"])
@@ -155,7 +106,7 @@ def prepare_dNdlnD(population, var_cfg: dict) -> PlotDat:
 def prepare_Nccn(population, var_cfg: dict) -> PlotDat:
     cfg = dict(var_cfg or {})
     s_eval = np.asarray(cfg.get("s_eval", np.linspace(0.01, 1.0, 50)))
-    vardat = compute_Nccn(population, s_eval, cfg.get("T", 298.15))
+    vardat = _compute_variable(population, "Nccn", {"s_eval": s_eval, "T": cfg.get("T", 298.15)})
     x = np.asarray(vardat["s"])  # fractional supersaturation
     y = np.asarray(vardat["Nccn"])
     return {"x": x, "y": y, "labs": ["s (%)", "Nccn (1/m$^3$)"], "xscale": "log", "yscale": "linear"}
@@ -164,26 +115,31 @@ def prepare_Nccn(population, var_cfg: dict) -> PlotDat:
 def prepare_frac_ccn(population, var_cfg: dict) -> PlotDat:
     cfg = dict(var_cfg or {})
     s_eval = np.asarray(cfg.get("s_eval", np.linspace(0.01, 1.0, 50)))
-    vardat = compute_Nccn(population, s_eval, cfg.get("T", 298.15))
-    total = np.sum(population.num_concs)
-    y = np.asarray(vardat["Nccn"]) if total == 0 else np.asarray(vardat["Nccn"]) / float(total)
+    vardat = _compute_variable(population, "frac_ccn", {"s_eval": s_eval, "T": cfg.get("T", 298.15)})
     x = np.asarray(vardat["s"])
+    y = np.asarray(vardat["frac_ccn"])
     return {"x": x, "y": y, "labs": ["s (%)", "fraction CCN"], "xscale": "log", "yscale": "linear"}
 
 
 def prepare_optical_vs_wvl(population, var_cfg: dict) -> PlotDat:
     cfg = dict(var_cfg or {})
-    coeff = cfg.get("coeff", "total_ext")
+    coeff = cfg.get("coeff", "b_ext")
+    # allow legacy aliases transparently
+    if coeff in ("total_ext", "total_abs", "total_scat"):
+        alias_map = {"total_ext": "b_ext", "total_abs": "b_abs", "total_scat": "b_scat"}
+        coeff = alias_map[coeff]
     wvls = np.asarray(cfg.get("wvls", [550e-9]))
     rh_grid = np.asarray(cfg.get("rh_grid", [0.0]))
-    vardat = compute_optical_coeffs(
+    vardat = _compute_variable(
         population,
-        coeff_types=[coeff],
-        wvls=wvls,
-        rh_grid=rh_grid,
-        morphology=cfg.get("morphology", "core-shell"),
-        temp=cfg.get("T", 298.15),
-        species_modifications=cfg.get("species_modifications", {}),
+        coeff,
+        {
+            "wvls": list(wvls),
+            "rh_grid": list(rh_grid),
+            "morphology": cfg.get("morphology", "core-shell"),
+            "species_modifications": cfg.get("species_modifications", {}),
+            "T": cfg.get("T", 298.15),
+        },
     )
     arr2d = np.asarray(vardat.get(coeff))
     # select rh slice
@@ -199,17 +155,22 @@ def prepare_optical_vs_wvl(population, var_cfg: dict) -> PlotDat:
 
 def prepare_optical_vs_rh(population, var_cfg: dict) -> PlotDat:
     cfg = dict(var_cfg or {})
-    coeff = cfg.get("coeff", "total_ext")
+    coeff = cfg.get("coeff", "b_ext")
+    if coeff in ("total_ext", "total_abs", "total_scat"):
+        alias_map = {"total_ext": "b_ext", "total_abs": "b_abs", "total_scat": "b_scat"}
+        coeff = alias_map[coeff]
     wvls = np.asarray(cfg.get("wvls", [550e-9]))
     rh_grid = np.asarray(cfg.get("rh_grid", [0.0]))
-    vardat = compute_optical_coeffs(
+    vardat = _compute_variable(
         population,
-        coeff_types=[coeff],
-        wvls=wvls,
-        rh_grid=rh_grid,
-        morphology=cfg.get("morphology", "core-shell"),
-        temp=cfg.get("T", 298.15),
-        species_modifications=cfg.get("species_modifications", {}),
+        coeff,
+        {
+            "wvls": list(wvls),
+            "rh_grid": list(rh_grid),
+            "morphology": cfg.get("morphology", "core-shell"),
+            "species_modifications": cfg.get("species_modifications", {}),
+            "T": cfg.get("T", 298.15),
+        },
     )
     arr2d = np.asarray(vardat.get(coeff))
     # select wvl slice
@@ -244,7 +205,7 @@ def build_default_var_cfg(varname: str):
             "diam_scale": "log",
         }
     elif varname in ("Nccn", "frac_ccn"):
-        return {"s_eval": np.linspace(0.01, 1.0, 50), "T": 298.15}
+        return {"s_eval": np.logspace(-2, 2, 50), "T": 298.15}
     elif varname in ["b_abs", "b_scat", "b_ext", "total_abs", "total_scat", "total_ext"]:
         return {
             "wvls": np.array([550e-9]),

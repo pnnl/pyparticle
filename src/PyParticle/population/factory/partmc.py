@@ -27,11 +27,6 @@ if _HAS_NETCDF4:
         # partmc_dir = Path(config['partmc_dir'])
         partmc_dir = Path(config['partmc_dir'])
         timestep = config['timestep']
-        # PartMC factory expects an integer timestep index used in the filename selection
-        if not isinstance(timestep, int):
-            raise ValueError(
-                f"PartMC factory expects 'timestep' to be an integer index used in the output filename, got {type(timestep)} ({timestep})."
-            )
         repeat = config['repeat']
         n_particles = config.get('n_particles', None)
         N_tot = config.get('N_tot', None)
@@ -40,14 +35,7 @@ if _HAS_NETCDF4:
         suppress_warning = config.get('suppress_warning', True)
         add_mixing_ratios = config.get('add_mixing_ratios', True)
 
-        partmc_out_dir = partmc_dir / 'out'
-        if not partmc_out_dir.exists():
-            raise FileNotFoundError(f"PartMC output directory not found: {partmc_out_dir}")
-
-        partmc_filepath = get_ncfile(partmc_out_dir, timestep, repeat)
-        if not partmc_filepath.exists():
-            raise FileNotFoundError(f"PartMC NetCDF file not found: {partmc_filepath}")
-
+        partmc_filepath = get_ncfile(partmc_dir / 'out', timestep, repeat)
         currnc = netCDF4.Dataset(partmc_filepath)
         aero_spec_names = currnc.variables['aero_species'].names.split(',')
         # Get AerosolSpecies objects with modifications if any

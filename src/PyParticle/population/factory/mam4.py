@@ -29,12 +29,6 @@ if _HAS_NETCDF4:
     def build(config):
         output_filename = Path(config['output_filename'])
         timestep = config['timestep']
-        # Ensure timestep is an integer index (not seconds). MAM4 builder indexes into
-        # NetCDF arrays using this value, so require an int and validate range below.
-        if not isinstance(timestep, int):
-            raise ValueError(
-                f"MAM4 factory expects 'timestep' to be an integer index into the NetCDF time axis, got {type(timestep)} ({timestep})."
-            )
         # fixme: use config.get() to set defatuls
         GSDs = config['GSD']
         # fixme: make this +/- certain number of sigmas (rather than min/max diams)
@@ -45,18 +39,7 @@ if _HAS_NETCDF4:
 
         currnc = netCDF4.Dataset(output_filename)
 
-        # Validate that the timestep index exists on the relevant variables used below.
-        # num_aer is indexed as num_aer[:, timestep]
-        try:
-            num_aer = currnc['num_aer']
-        except Exception:
-            raise KeyError("MAM4 NetCDF missing expected variable 'num_aer'.")
-        # Ensure it has a time axis and the requested index is present
-        if num_aer.ndim < 2 or timestep < 0 or timestep >= num_aer.shape[1]:
-            raise IndexError(
-                f"Requested timestep index {timestep} is out of range for 'num_aer' with shape {num_aer.shape}."
-            )
-
+        num_aer = currnc['num_aer']
         so4_aer = currnc['so4_aer']
         soa_aer = currnc['soa_aer']
         dgn_a = currnc['dgn_a']

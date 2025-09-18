@@ -174,7 +174,7 @@ def test_reference_comparisons(request):
         # Reference comparisons
         if compare_mode in ("pyrcel", "both") and t.get("type", "").lower().startswith("ccn"):
             try:
-                from tests.reference_wrappers import pyrcel_adapter as pra
+                from tests_archive.reference_wrappers import pyrcel_adapter as pra
 
                 ref = pra.compute_ccn_reference(t)
                 comp = compare_scalar(float(pyp_particle["s_critical_percent"]), float(ref["s_critical_percent"]),
@@ -186,7 +186,7 @@ def test_reference_comparisons(request):
 
         if compare_mode in ("pymiescatt", "both") and t.get("type", "").lower().startswith("optics"):
             try:
-                from tests.reference_wrappers import pymiescatt_adapter as pma
+                from tests_archive.reference_wrappers import pymiescatt_adapter as pma
 
                 ref = pma.compute_optics_reference(t)
                 # compare simple metric: first b_ext grid element if available
