@@ -1,0 +1,17 @@
+{
+  "type": "binned_lognormals",
+  "name": "example_binned",
+  "timestep": 0,
+  "GMD": [5.0e-7],
+  "GSD": [1.6],
+  "N": [500.0],
+  "N_bins": [80],
+  "aero_spec_names": [["SO4", "Na"]],
+  "aero_spec_fracs": [[0.5, 0.5]],
+  "species_modifications": {
+    "SO4": {},
+    "Na": {}
+  },
+  "surface_tension": 0.072,
+  "D_is_wet": false
+}

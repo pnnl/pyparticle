@@ -95,3 +95,8 @@ def plot_lines(varname,
         ax.set_yscale(yscale)
 
     return last_line, last_labs
+
+
+## NOTE: The former DataFrame-based helper plot_grid_from_df was removed to
+## simplify dependencies (no pandas). If needed in the future, recover from
+## history or implement a light adapter that consumes iterable plot dicts.

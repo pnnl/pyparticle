@@ -19,6 +19,7 @@
 !*.toml
 !*.yaml
 !*.yml
+!examples/configs/*.json
 !uv.lock
 !*.ini
 !.python-version

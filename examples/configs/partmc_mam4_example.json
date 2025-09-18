@@ -1,0 +1,20 @@
+{
+  "scenarios": ["01", "05", "10"],
+  "partmc_root": "/Users/fier887/Downloads/partmc_runs",
+  "mam4_root": "/Users/fier887/Downloads/mam4_runs",
+  "timestep": 10,
+  "repeat": 1,
+  "variables": ["dNdlnD", "frac_ccn"],
+  "partmc_species_modifications": {
+    "BC": {"density": 1800, "k_550": 0.8, "n_550": 1.85},
+    "SO4": {"density": 1770, "k_550": 0.0, "n_550": 1.45, "kappa": 0.6}
+  },
+  "mam4_defaults": {
+    "GSD": [1.5, 1.5],
+    "D_min": 1e-8,
+    "D_max": 1e-6,
+    "N_bins": 25,
+    "p": 101325.0,
+    "T": 288.15
+  }
+}

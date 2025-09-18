@@ -92,26 +92,8 @@ def small_ndarray(small_random_state):
         pytest.skip("numpy not available")
 
 
-@pytest.fixture()
-def small_dataframe(small_random_state):
-    try:
-        import pandas as pd  # type: ignore
-        import numpy as np
-
-        rs = small_random_state or np.random.RandomState(123)
-        return pd.DataFrame({"a": rs.randn(5), "b": rs.randint(0, 3, size=5)})
-    except Exception:
-        pytest.skip("pandas not available")
-
-
-@pytest.fixture()
-def small_series(small_dataframe):
-    try:
-        import pandas as pd  # type: ignore
-
-        return small_dataframe["a"] if hasattr(small_dataframe, "__getitem__") else pd.Series([])
-    except Exception:
-        pytest.skip("pandas not available")
+## Removed pandas-based fixtures (small_dataframe, small_series) after dropping
+## DataFrame plotting pipeline to avoid unnecessary dependency.
 
 
 @pytest.fixture()
