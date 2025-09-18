@@ -112,7 +112,11 @@ def compute_optical_coeffs(
     if species_modifications is None:
         species_modifications = {}
 
-    cfg = {"rh_grid": list(rh_grid), "wvl_grid": list(wvls), "type": morphology, "temp": temp, "species_modifications": species_modifications}
+    # Normalize morphology name to registered identifiers (registry uses underscores)
+    morph = str(morphology).strip()
+    if morph.lower() == "core-shell":  # alias -> registry name
+        morph = "core_shell"
+    cfg = {"rh_grid": list(rh_grid), "wvl_grid": list(wvls), "type": morph, "temp": temp, "species_modifications": species_modifications}
 
     # delegate to optics builder (imported at module level so tests can monkeypatch)
     optical_pop = build_optical_population(particle_population, cfg)
@@ -230,9 +234,13 @@ def build_default_var_cfg(varname: str):
             "wetsize": True,
             "normalize": False,
             "method": "hist",
-            "N_bins": 30,
+            # Updated defaults (was 30) to better resolve modal structure in typical
+            # PartMC/MAM4 ensemble comparisons without being overly heavy.
+            "N_bins": 80,
             "D_min": 1e-9,
-            "D_max": 1e-4,
+            # Reduced upper bound (was 1e-4) to 2e-6 to focus on sub-micron / accumulation
+            # regime emphasized in ensemble workflows. Users can override upward as needed.
+            "D_max": 2e-6,
             "diam_scale": "log",
         }
     elif varname in ("Nccn", "frac_ccn"):
