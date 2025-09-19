@@ -25,7 +25,7 @@ except ModuleNotFoundError:
 
 
 if _HAS_NETCDF4:
-    @register("mam4")
+    @register("mam4") # only registers if netCDF4 is available
     def build(config):
         output_filename = Path(config['output_filename'])
         timestep = config['timestep']
@@ -77,7 +77,7 @@ if _HAS_NETCDF4:
         else:
             lognormals_cfg['GMD'] = GMDs #dgn_a[:,timestep]
 
-    # debug: GMDs computed above
+        # debug: GMDs computed above
         # fixme: limited species for now
         lognormals_cfg['aero_spec_names'] = [['SO4','OC','H2O'],['SO4','OC','H2O'],['SO4','OC','H2O'],['SO4','OC','H2O']]
         # fixme: mam4 species not totally aligned
@@ -86,27 +86,22 @@ if _HAS_NETCDF4:
 
         aero_spec_fracs = []
         for (m_so4,m_soa,m_h2o) in zip(mass_so4,mass_soa,mass_h2o):
-            # m_tot = m_so4 + m_soa + m_h2o
             spec_frac = np.array([m_so4,m_soa,m_h2o])
             spec_frac /= np.sum(spec_frac)
             spec_frac[np.isnan(spec_frac)] = 0.
             aero_spec_fracs.append(spec_frac)
 
-        lognormals_cfg['aero_spec_fracs'] = aero_spec_fracs # np.array([mass_so4/mass_tot,mass_soa/mass_tot,mass_h2o/mass_tot]).transpose()
+        lognormals_cfg['aero_spec_fracs'] = aero_spec_fracs
 
         mam4_population = build_binned_lognormals(lognormals_cfg)
         return mam4_population
 
 else:
     def build(config):
-        raise ModuleNotFoundError(
-            "The MAM4 population factory requires the 'netCDF4' package, "
-            "which is not installed. Install it with:\n"
-            "  conda install -c conda-forge netCDF4\n"
-            "or\n"
-            "  pip install netCDF4"
-        )
-
+        raise ModuleNotFoundError("Install netCDF4 to read PartMC files: "
+                                  "generate the pyparticle-partmc environment-partmc.yml file using "
+                                  "tools/create_conda_env.py, and then create and activate the " 
+                                  "pyparticle-partmc environment")
 
 def get_ncfile(partmc_output_dir, timestep, repeat):
     for root, dirs, files in os.walk(partmc_output_dir):
@@ -127,48 +122,6 @@ def get_ncfile(partmc_output_dir, timestep, repeat):
                 preface_string = 'YOU_NEED_TO_CHANGE_preface_string_'
     ncfile = partmc_output_dir / (preface_string + str(int(repeat)).zfill(4) + '_' + str(int(timestep)).zfill(8) + '.nc')
     return ncfile
-
-    # aero_spec_names = currnc.variables['aero_species'].names.split(',')
-    # Get AerosolSpecies objects with modifications if any
-    # species_list = tuple(
-    #     get_species(name, **species_modifications.get(name, {}))
-    #     for name in aero_spec_names
-    # )
-    
-    # spec_masses = np.array(currnc.variables['aero_particle_mass'][:])
-    # part_ids = np.array([one_id for one_id in currnc.variables['aero_id'][:]], dtype=int)
-
-    # if 'aero_num_conc' in currnc.variables.keys():
-    #     num_concs = currnc.variables['aero_num_conc'][:]
-    # else:
-    #     num_concs = 1. / currnc.variables['aero_comp_vol'][:]
-    
-    # if N_tot is None:
-    #     N_tot = np.sum(num_concs)
-
-    # if n_particles is None:
-    #     idx = np.arange(len(part_ids))
-    # elif n_particles <= len(part_ids):
-    #     idx = np.random.choice(np.arange(len(part_ids)), size=n_particles, replace=False)
-    # else:
-    #     raise IndexError('n_particles > len(part_ids)')
-
-    # partmc_population = ParticlePopulation(species=species_list, spec_masses=[], num_concs=[], ids=[])
-    # for ii in idx:
-    #     particle = make_particle_from_masses(
-    #         aero_spec_names, 
-    #         spec_masses[:, ii],
-    #         species_modifications=species_modifications,
-    #     )
-    #     partmc_population.set_particle(
-    #         particle, part_ids[ii], num_concs[ii] * N_tot / np.sum(num_concs[idx]), suppress_warning=suppress_warning
-    #     )
-    
-    # if add_mixing_ratios:
-    #     gas_mixing_ratios = np.array(currnc.variables['gas_mixing_ratio'][:])
-    #     partmc_population.gas_mixing_ratios = gas_mixing_ratios
-    # return currnc
-
 
 def get_ncfile(partmc_output_dir, timestep, repeat):
     for root, dirs, files in os.walk(partmc_output_dir):

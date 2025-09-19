@@ -13,7 +13,9 @@ from __future__ import annotations
 from typing import Dict, Any
 import warnings
 import numpy as np
-from ..analysis import compute_variable as _compute_variable, list_variables as _list_variables  # Dispatcher
+from ..analysis.dispatcher import compute_variable as _compute_variable
+from ..analysis import list_variables as _list_variables
+from ..analysis import global_registry as _global_registry
 
 # NOTE: Legacy direct compute_* functions retained temporarily for backward compatibility
 # but now emit DeprecationWarning and delegate to analysis dispatcher-based
@@ -31,7 +33,7 @@ def _deprecated(msg: str):
 
 
 def compute_dNdlnD(*args, **kwargs):  # pragma: no cover - legacy shim
-    _deprecated("viz.data_prep.compute_dNdlnD is deprecated; use analysis.compute_variable('dNdlnD', cfg)")
+    _deprecated("viz.data_prep.compute_dNdlnD is deprecated; use analysis.compute_variable('dNdlnD', cfg) or analysis.global_registry.get_variable_builder")
     population = args[0]
     cfg = dict(
         wetsize=kwargs.get("wetsize", True),
@@ -51,7 +53,7 @@ def compute_Nccn(population, s_eval, T):  # pragma: no cover - legacy shim
 
 
 def compute_optical_coeffs(population, coeff_types=("b_ext",), wvls=None, rh_grid=None, morphology="core-shell", temp=298.15, species_modifications=None):  # pragma: no cover
-    _deprecated("viz.data_prep.compute_optical_coeffs deprecated; call analysis.compute_variable for each coeff (e.g. 'b_ext')")
+    _deprecated("viz.data_prep.compute_optical_coeffs deprecated; call analysis.compute_variable for each coeff (e.g. 'b_ext') or use analysis.global_registry")
     if not isinstance(coeff_types, (list, tuple)):
         coeff_types = [coeff_types]
     results = {}
@@ -130,6 +132,9 @@ def prepare_optical_vs_wvl(population, var_cfg: dict) -> PlotDat:
         coeff = alias_map[coeff]
     wvls = np.asarray(cfg.get("wvls", [550e-9]))
     rh_grid = np.asarray(cfg.get("rh_grid", [0.0]))
+    # Use dispatcher compute_variable which will resolve aliases and build the
+    # appropriate population-level variable under the hood. For advanced use
+    # cases the global registry can be used to fetch builders across families.
     vardat = _compute_variable(
         population,
         coeff,

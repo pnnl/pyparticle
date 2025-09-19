@@ -2,7 +2,7 @@ from __future__ import annotations
 import warnings
 from typing import Dict, Any
 from .builder import build_variable
-from .factory.registry import list_variables as _list, describe_variable as _describe, _ALIASES, resolve_name
+from .population.factory.registry import list_variables as _list, describe_variable as _describe, _ALIASES, resolve_name
 
 def compute_variable(population, varname: str | None = None, var_cfg: Dict[str, Any] | None = None):
     if var_cfg is None:

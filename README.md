@@ -1,3 +1,4 @@
+This file is a placeholder to allow the patch tool to run read operations.
 # PyParticle
 
 Branch-aware CI and coverage
@@ -15,9 +16,9 @@ PyParticle provides particle, species, population, and optics modeling utilities
 
 Key modules (see per-module READMEs):
 - `src/PyParticle/` — core package overview
+- `src/PyParticle/species/` — aerosol species definitions and registry
+- `src/PyParticle/population/` — particle population classes and builders
 - `src/PyParticle/optics/` — optical particle models and builders
-- `src/PyParticle/population/` — population classes and builders
-- `src/PyParticle/species/` — species definitions and registry
 - `examples/` — runnable examples using JSON configs
 
 Quick start

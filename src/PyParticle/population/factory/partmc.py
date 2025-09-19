@@ -22,9 +22,8 @@ except ModuleNotFoundError:
 
 
 if _HAS_NETCDF4:
-    @register("partmc")
+    @register("partmc") # only registers if netCDF4 is available
     def build(config):
-        # partmc_dir = Path(config['partmc_dir'])
         partmc_dir = Path(config['partmc_dir'])
         timestep = config['timestep']
         repeat = config['repeat']
@@ -99,20 +98,8 @@ if _HAS_NETCDF4:
         return ncfile
 
 else:
-    def get_ncfile(*args, **kwargs):
-        raise ModuleNotFoundError(
-            "The PartMC population factory requires the 'netCDF4' package, "
-            "which is not installed. Install it with:\n"
-            "  conda install -c conda-forge netCDF4\n"
-            "or\n"
-            "  pip install netCDF4"
-        )
-
     def build(config):
-        raise ModuleNotFoundError(
-            "The PartMC population factory requires the 'netCDF4' package, "
-            "which is not installed. Install it with:\n"
-            "  conda install -c conda-forge netCDF4\n"
-            "or\n"
-            "  pip install netCDF4"
-        )
+        raise ModuleNotFoundError("Install netCDF4 to read PartMC files: "
+                                  "generate the pyparticle-partmc environment-partmc.yml file using "
+                                  "tools/create_conda_env.py, and then create and activate the " 
+                                  "pyparticle-partmc environment")

@@ -1,0 +1,23 @@
+{
+  "population": {
+    "type": "binned_lognormals",
+    "N": 1000.0,
+    "GMD": 100e-9,
+    "GSD": 1.6,
+    "aero_spec_names": ["SO4", "OC", "BC"],
+    "aero_spec_fracs": [0.6, 0.2, 0.2],
+    "D_min": 10e-9,
+    "D_max": 2e-6,
+    "N_bins": 60
+  },
+  "optics": {
+    "type": "pymiescatt_core_shell",
+    "wvl_grid": [550e-9],
+    "rh_grid": [0.0, 0.4, 0.6, 0.8, 0.9],
+    "core_fraction": 0.8,
+    "refractive_index_core": [1.75, 0.44],
+    "refractive_index_shell": [1.33, 0.0],
+    "density_core": 1800.0,
+    "density_shell": 1000.0
+  }
+}

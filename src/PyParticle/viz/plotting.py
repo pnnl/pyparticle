@@ -7,17 +7,33 @@ Role:
   creates and returns artists.
 """
 
-from typing import Sequence, Optional, Tuple, Union
+from typing import Sequence, Optional, Tuple, Union, Dict, Any
 import matplotlib.axes
 import matplotlib.pyplot as plt
 from . import data_prep
+from ..population.base import ParticlePopulation  # forward reference in function signatures
 # Avoid importing ParticlePopulation at module import time to prevent
 # import cycles when package top-level imports happen in examples/tests.
 # We use a forward reference in the function signature below.
 # fixme: link directly with PyParticle populations
 
+def plot_scatter(varnames,
+                 particle_population: ParticlePopulation,
+                 var_cfgs: Optional[Sequence[Dict[str, Any]]] = None,
+                 ax: Optional[matplotlib.axes.Axes] = None):
+    """Plot a scatter of per-partcle variables `ax` and return the created PathCollection artist.
+    """
+    if ax is None:
+        fig, ax = plt.subplots()
+    for ii, varname in enumerate(varnames):
+        if var_cfgs is not None:
+            var_cfg = var_cfgs[ii]
+        else:
+            var_cfg = None
+        
+
 def plot_lines(varname,
-               particle_populations: Tuple["ParticlePopulation", ...],
+               particle_populations: Tuple[ParticlePopulation, ...],
                var_cfg: Optional[dict] = None,
                ax: Optional[matplotlib.axes.Axes] = None,
                colors: Optional[Union[str, list]] = None,

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Dict, Any, Sequence, Tuple
 
 
+
 @dataclass(frozen=True)
 class VariableMeta:
     name: str
@@ -14,9 +15,10 @@ class VariableMeta:
     units: Dict[str, str] | None = None
 
 
-class AbstractVariable:
-    meta: VariableMeta  # type: ignore
-    def __init__(self, cfg: Dict[str, Any]):
-        self.cfg = cfg
-    def compute(self, population):  # pragma: no cover - interface
-        raise NotImplementedError
+from .population.base import PopulationVariable, VariableMeta
+
+# Backwards compatible alias. Many existing factory modules import
+# `AbstractVariable` from `analysis.base`; keep that name working.
+AbstractVariable = PopulationVariable
+
+__all__ = ["PopulationVariable", "AbstractVariable", "VariableMeta"]
