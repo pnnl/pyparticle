@@ -20,18 +20,42 @@ from ..population.base import ParticlePopulation  # forward reference in functio
 def plot_scatter(varnames,
                  particle_population: ParticlePopulation,
                  var_cfgs: Optional[Sequence[Dict[str, Any]]] = None,
+                 colormap: Optional[str] = None,
+                 size: Union[float, Sequence[float]] = 20,
                  ax: Optional[matplotlib.axes.Axes] = None):
     """Plot a scatter of per-partcle variables `ax` and return the created PathCollection artist.
     """
     if ax is None:
         fig, ax = plt.subplots()
-    for ii, varname in enumerate(varnames):
-        if var_cfgs is not None:
-            var_cfg = var_cfgs[ii]
-        else:
-            var_cfg = None
-        
+    
+    dat = data_prep.prepare_particle_variable(particle_population, varnames, var_cfgs)
+    x, y, c, s, labs = dat["x"], dat["y"], dat["c"], dat["s"], dat["labs"]
+    # todo: 3D scatter later?
+    xscale, yscale, cscale = dat.get("xscale", "linear"), dat.get("yscale", "linear"), dat.get('cscale', 'linear')
+    
+    if c is not None and colormap is None:
+        colormap = 'viridis'
+    cmap = plt.get_cmap(colormap) if colormap else None
+    alpha = 0.7 if c is not None else 1.0
+    edgecolors = 'none' if c is not None else 'face'
+    vmin, vmax = None, None
+    if cscale == 'log' and c is not None:
+        vmin = max(min(c[c > 0]), 1e-5)
+        vmax = max(c)
+    hsc = ax.scatter(x, y, c=c, s=s, cmap=cmap, alpha=alpha, edgecolors=edgecolors, vmin=vmin, vmax=vmax)
+    ax.set_xlabel(labs[0])
+    ax.set_ylabel(labs[1])
+    if labs[2]:
+        cbar = plt.colorbar(mappable=ax.collections[0], ax=ax)
+        cbar.set_label(labs[2])
+    # fixme: not working with scale
 
+    ax.set_xscale(xscale)
+    ax.set_yscale(yscale)
+    return fig, ax, hsc, dat
+
+# fixme: this is lines for a given state; add vs. time/height as different plot
+# fixme: separate distributions as their own plot? 
 def plot_lines(varname,
                particle_populations: Tuple[ParticlePopulation, ...],
                var_cfg: Optional[dict] = None,

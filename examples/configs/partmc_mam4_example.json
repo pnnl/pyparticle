@@ -1,6 +1,6 @@
 {
-  "partmc_root_dir": "/Users/fier887/Downloads/ambrs_runs/1h_5k/partmc_runs",
-  "mam4_root_dir": "/Users/fier887/Downloads/ambrs_runs/1h_5k/mam4_runs",
+  "partmc_dir": "/Users/fier887/Downloads/ambrs_runs/1h_5k/partmc_runs",
+  "mam4_dir": "/Users/fier887/Downloads/ambrs_runs/1h_5k/mam4_runs",
   "scenario_names": ["1","2","3","4","5"],
   "timestep": 1,
   "repeat": 1,

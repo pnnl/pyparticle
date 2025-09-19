@@ -1,4 +1,4 @@
-"""Compare PyParticle `core_shell` optical result to a direct PyMieScatt polydisperse calculation.
+"""Compare PyParticle `core_shell` optical result to a direct PyMieScatt lognormal calculation.
 
 See repo examples for usage and the config under examples/configs.
 """
@@ -16,7 +16,7 @@ import warnings
 from PyParticle import build_population, build_optical_population
 from PyParticle import make_particle
 
-def pymiescatt_polydisperse_b_scat(pop_cfg: Dict[str, Any], optics_cfg: Dict[str, Any], rh: float = 0.0):
+def pymiescatt_lognormal_b_scat(pop_cfg: Dict[str, Any], optics_cfg: Dict[str, Any], rh: float = 0.0):
     try:
         import PyMieScatt as PMS
     except Exception as e:
@@ -180,6 +180,7 @@ def pymiescatt_polydisperse_b_scat(pop_cfg: Dict[str, Any], optics_cfg: Dict[str
             lower=lower,
             upper=upper,
             asDict=True,
+            numberOfBins=pop_cfg.get('N_bins', 100)
         )
         # Extract Bsca and Babs (PyMieScatt ensemble returns Bsca/Babs commonly in Mm^-1)
         def _get_key(dct, keys):
@@ -279,7 +280,7 @@ def main(argv=None):
     try:
         # Pass population cfg (which contains refractive index) and variable cfg
         # Wrapper returns (wl_nm, b_scat_m, b_abs_m)
-        wl_p, b_scat_pms_m, b_abs_pms_m = pymiescatt_polydisperse_b_scat(pop_cfg, var_cfg, rh=0.0)
+        wl_p, b_scat_pms_m, b_abs_pms_m = pymiescatt_lognormal_b_scat(pop_cfg, var_cfg, rh=0.0)
     except Exception as e:
         print("PyMieScatt comparison failed:", e)
         wl_p, b_scat_pms_m, b_abs_pms_m = (wl * 1e9), np.zeros_like(wl), np.zeros_like(wl)
@@ -287,7 +288,7 @@ def main(argv=None):
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.plot(wl * 1e9, b_scat_pp, marker="o", label="PyParticle core_shell b_scat")
     # wl_p returned by wrapper is in nm already
-    ax.plot(wl_p, b_scat_pms_m, marker="x", linestyle="--", label="PyMieScatt polydisperse b_scat")
+    ax.plot(wl_p, b_scat_pms_m, marker="x", linestyle="--", label="PyMieScatt lognormal b_scat")
     # compute percent difference (avoid divide-by-zero)
     with np.errstate(divide='ignore', invalid='ignore'):
         pct_diff = 100.0 * (b_scat_pp - b_scat_pms_m) / np.where(b_scat_pms_m != 0, b_scat_pms_m, np.nan)
@@ -314,10 +315,47 @@ def main(argv=None):
     csv_out = Path("examples") / "bscat_comparison.csv"
     with open(csv_out, "w", newline='') as fh:
         writer = csv.writer(fh)
-        writer.writerow(["wavelength_nm", "b_scat_pyParticle", "b_scat_pymiescatt_m-1", "b_abs_pymiescatt_m-1", "pct_diff"])
+        writer.writerow(["wavelength_nm", "b_scat_pyParticle", "b_scat_pymiescatt_m-1", "b_abs_pymiescatt_m-1", "pct_diff_b_scat"])
         for w, a, b, babs, p in zip(wl * 1e9, b_scat_pp, b_scat_pms_m, b_abs_pms_m, pct_diff):
             writer.writerow([f"{w:.2f}", f"{a:.6e}", f"{b:.6e}", f"{babs:.6e}", f"{p:.6e}"])
     print(f"Wrote: {csv_out}")
+
+    # --- b_abs vs wavelength comparison plot ---
+    try:
+        b_abs_pp = opt_pop.get_optical_coeff("b_abs", rh=rh_val, wvl=None)
+    except Exception:
+        b_abs_pp = np.zeros_like(b_scat_pp)
+
+    fig2, ax2 = plt.subplots(figsize=(6, 4))
+    ax2.plot(wl * 1e9, b_abs_pp, marker="o", label="PyParticle core_shell b_abs")
+    ax2.plot(wl_p, b_abs_pms_m, marker="x", linestyle="--", label="PyMieScatt lognormal b_abs")
+    with np.errstate(divide='ignore', invalid='ignore'):
+        pct_diff_abs = 100.0 * (b_abs_pp - b_abs_pms_m) / np.where(b_abs_pms_m != 0, b_abs_pms_m, np.nan)
+    if np.any(np.isfinite(pct_diff_abs)):
+        max_abs_pct_abs = np.nanmax(np.abs(pct_diff_abs))
+        ax2.annotate(f"max |% diff| = {max_abs_pct_abs:.1f}%", xy=(0.05, 0.95), xycoords='axes fraction', fontsize=9,
+                     verticalalignment='top')
+    else:
+        ax2.annotate("percent diff undefined (zero reference)", xy=(0.05, 0.95), xycoords='axes fraction', fontsize=9,
+                     verticalalignment='top')
+    ax2.set_xlabel("Wavelength (nm)")
+    ax2.set_ylabel("b_abs (m^-1)")
+    ax2.set_title("b_abs vs wavelength at RH=0")
+    ax2.grid(True)
+    ax2.legend()
+    out2 = Path("examples") / "out_babs_vs_wvl.png"
+    fig2.tight_layout()
+    fig2.savefig(out2, dpi=180)
+    print(f"Wrote: {out2}")
+
+    # Write absorption comparison CSV
+    csv_abs = Path("examples") / "babs_comparison.csv"
+    with open(csv_abs, "w", newline='') as fh:
+        writer = csv.writer(fh)
+        writer.writerow(["wavelength_nm", "b_abs_pyParticle", "b_abs_pymiescatt_m-1", "pct_diff_b_abs"])
+        for w, a_abs, b_abs_val, p_abs in zip(wl * 1e9, b_abs_pp, b_abs_pms_m, pct_diff_abs):
+            writer.writerow([f"{w:.2f}", f"{a_abs:.6e}", f"{b_abs_val:.6e}", f"{p_abs:.6e}"])
+    print(f"Wrote: {csv_abs}")
 
     # --- Make a figure of b_scat vs RH for a homogeneous sphere ---
     def plot_b_scat_vs_rh_homogeneous():
@@ -392,6 +430,23 @@ def main(argv=None):
         fig.tight_layout()
         fig.savefig(out_rh, dpi=180)
         print(f'Wrote: {out_rh}')
+
+        # Also compute/plot b_abs vs RH if available
+        try:
+            b_abs_arr = optical_mono.get_optical_coeff('b_abs', rh=None, wvl=None)
+            fig_ab, ax_ab = plt.subplots(figsize=(6, 4))
+            ax_ab.plot(rh_grid, b_abs_arr[:, 0], marker='o')
+            ax_ab.set_xlabel('RH')
+            ax_ab.set_ylabel('b_abs (m^-1)')
+            ax_ab.set_title('b_abs vs RH (homogeneous sphere)')
+            ax_ab.grid(True)
+            out_ab_rh = Path('examples') / 'out_babs_vs_rh.png'
+            fig_ab.tight_layout()
+            fig_ab.savefig(out_ab_rh, dpi=180)
+            print(f'Wrote: {out_ab_rh}')
+        except Exception:
+            # if unavailable, skip silently
+            pass
 
     plot_b_scat_vs_rh_homogeneous()
 

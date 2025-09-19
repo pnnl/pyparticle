@@ -8,7 +8,7 @@
     "GSD": [1.6],
     "aero_spec_names": [["SO4"]],
     "aero_spec_fracs": [[1.0]],
-    "N_bins": 80,
+    "N_bins": 1000,
     "D_min": 10e-9,
     "D_max": 2e-6,
     "refractive_index": [1.75, 0.44]

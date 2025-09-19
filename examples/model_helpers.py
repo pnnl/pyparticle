@@ -102,8 +102,8 @@ def build_populations_and_varcfgs(
     Returns a dict with keys: partmc_cfg, mam4_cfg, partmc_pop, mam4_pop,
     var_cfgs.
     """
-    partmc_root = Path(cfg_all.get("partmc_root", ""))
-    mam4_root = Path(cfg_all.get("mam4_root", ""))
+    partmc_root = Path(cfg_all.get("partmc_dir", ""))
+    mam4_root = Path(cfg_all.get("mam4_dir", ""))
     if not partmc_root.is_dir():
         raise FileNotFoundError(f"PartMC root directory not found: {partmc_root}")
     if not mam4_root.is_dir():
