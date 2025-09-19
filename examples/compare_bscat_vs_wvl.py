@@ -382,7 +382,7 @@ def main(argv=None):
             else:
                 binned_cfg['aero_spec_names'] = [['SO4']]
                 binned_cfg['aero_spec_fracs'] = [[1.0]]
-            mono_pop = build_population(binned_cfg)
+            binned_pop = build_population(binned_cfg)
         except Exception as e:
             print('Failed to build binned_lognormal population for RH sweep:', e)
             return
@@ -407,16 +407,16 @@ def main(argv=None):
         if k_550 is not None:
             ocfg['k_550'] = k_550
 
-        optical_mono = build_optical_population(mono_pop, ocfg)
+        optical_pop = build_optical_population(binned_pop, ocfg)
         # Get scattering coefficient per RH (first wavelength)
         try:
-            b_scat_arr = optical_mono.get_optical_coeff('b_scat', rh=None, wvl=None)
+            b_scat_arr = optical_pop.get_optical_coeff('b_scat', rh=None, wvl=None)
         except Exception:
             # Fallback: sum per-particle cross sections
             bs = np.zeros((len(rh_grid), len(wvl_grid)))
-            for i, particle in enumerate(optical_mono.particles):
+            for i, particle in enumerate(optical_pop.particles):
                 Csca = particle.get_cross_section('b_scat')
-                bs += np.asarray(Csca) * optical_mono.num_concs[i]
+                bs += np.asarray(Csca) * optical_pop.num_concs[i]
             b_scat_arr = bs
 
         fig, ax = plt.subplots(figsize=(6, 4))
@@ -433,7 +433,7 @@ def main(argv=None):
 
         # Also compute/plot b_abs vs RH if available
         try:
-            b_abs_arr = optical_mono.get_optical_coeff('b_abs', rh=None, wvl=None)
+            b_abs_arr = optical_pop.get_optical_coeff('b_abs', rh=None, wvl=None)
             fig_ab, ax_ab = plt.subplots(figsize=(6, 4))
             ax_ab.plot(rh_grid, b_abs_arr[:, 0], marker='o')
             ax_ab.set_xlabel('RH')

@@ -23,10 +23,7 @@ from .plotting import plot_lines
 from .formatting import format_axes, add_legend
 from ..population.builder import build_population
 from ..population.base import ParticlePopulation
-# Prefer analysis.builder as the authoritative source of variable defaults
-from ..analysis.builder import build_variable
-# keep legacy data_prep defaults as a safe fallback
-from .data_prep import build_default_var_cfg as legacy_build_default_var_cfg
+from .data_prep import build_default_var_cfg
 
 
 def _load_config_from_path(p: str) -> dict:
@@ -88,8 +85,6 @@ def make_grid_scenarios_variables_same_timestep(
     # tiny population cache
     pop_cache = {}
     populations: List[Any] = []
-    # cache per-variable default var_cfg pulled from analysis Variable meta
-    var_defaults_cache: dict = {}
 
     for i, scen in enumerate(scenarios):
         cache_key = None
@@ -131,23 +126,10 @@ def make_grid_scenarios_variables_same_timestep(
     for i, pop in enumerate(populations):
         for j, var in enumerate(variables):
             ax = axarr[i, j]
-            # prepare var cfg: prefer analysis variable metadata defaults
-            try:
-                if var not in var_defaults_cache:
-                    try:
-                        var_obj = build_variable(var, scope="population")
-                        defaults = dict(getattr(var_obj, "meta").default_cfg)
-                    except Exception:
-                        # if analysis builder fails for any reason, fall back to legacy
-                        defaults = legacy_build_default_var_cfg(var)
-                    var_defaults_cache[var] = defaults
-                vcfg = dict(var_defaults_cache[var])
-            except Exception:
-                # ultimate fallback: legacy helper
-                vcfg = legacy_build_default_var_cfg(var)
-
+            # prepare var cfg
+            vcfg = build_default_var_cfg(var)
             if var_cfg_overrides and var in var_cfg_overrides:
-                # shallow merge user overrides into the defaults (do not mutate cache)
+                # shallow merge
                 for k, v in var_cfg_overrides[var].items():
                     vcfg[k] = v
 
