@@ -20,7 +20,7 @@ coverage:
 
 # Ignore generated or data directories from coverage trends.
 ignore:
-  - "tests"
+#  - "tests"
   - "datasets"
   - "src/PyParticle/**/__pycache__"
   - "**/*.ipynb"
