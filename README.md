@@ -1,5 +1,5 @@
 # PyParticle
-Python package for describing and analyzing populations of aerosol particles.
+Light-weight package for describing and analyzing populations of aerosol particles.
 
 Branch-aware CI and coverage
 
