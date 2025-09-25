@@ -13,6 +13,7 @@ Rationale: callers (e.g., the VariableBuilder) can ask for defaults by
 variable name and merge them with variable-local defaults and user config.
 """
 
+# fixme: maybe associate this with variables
 
 # A compact mapping of canonical defaults keyed by variable name. The map is
 # intentionally permissive: axis variables and consuming variables share the
