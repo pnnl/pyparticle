@@ -15,7 +15,7 @@ class DNdlnDVar(PopulationVariable):
         name="dNdlnD",
         axis_names=("D",),
         description="Size distribution dN/dlnD",
-        units="m^-3",
+        units="m$^{-3}$",
         scale='linear', # dN/dlnD is typically shown on linear scale; diameter itself on log scale
         long_label='Number size distribution',
         short_label='$dN/d\ln D$',
