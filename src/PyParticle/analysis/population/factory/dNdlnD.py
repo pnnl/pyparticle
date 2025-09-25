@@ -19,15 +19,16 @@ class DNdlnDVar(PopulationVariable):
         scale='linear', # dN/dlnD is typically shown on linear scale; diameter itself on log scale
         long_label='Number size distribution',
         short_label='$dN/d\ln D$',
-        default_cfg={
-            "wetsize": True,
-            "normalize": False,
-            "method": "hist",
-            "N_bins": 80,
-            "D_min": 1e-9,
-            "D_max": 2e-6,
-            "diam_scale": "log",
-        },
+        # diameter grid default centralized in analysis.defaults; keep distribution options
+        # default_cfg={
+        #     "wetsize": True,
+        #     "normalize": False,
+        #     "method": "hist",
+        #     "N_bins": 80,
+        #     "D_min": 1e-9,
+        #     "D_max": 2e-6,
+        #     "diam_scale": "log",
+        # },
     )
 
     def compute(self, population, as_dict=False):

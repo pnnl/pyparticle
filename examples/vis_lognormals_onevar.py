@@ -49,11 +49,12 @@ def plot_one_line(varname='b_scat',
     plt.show()
     return lines, ax
 
-plot_one_line(varname='b_scat')
+varname = 'Nccn'
+plot_one_line(varname=varname)
 
 
 repo_root = Path(__file__).resolve().parent.parent
-out = repo_root / "examples" / "b_scat_lognormal.png"
+out = repo_root / "examples" / f"{varname}_lognormal.png"
 
 plt.savefig(out)
 

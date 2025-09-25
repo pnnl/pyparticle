@@ -14,7 +14,8 @@ class SupersaturationGridVar(PopulationVariable):
         short_label = 's',
         long_label = 'supersaturation',
         scale='log',
-        default_cfg={"s_grid": np.logspace(-2, 1, 100)},  # 0.01% to 10%
+        # axis/grid defaults are centralized in analysis.defaults
+        default_cfg={},
         aliases=('s','supersaturation','s_eval'),
     )
     def compute(self, population=None,as_dict=False):

@@ -14,14 +14,12 @@ class AbsCoeff(PopulationVariable):
         short_label="$b_{\mathrm{abs}}$",
         long_label="absorption coefficient",
         scale='linear',
-        default_cfg={
-            # fixme: wvl_grid rather than wvls? Consistent with RH grid?
-            "wvls": [550e-9],
-            "rh_grid": [0.0, 0.5, 0.9],
-            "morphology": "core-shell",
-            "species_modifications": {},
-            "T": 298.15,
-        },
+        # axis/grid defaults are centralized in analysis.defaults; keep other defaults
+        # default_cfg={
+        #     "morphology": "core-shell",
+        #     "species_modifications": {},
+        #     "T": 298.15,
+        # },
         aliases=("total_abs",),
     )
 
@@ -44,6 +42,6 @@ class AbsCoeff(PopulationVariable):
         return arr
 
 
-def build(cfg=None):
-    cfg = cfg or {}
-    return AbsCoeff(cfg)
+# def build(cfg=None):
+#     cfg = cfg or {}
+#     return AbsCoeff(cfg)

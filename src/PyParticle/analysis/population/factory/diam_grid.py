@@ -14,17 +14,17 @@ class DiamGridVar(PopulationVariable):
         scale='log',
         long_label = 'dry diameter',
         short_label = 'D',
-        default_cfg={"diam_grid": np.logspace(-9, -6, 80)},
+    # axis/grid defaults are centralized in analysis.defaults
+    default_cfg={},
         aliases=("D"),
     )
     def compute(self, population,as_dict=False):
         cfg = self.cfg
-        vals = cfg.get("diam_grid", np.logspace(-9, -6, 80))
+        vals = cfg.get("diam_grid")
         if as_dict:
             return {"diam_grid": np.asarray(vals)}
         else:
             return np.asarray(vals)
-
 
 def build(cfg=None):
     cfg = cfg or {}

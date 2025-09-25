@@ -24,14 +24,15 @@ class StateScatterPlotter(Plotter):
     def __init__(self, config: dict):
         self.type = "state_scatter"
         self.config = config
+        # make config for each variable? (see parci processes)
         self.var_cfg = dict(config.get("var_cfg", {}))
         self.xname = config.get("xvar")
         self.yname = config.get("yvar")
-        self.cname = config.get("cvar")
-        self.sname = config.get("svar")
+        self.cname = config.get("cvar",None)
+        self.sname = config.get("svar",None)
         if not (self.xname and self.yname):
             raise ValueError("StateScatterPlotter requires 'xvar' and 'yvar' in config.")
-
+        
     def _fmt_label(self, long_label, units):
         units = (units or "").strip()
         return f"{long_label} [{units}]" if units else long_label

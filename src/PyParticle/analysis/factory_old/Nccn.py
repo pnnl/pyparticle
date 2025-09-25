@@ -10,7 +10,9 @@ class NccnVar(AbstractVariable):
         value_key="Nccn",
         axis_keys=("s",),
         description="CCN activation spectrum",
-        default_cfg={"s_eval": np.linspace(0.01, 1.0, 50), "T": 298.15},
+        # axis/grid defaults centralized in analysis.defaults. Keep only
+        # variable-specific defaults here.
+        default_cfg={"T": 298.15},
     )
 
     def compute(self, population):

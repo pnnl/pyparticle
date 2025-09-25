@@ -15,7 +15,8 @@ class WvlGridVar(PopulationVariable):
         short_label = '$\lambda$',
         long_label = 'wavelength',
         scale='linear',
-        default_cfg={"wvl_grid": [0.0]},
+        # axis/grid defaults are centralized in analysis.defaults
+        default_cfg={},
         aliases=('wvls',),
     )
     def compute(self, population=None,as_dict=False):

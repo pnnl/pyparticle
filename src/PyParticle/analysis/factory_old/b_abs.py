@@ -11,9 +11,8 @@ class BAbsVar(AbstractVariable):
         value_key="b_abs",
         axis_keys=("rh_grid", "wvls"),
         description="Absorption coefficient",
+        # axis/grid defaults are centralized in analysis.defaults
         default_cfg={
-            "wvls": [550e-9],
-            "rh_grid": [0.0, 0.5, 0.9],
             "morphology": "core-shell",
             "species_modifications": {},
             "T": 298.15,

@@ -14,9 +14,10 @@ class NccnVar(PopulationVariable):
         scale='linear',
         long_label = 'CCN number concentration',
         short_label = '$N_{\mathrm{CCN}}(s)$',
-        default_cfg={"s_eval": np.linspace(0.01, 1.0, 50), "T": 298.15},
+        # s-grid default centralized in analysis.defaults; keep other defaults
+        default_cfg={"T": 298.15},
     )
-
+    
     def compute(self, population, as_dict=False):
         cfg = self.cfg
         s_eval = cfg.get("s_eval", [])
@@ -35,6 +36,6 @@ class NccnVar(PopulationVariable):
         return out
 
 
-def build(cfg=None):
-    cfg = cfg or {}
-    return NccnVar(cfg)
+# def build(cfg=None):
+#     cfg = cfg or {}
+#     return NccnVar(cfg)

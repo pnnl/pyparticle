@@ -14,9 +14,8 @@ class ExtinctionCoeff(PopulationVariable):
         short_label="$b_{\mathrm{text}}$",
         long_label="extinction coefficient",
         scale='linear',
+        # axis/grid defaults are centralized in analysis.defaults; keep other defaults
         default_cfg={
-            "wvls": [550e-9],
-            "rh_grid": [0.0, 0.5, 0.9],
             "morphology": "core-shell",
             "species_modifications": {},
             "T": 298.15,

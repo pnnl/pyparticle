@@ -24,6 +24,8 @@ class Variable:
     """
     meta: VariableMeta
     def __init__(self, cfg: Dict[str, Any]):
+        # VariableBuilder is responsible for merging defaults; Variable
+        # instances simply accept the already-merged config.
         self.cfg = cfg
     
     def compute(self, population):  # pragma: no cover - interface
@@ -36,5 +38,5 @@ class Variable:
         are the same as the current units.
         """
         if self.meta.units is None or new_units == self.meta.units:
-            return
+            pass
         raise NotImplementedError("Rescaling not implemented for " + new_units)

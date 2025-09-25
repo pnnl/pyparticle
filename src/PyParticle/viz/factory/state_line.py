@@ -15,7 +15,7 @@ class StateLinePlotter(Plotter):
         # normalize synonyms
         if "wvls" in self.var_cfg and "wvl_grid" not in self.var_cfg:
             self.var_cfg["wvl_grid"] = self.var_cfg.pop("wvls")
-
+        
     def _fmt_label(self, long_label, units):
         units = (units or "").strip()
         return f"{long_label} [{units}]" if units else long_label
@@ -25,7 +25,7 @@ class StateLinePlotter(Plotter):
         yvar = build_variable(name=self.varname, scope="population", var_cfg=self.var_cfg)
         # choose x-axis variable (simplified)
         if self.varname in ("Nccn", "frac_ccn"):
-            xvar = build_variable("s_grid", self.var_cfg)
+            xvar = build_variable("s_grid", scope="population", var_cfg=self.var_cfg)
         elif self.varname in ("b_abs","b_scat","b_ext"):
             has_w = len(self.var_cfg.get("wvl_grid", [])) > 1
             has_rh = len(self.var_cfg.get("rh_grid", [])) > 1
@@ -59,7 +59,7 @@ class StateLinePlotter(Plotter):
             "x": x, "y": y,
             "xlabel": self._fmt_label(xvar.meta.long_label, getattr(xvar.meta, "units", "")),
             "ylabel": self._fmt_label(yvar.meta.long_label, getattr(yvar.meta, "units", "")),
-            "xscale": "linear", "yscale": "linear",
+            "xscale": xvar.meta.scale, "yscale": yvar.meta.scale,
         }
 
     def plot(self, population, ax, **kwargs):

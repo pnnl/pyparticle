@@ -13,7 +13,7 @@ class PopulationVariable(Variable):
     `AbstractVariable = PopulationVariable`.
     """
     meta: VariableMeta
-
+    
     def __init__(self, cfg: Dict[str, Any]):
         self.cfg = cfg
 

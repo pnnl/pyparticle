@@ -15,7 +15,8 @@ class RHGridVar(PopulationVariable):
         scale='linear',
         long_label = 'relative humidity',
         short_label = 'RH',
-        default_cfg={"rh_grid": np.array([0.0])},
+        # axis/grid defaults are centralized in analysis.defaults
+        default_cfg={},
         aliases=(),
     )
     def compute(self, population,as_dict=False):

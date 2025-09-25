@@ -11,9 +11,9 @@ class BScatVar(AbstractVariable):
         value_key="b_scat",
         axis_keys=("rh_grid", "wvls"),
         description="Scattering coefficient",
+        # keep only variable-specific defaults here; axes/grids are centralized
+        # in analysis.defaults.get_defaults_for_variable
         default_cfg={
-            "wvls": [550e-9],
-            "rh_grid": [0.0, 0.5, 0.9],
             "morphology": "core-shell",
             "species_modifications": {},
             "T": 298.15,

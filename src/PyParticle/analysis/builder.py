@@ -3,6 +3,7 @@ from typing import Dict, Any, Callable
 
 # fixme: shouldn't resolve_name, _ALIASES be part of e.g., global_registry.py?
 from .population.factory.registry import resolve_name, _ALIASES
+from .defaults import get_defaults_for_variable as _get_defaults_for_var
 import warnings
 # Unified builder: routes to population or particle registries
 
@@ -59,15 +60,28 @@ class VariableBuilder:
 				defaults = dict(getattr(inst, "meta").default_cfg)
 			except Exception:
 				defaults = {}
-
+		
 		merged = dict(defaults)
+		# Merge order (lowest -> highest precedence):
+		# 1) canonical defaults for this variable name (from analysis.defaults)
+		# 2) builder/variable meta.default_cfg (variable-local defaults)
+		# 3) user-supplied cfg passed to the builder
+		# 4) runtime modifications via .modify()
+		merged = {}
+		# fetch defaults for the canonical variable name
+		try:
+			merged.update(_get_defaults_for_var(self.name))
+		except Exception:
+			# be conservative: ignore defaults lookup failures
+			pass
+		# overlay variable-local defaults then user cfg and runtime mods
+		merged.update(defaults)
 		merged.update(self.cfg)
 		merged.update(self._mods)
 		
 		# Call the builder with merged cfg
 		obj = builder(merged)
 		return obj
-
 
 def build_variable(name: str, scope: str = "population", var_cfg={}):
 	return VariableBuilder(name, var_cfg, scope=scope).build()

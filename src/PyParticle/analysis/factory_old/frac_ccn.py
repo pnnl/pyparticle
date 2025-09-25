@@ -10,7 +10,8 @@ class FracCCNVar(AbstractVariable):
         value_key="frac_ccn",
         axis_keys=("s",),
         description="Fractional CCN activation",
-        default_cfg={"s_eval": np.linspace(0.01, 1.0, 50), "T": 298.15},
+        # axis/grid defaults centralized in analysis.defaults.
+        default_cfg={"T": 298.15},
     )
 
     def compute(self, population):
