@@ -13,8 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 
-from PyParticle import build_population
-from PyParticle.viz_lessOld import plot_lines
+from PyParticle import build_population, build_optical_population
+from PyParticle import make_particle
 
 def pymiescatt_lognormal_b_scat(pop_cfg: Dict[str, Any], optics_cfg: Dict[str, Any], rh: float = 0.0):
     try:
@@ -236,48 +236,220 @@ def main(argv=None):
             " Remove any 'modes' shorthand and provide keys like 'N', 'GMD', 'GSD',"
             " 'aero_spec_names', and 'aero_spec_fracs' as parallel lists (see examples/configs/binned_lognormal_bscat_wvl.json)."
         )
-    
+
     pop_cfg_builder = config_to_builder_pop(pop_cfg)
     pop_cfg_builder.setdefault("type", "binned_lognormals")
     pop = build_population(pop_cfg_builder)
-    fig, ax = plt.subplots(1, 1, figsize=(6, 4))
-    # PyParticle b_scat (used for plotting)
-    lines, plotdats = plot_lines(ax, (pop,), 'b_scat', var_cfg=var_cfg)
-    # Also obtain PyParticle b_abs plot data for diagnostics
-    # _, plotdats_abs = plot_lines(ax, (pop,), 'b_abs', var_cfg=var_cfg)
 
-    # Compute PyMieScatt analytic reference (returns wavelengths in nm)
-    wl_nm_ref, b_scat_ref_m, b_abs_ref_m = pymiescatt_lognormal_b_scat(pop_cfg, var_cfg)
+    # Build optics config from variable cfg and population refractive index
+    opt_cfg_builder = dict(var_cfg)
+    opt_cfg_builder.setdefault("type", var_cfg.get("morphology", "homogeneous"))
+    opt_cfg_builder["diameter_units"] = "m"
+    # Force zero dispersion so refractive index stays constant across wavelength
+    opt_cfg_builder.setdefault("alpha_n", 0.0)
+    opt_cfg_builder.setdefault("alpha_k", 0.0)
+    # If population defines a refractive index (e.g., [n, k]) use it
+    refr = pop_cfg.get('refractive_index', pop_cfg.get('refractive_indices', None))
+    if refr is not None:
+        if isinstance(refr, (list, tuple)) and len(refr) >= 2:
+            opt_cfg_builder['n_550'] = float(refr[0])
+            opt_cfg_builder['k_550'] = float(refr[1])
+        else:
+            # allow scalar real index
+            opt_cfg_builder['n_550'] = float(refr)
 
-    # Extract PyParticle b_scat plot data (x in meters -> convert to nm)
-    if not plotdats:
-        raise RuntimeError("No b_scat PlotDat returned from plot_lines")
-    pd_scat = plotdats[0]
-    x_m = np.asarray(pd_scat.get('x'))
-    y_scat_py = np.asarray(pd_scat.get('y'))
-    x_nm = x_m * 1e9
+    opt_pop = build_optical_population(pop, opt_cfg_builder)
 
-    # Interpolate PyMieScatt b_scat reference onto PyParticle wavelength grid if necessary
-    sort_idx = np.argsort(wl_nm_ref)
-    wl_nm_ref_sorted = np.asarray(wl_nm_ref)[sort_idx]
-    b_scat_ref_sorted = np.asarray(b_scat_ref_m)[sort_idx]
-    b_scat_ref_on_py = np.interp(x_nm, wl_nm_ref_sorted, b_scat_ref_sorted)
+    # Extract b_scat vs wavelength at RH=0 using OpticalPopulation API
+    wl = np.asarray(opt_cfg_builder.get("wvl_grid", [550e-9]))
 
-    # Percent difference: (py - ref)/ref * 100
-    with np.errstate(divide='ignore', invalid='ignore'):
-        pct_diff = 100.0 * (y_scat_py - b_scat_ref_on_py) / b_scat_ref_on_py
-
-    # Write scattering diagnostics CSV
-    out_csv = Path("examples/bscat_comparison.csv")
-    header = "wavelength_nm,b_scat_pyParticle,b_scat_pymiescatt_m-1,pct_diff_b_scat\n"
-    rows = []
-    for xi, pyv, refv, pdv in zip(x_nm, y_scat_py, b_scat_ref_on_py, pct_diff):
-        rows.append(f"{float(xi):.2f},{pyv:.6e},{refv:.6e},{pdv:.6e}\n")
-    out_csv.write_text(header + "".join(rows))
-    print(f"Wrote scattering diagnostics CSV: {out_csv}")
-    print(plotdats)
-
+    # Diagnostic: print refractive index used per wavelength to confirm no dispersion
+    print("Refractive indices used by PyParticle:")
+    for i, w in enumerate(wl):
+        try:
+            n_val = opt_pop.n_complex[i].real
+            k_val = opt_pop.n_complex[i].imag
+            print(f"{w*1e9:.0f} nm: n={n_val:.3f}, k={k_val:.3f}")
+        except Exception:
+            # if opt_pop.n_complex not available or shaped differently, skip gracefully
+            pass
+    rh_val = float(opt_cfg_builder.get("rh_grid", [0.0])[0])
+    # get_optical_coeff returns array across wavelengths when wvl is None
+    b_scat_pp = opt_pop.get_optical_coeff("b_scat", rh=rh_val, wvl=None)
     
+    try:
+        # Pass population cfg (which contains refractive index) and variable cfg
+        # Wrapper returns (wl_nm, b_scat_m, b_abs_m)
+        wl_p, b_scat_pms_m, b_abs_pms_m = pymiescatt_lognormal_b_scat(pop_cfg, var_cfg, rh=0.0)
+    except Exception as e:
+        print("PyMieScatt comparison failed:", e)
+        wl_p, b_scat_pms_m, b_abs_pms_m = (wl * 1e9), np.zeros_like(wl), np.zeros_like(wl)
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(wl * 1e9, b_scat_pp, marker="o", label="PyParticle core_shell b_scat")
+    # wl_p returned by wrapper is in nm already
+    ax.plot(wl_p, b_scat_pms_m, marker="x", linestyle="--", label="PyMieScatt lognormal b_scat")
+    # compute percent difference (avoid divide-by-zero)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        pct_diff = 100.0 * (b_scat_pp - b_scat_pms_m) / np.where(b_scat_pms_m != 0, b_scat_pms_m, np.nan)
+    # annotate max absolute percent difference
+    if np.any(np.isfinite(pct_diff)):
+        max_abs_pct = np.nanmax(np.abs(pct_diff))
+        ax.annotate(f"max |% diff| = {max_abs_pct:.1f}%", xy=(0.05, 0.95), xycoords='axes fraction', fontsize=9,
+                    verticalalignment='top')
+    else:
+        ax.annotate("percent diff undefined (zero reference)", xy=(0.05, 0.95), xycoords='axes fraction', fontsize=9,
+                    verticalalignment='top')
+    ax.set_xlabel("Wavelength (nm)")
+    ax.set_ylabel("b_scat (m^-1)")
+    ax.set_title("b_scat vs wavelength at RH=0")
+    ax.grid(True)
+    ax.legend()
+
+    out = Path("examples") / "out_bscat_vs_wvl.png"
+    fig.tight_layout()
+    fig.savefig(out, dpi=180)
+    print(f"Wrote: {out}")
+    # Write numeric comparison CSV
+    import csv
+    csv_out = Path("examples") / "bscat_comparison.csv"
+    with open(csv_out, "w", newline='') as fh:
+        writer = csv.writer(fh)
+        writer.writerow(["wavelength_nm", "b_scat_pyParticle", "b_scat_pymiescatt_m-1", "b_abs_pymiescatt_m-1", "pct_diff_b_scat"])
+        for w, a, b, babs, p in zip(wl * 1e9, b_scat_pp, b_scat_pms_m, b_abs_pms_m, pct_diff):
+            writer.writerow([f"{w:.2f}", f"{a:.6e}", f"{b:.6e}", f"{babs:.6e}", f"{p:.6e}"])
+    print(f"Wrote: {csv_out}")
+
+    # --- b_abs vs wavelength comparison plot ---
+    try:
+        b_abs_pp = opt_pop.get_optical_coeff("b_abs", rh=rh_val, wvl=None)
+    except Exception:
+        b_abs_pp = np.zeros_like(b_scat_pp)
+
+    fig2, ax2 = plt.subplots(figsize=(6, 4))
+    ax2.plot(wl * 1e9, b_abs_pp, marker="o", label="PyParticle core_shell b_abs")
+    ax2.plot(wl_p, b_abs_pms_m, marker="x", linestyle="--", label="PyMieScatt lognormal b_abs")
+    with np.errstate(divide='ignore', invalid='ignore'):
+        pct_diff_abs = 100.0 * (b_abs_pp - b_abs_pms_m) / np.where(b_abs_pms_m != 0, b_abs_pms_m, np.nan)
+    if np.any(np.isfinite(pct_diff_abs)):
+        max_abs_pct_abs = np.nanmax(np.abs(pct_diff_abs))
+        ax2.annotate(f"max |% diff| = {max_abs_pct_abs:.1f}%", xy=(0.05, 0.95), xycoords='axes fraction', fontsize=9,
+                     verticalalignment='top')
+    else:
+        ax2.annotate("percent diff undefined (zero reference)", xy=(0.05, 0.95), xycoords='axes fraction', fontsize=9,
+                     verticalalignment='top')
+    ax2.set_xlabel("Wavelength (nm)")
+    ax2.set_ylabel("b_abs (m^-1)")
+    ax2.set_title("b_abs vs wavelength at RH=0")
+    ax2.grid(True)
+    ax2.legend()
+    out2 = Path("examples") / "out_babs_vs_wvl.png"
+    fig2.tight_layout()
+    fig2.savefig(out2, dpi=180)
+    print(f"Wrote: {out2}")
+
+    # Write absorption comparison CSV
+    csv_abs = Path("examples") / "babs_comparison.csv"
+    with open(csv_abs, "w", newline='') as fh:
+        writer = csv.writer(fh)
+        writer.writerow(["wavelength_nm", "b_abs_pyParticle", "b_abs_pymiescatt_m-1", "pct_diff_b_abs"])
+        for w, a_abs, b_abs_val, p_abs in zip(wl * 1e9, b_abs_pp, b_abs_pms_m, pct_diff_abs):
+            writer.writerow([f"{w:.2f}", f"{a_abs:.6e}", f"{b_abs_val:.6e}", f"{p_abs:.6e}"])
+    print(f"Wrote: {csv_abs}")
+
+    # --- Make a figure of b_scat vs RH for a homogeneous sphere ---
+    def plot_b_scat_vs_rh_homogeneous():
+        # Determine diameter and number from the builder config
+        # prefer pop_cfg_builder (which was translated to builder format)
+        try:
+            D = float(pop_cfg_builder.get('GMD', [200e-9])[0])
+        except Exception:
+            D = float(pop_cfg_builder.get('GMD', 200e-9))
+        try:
+            N = float(pop_cfg_builder.get('N', [1000.0])[0])
+        except Exception:
+            N = float(pop_cfg_builder.get('N', 1000.0))
+        # Use binned lognormal builder config (created earlier) to build a
+        # binned_lognormal population for the RH sweep. Ensure the builder
+        # configuration uses a single SO4 mode.
+        try:
+            binned_cfg = pop_cfg_builder.copy()
+            binned_cfg.setdefault('type', 'binned_lognormals')
+            # Force single-species SO4 with full mass fraction if not present
+            if 'aero_spec_names' in binned_cfg:
+                # already aligned
+                pass
+            else:
+                binned_cfg['aero_spec_names'] = [['SO4']]
+                binned_cfg['aero_spec_fracs'] = [[1.0]]
+            binned_pop = build_population(binned_cfg)
+        except Exception as e:
+            print('Failed to build binned_lognormal population for RH sweep:', e)
+            return
+        rh_grid = np.linspace(0.0, 0.95, 10)
+        wvl_grid = np.asarray(var_cfg.get('wvl_grid', [550e-9]))
+        # Map refractive index keys if present
+        ri = pop_cfg.get('refractive_index_core', pop_cfg.get('refractive_index', pop_cfg.get('refractive_indices', None)))
+        n_550 = None
+        k_550 = None
+        if isinstance(ri, (list, tuple)) and len(ri) >= 2:
+            n_550 = float(ri[0])
+            k_550 = float(ri[1])
+
+        ocfg = {
+            'type': 'homogeneous',
+            'rh_grid': list(rh_grid),
+            'wvl_grid': list(wvl_grid),
+            'diameter_units': 'm',
+        }
+        if n_550 is not None:
+            ocfg['n_550'] = n_550
+        if k_550 is not None:
+            ocfg['k_550'] = k_550
+
+        optical_pop = build_optical_population(binned_pop, ocfg)
+        # Get scattering coefficient per RH (first wavelength)
+        try:
+            b_scat_arr = optical_pop.get_optical_coeff('b_scat', rh=None, wvl=None)
+        except Exception:
+            # Fallback: sum per-particle cross sections
+            bs = np.zeros((len(rh_grid), len(wvl_grid)))
+            for i, particle in enumerate(optical_pop.particles):
+                Csca = particle.get_cross_section('b_scat')
+                bs += np.asarray(Csca) * optical_pop.num_concs[i]
+            b_scat_arr = bs
+
+        fig, ax = plt.subplots(figsize=(6, 4))
+        # If b_scat_arr is 2D [rh, wvl], plot first wavelength vs RH
+        ax.plot(rh_grid, b_scat_arr[:, 0], marker='o')
+        ax.set_xlabel('RH')
+        ax.set_ylabel('b_scat (m^-1)')
+        ax.set_title('b_scat vs RH (homogeneous sphere)')
+        ax.grid(True)
+        out_rh = Path('examples') / 'out_bscat_vs_rh.png'
+        fig.tight_layout()
+        fig.savefig(out_rh, dpi=180)
+        print(f'Wrote: {out_rh}')
+
+        # Also compute/plot b_abs vs RH if available
+        try:
+            b_abs_arr = optical_pop.get_optical_coeff('b_abs', rh=None, wvl=None)
+            fig_ab, ax_ab = plt.subplots(figsize=(6, 4))
+            ax_ab.plot(rh_grid, b_abs_arr[:, 0], marker='o')
+            ax_ab.set_xlabel('RH')
+            ax_ab.set_ylabel('b_abs (m^-1)')
+            ax_ab.set_title('b_abs vs RH (homogeneous sphere)')
+            ax_ab.grid(True)
+            out_ab_rh = Path('examples') / 'out_babs_vs_rh.png'
+            fig_ab.tight_layout()
+            fig_ab.savefig(out_ab_rh, dpi=180)
+            print(f'Wrote: {out_ab_rh}')
+        except Exception:
+            # if unavailable, skip silently
+            pass
+
+    plot_b_scat_vs_rh_homogeneous()
+
 
 if __name__ == "__main__":
     main()

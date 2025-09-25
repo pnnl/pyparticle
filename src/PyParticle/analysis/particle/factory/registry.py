@@ -112,8 +112,8 @@ def describe_particle_variable(name: str):
 
     return {
         "name": meta.name,
-        "value_key": meta.value_key,
-        "axis_keys": list(meta.axis_keys),
+        "value_key": meta.name,
+        "axis_keys": list(meta.axis_names),
         "description": meta.description,
         "aliases": list(meta.aliases),
         "defaults": dict(meta.default_cfg),

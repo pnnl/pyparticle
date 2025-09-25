@@ -92,7 +92,7 @@ def list_variables(include_aliases: bool = False):
     return names
 
 def describe_variable(name: str):
-    builder = get_builder(name)
+    builder = get_population_builder(name)
     meta = None
     if hasattr(builder, "meta"):
         meta = getattr(builder, "meta")
@@ -108,8 +108,8 @@ def describe_variable(name: str):
 
     return {
         "name": meta.name,
-        "value_key": meta.value_key,
-        "axis_keys": list(meta.axis_keys),
+        "value_key": meta.name,
+        "axis_keys": list(meta.axis_names),
         "description": meta.description,
         "aliases": list(meta.aliases),
         "defaults": dict(meta.default_cfg),

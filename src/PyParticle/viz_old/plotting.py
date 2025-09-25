@@ -10,6 +10,7 @@ Role:
 from typing import Sequence, Optional, Tuple, Union, Dict, Any
 import matplotlib.axes
 import matplotlib.pyplot as plt
+from ..analysis import compute_plotdat, build_default_var_cfg
 from . import data_prep
 from ..population.base import ParticlePopulation  # forward reference in function signatures
 # Avoid importing ParticlePopulation at module import time to prevent
@@ -17,42 +18,42 @@ from ..population.base import ParticlePopulation  # forward reference in functio
 # We use a forward reference in the function signature below.
 # fixme: link directly with PyParticle populations
 
-def plot_scatter(varnames,
-                 particle_population: ParticlePopulation,
-                 var_cfgs: Optional[Sequence[Dict[str, Any]]] = None,
-                 colormap: Optional[str] = None,
-                 size: Union[float, Sequence[float]] = 20,
-                 ax: Optional[matplotlib.axes.Axes] = None):
-    """Plot a scatter of per-partcle variables `ax` and return the created PathCollection artist.
-    """
-    if ax is None:
-        fig, ax = plt.subplots()
+# def plot_scatter(varnames,
+#                  particle_population: ParticlePopulation,
+#                  var_cfgs: Optional[Sequence[Dict[str, Any]]] = None,
+#                  colormap: Optional[str] = None,
+#                  size: Union[float, Sequence[float]] = 20,
+#                  ax: Optional[matplotlib.axes.Axes] = None):
+#     """Plot a scatter of per-partcle variables `ax` and return the created PathCollection artist.
+#     """
+#     if ax is None:
+#         fig, ax = plt.subplots()
     
-    dat = data_prep.prepare_particle_variable(particle_population, varnames, var_cfgs)
-    x, y, c, s, labs = dat["x"], dat["y"], dat["c"], dat["s"], dat["labs"]
-    # todo: 3D scatter later?
-    xscale, yscale, cscale = dat.get("xscale", "linear"), dat.get("yscale", "linear"), dat.get('cscale', 'linear')
+#     dat = data_prep.prepare_particle_variable(particle_population, varnames, var_cfgs)
+#     x, y, c, s, labs = dat["x"], dat["y"], dat["c"], dat["s"], dat["labs"]
+#     # todo: 3D scatter later?
+#     xscale, yscale, cscale = dat.get("xscale", "linear"), dat.get("yscale", "linear"), dat.get('cscale', 'linear')
     
-    if c is not None and colormap is None:
-        colormap = 'viridis'
-    cmap = plt.get_cmap(colormap) if colormap else None
-    alpha = 0.7 if c is not None else 1.0
-    edgecolors = 'none' if c is not None else 'face'
-    vmin, vmax = None, None
-    if cscale == 'log' and c is not None:
-        vmin = max(min(c[c > 0]), 1e-5)
-        vmax = max(c)
-    hsc = ax.scatter(x, y, c=c, s=s, cmap=cmap, alpha=alpha, edgecolors=edgecolors, vmin=vmin, vmax=vmax)
-    ax.set_xlabel(labs[0])
-    ax.set_ylabel(labs[1])
-    if labs[2]:
-        cbar = plt.colorbar(mappable=ax.collections[0], ax=ax)
-        cbar.set_label(labs[2])
-    # fixme: not working with scale
+#     if c is not None and colormap is None:
+#         colormap = 'viridis'
+#     cmap = plt.get_cmap(colormap) if colormap else None
+#     alpha = 0.7 if c is not None else 1.0
+#     edgecolors = 'none' if c is not None else 'face'
+#     vmin, vmax = None, None
+#     if cscale == 'log' and c is not None:
+#         vmin = max(min(c[c > 0]), 1e-5)
+#         vmax = max(c)
+#     hsc = ax.scatter(x, y, c=c, s=s, cmap=cmap, alpha=alpha, edgecolors=edgecolors, vmin=vmin, vmax=vmax)
+#     ax.set_xlabel(labs[0])
+#     ax.set_ylabel(labs[1])
+#     if labs[2]:
+#         cbar = plt.colorbar(mappable=ax.collections[0], ax=ax)
+#         cbar.set_label(labs[2])
+#     # fixme: not working with scale
 
-    ax.set_xscale(xscale)
-    ax.set_yscale(yscale)
-    return fig, ax, hsc, dat
+#     ax.set_xscale(xscale)
+#     ax.set_yscale(yscale)
+#     return fig, ax, hsc, dat
 
 # fixme: this is lines for a given state; add vs. time/height as different plot
 # fixme: separate distributions as their own plot? 
@@ -102,29 +103,19 @@ def plot_lines(varname,
         elif isinstance(markers, list):
             marker = markers[ii]
 
-        default_var_cfg = data_prep.build_default_var_cfg(varname)
+        default_var_cfg = build_default_var_cfg(varname)
         # merge user var_cfg with defaults (do not mutate caller dict)
         merged_cfg = dict(default_var_cfg)
         if var_cfg:
             for k, v in var_cfg.items():
                 merged_cfg[k] = v
 
-        # Dispatch directly to the new data_prep helpers instead of older analysis
-        if varname == "dNdlnD":
-            dat = data_prep.prepare_dNdlnD(particle_population, merged_cfg)
-        elif varname == "Nccn":
-            dat = data_prep.prepare_Nccn(particle_population, merged_cfg)
-        elif varname == "frac_ccn":
-            dat = data_prep.prepare_frac_ccn(particle_population, merged_cfg)
-        elif varname in ["b_abs", "b_scat", "b_ext", "total_abs", "total_scat", "total_ext"]:
-            if merged_cfg.get("vs_rh", False):
-                dat = data_prep.prepare_optical_vs_rh(particle_population, dict(merged_cfg, coeff=varname))
-            else:
-                dat = data_prep.prepare_optical_vs_wvl(particle_population, dict(merged_cfg, coeff=varname))
-        elif varname == "Ntot":
+        # Delegate to analysis.compute_plotdat which returns a PlotDat dict
+        if varname == "Ntot":
             dat = {"x": None, "y": None, "labs": ("", ""), "xscale": "linear", "yscale": "linear"}
         else:
-            raise NotImplementedError(f"varname={varname} not yet implemented in plotting.plot_lines")
+            # compute_plotdat expects canonical/alias names and a var_cfg dict
+            dat = compute_plotdat(particle_population, varname, merged_cfg)
 
         x, y, labs = dat["x"], dat["y"], dat["labs"]
         xscale, yscale = dat.get("xscale", "linear"), dat.get("yscale", "linear")

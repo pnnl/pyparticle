@@ -7,10 +7,6 @@ from .population.factory.registry import list_variables as _list, describe_varia
 def compute_variable(population, varname: str | None = None, var_cfg: Dict[str, Any] | None = None):
     if var_cfg is None:
         var_cfg = {}
-    if varname is None:
-        if "varname" not in var_cfg:
-            raise ValueError("compute_variable requires varname or var_cfg['varname']")
-        varname = var_cfg.pop("varname")
     user_requested = varname
     canon = resolve_name(varname)
     if user_requested != canon and user_requested in _ALIASES:
@@ -22,7 +18,9 @@ def compute_variable(population, varname: str | None = None, var_cfg: Dict[str, 
     var_obj = build_variable(canon, **var_cfg)
     out = var_obj.compute(population)
     # simple squeeze
-    vk = var_obj.meta.value_key
+    # legacy code used meta.value_key; new meta uses meta.name as the
+    # canonical value key for the vardat entry.
+    vk = var_obj.meta.name
     try:
         import numpy as _np
         arr = _np.asarray(out[vk])

@@ -7,15 +7,19 @@ from .registry import register_variable
 class NccnVar(PopulationVariable):
     meta = VariableMeta(
         name="Nccn",
-        value_key="Nccn",
-        axis_keys=("s",),
-        description="CCN activation spectrum",
+            axis_names=("s",),
+        description="CCN number concentration as a function of supersaturation",
+        units="m$^{-3}$",
+        aliases=(),
+        scale='linear',
+        long_label = 'CCN number concentration',
+        short_label = '$N_{\mathrm{CCN}}(s)$',
         default_cfg={"s_eval": np.linspace(0.01, 1.0, 50), "T": 298.15},
     )
 
-    def compute(self, population):
+    def compute(self, population, as_dict=False):
         cfg = self.cfg
-        s_eval = cfg["s_eval"]
+        s_eval = cfg.get("s_eval", [])
         s_eval = np.asarray(s_eval, dtype=float)
         out = np.zeros_like(s_eval, dtype=float)
         for idx, s_env in enumerate(s_eval):
@@ -26,7 +30,9 @@ class NccnVar(PopulationVariable):
                 if s_env >= s_crit:
                     c += float(population.num_concs[i])
             out[idx] = c
-        return {"s": s_eval, "Nccn": out}
+        if as_dict:
+            return {"s": s_eval, "Nccn": out}
+        return out
 
 
 def build(cfg=None):

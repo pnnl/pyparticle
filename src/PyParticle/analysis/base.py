@@ -1,24 +1,40 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict, Any, Sequence, Tuple
-
+from dataclasses import dataclass, field
+from typing import Dict, Any, Sequence, Tuple, Optional
 
 
 @dataclass(frozen=True)
 class VariableMeta:
     name: str
-    value_key: str
-    axis_keys: Sequence[str]
-    description: str
-    default_cfg: Dict[str, Any]
+    axis_names: Sequence[str]
+    description: str  # axes label without units
+    long_label: Optional[str] = None  # with units
+    short_label: Optional[str] = None  # with units, for plots
+    default_cfg: Dict[str, Any] = field(default_factory=dict)
     aliases: Tuple[str, ...] = ()
-    units: Dict[str, str] | None = None
+    units: Optional[str] = None
+    scale: str = "linear"  # or 'log'
+    
+class Variable:
+    """Base class for variables that operate on an entire population.
 
+    This class replaces the legacy `AbstractVariable`. For backwards
+    compatibility the top-level `analysis.base` module will alias
+    `AbstractVariable = Variable`.
+    """
+    meta: VariableMeta
+    def __init__(self, cfg: Dict[str, Any]):
+        self.cfg = cfg
+    
+    def compute(self, population):  # pragma: no cover - interface
+        raise NotImplementedError
+    
+    def rescale(self, new_units):
+        """Rescale the variable to new units.
 
-from .population.base import PopulationVariable, VariableMeta
-
-# Backwards compatible alias. Many existing factory modules import
-# `AbstractVariable` from `analysis.base`; keep that name working.
-AbstractVariable = PopulationVariable
-
-__all__ = ["PopulationVariable", "AbstractVariable", "VariableMeta"]
+        This is a no-op if the variable has no units or if the new units
+        are the same as the current units.
+        """
+        if self.meta.units is None or new_units == self.meta.units:
+            return
+        raise NotImplementedError("Rescaling not implemented for " + new_units)

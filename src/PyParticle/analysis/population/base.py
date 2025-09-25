@@ -1,20 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Any, Sequence, Tuple
+from ..base import Variable, VariableMeta
 
 
-@dataclass(frozen=True)
-class VariableMeta:
-    name: str
-    value_key: str
-    axis_keys: Sequence[str]
-    description: str
-    default_cfg: Dict[str, Any]
-    aliases: Tuple[str, ...] = ()
-    units: Dict[str, str] | None = None
-
-
-class PopulationVariable:
+# fixme: call this something else? StateVariable? PopulationStateVariable?
+class PopulationVariable(Variable):
     """Base class for variables that operate on an entire population.
 
     This class replaces the legacy `AbstractVariable`. For backwards

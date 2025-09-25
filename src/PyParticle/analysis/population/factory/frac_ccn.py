@@ -7,15 +7,18 @@ from .registry import register_variable
 class FracCCNVar(PopulationVariable):
     meta = VariableMeta(
         name="frac_ccn",
-        value_key="frac_ccn",
-        axis_keys=("s",),
-        description="Fractional CCN activation",
+        axis_names=("s",),
+        description="fraction of particles that are CCN-activate at given supersaturation",
+        units="",
+        short_label="$frac_{\mathrm{CCN}}$",
+        long_label="fraction CCN-active",
+        scale='linear',
         default_cfg={"s_eval": np.linspace(0.01, 1.0, 50), "T": 298.15},
     )
 
-    def compute(self, population):
+    def compute(self, population, as_dict=False):
         cfg = self.cfg
-        s_eval = np.asarray(cfg["s_eval"], dtype=float)
+        s_eval = np.asarray(cfg.get("s_eval", []), dtype=float)
         # reuse logic from NccnVar
         nccn = []
         for s_env in s_eval:
@@ -29,7 +32,9 @@ class FracCCNVar(PopulationVariable):
         nccn = np.asarray(nccn)
         total = float(sum(population.num_concs))
         frac = nccn / total if total > 0 else nccn
-        return {"s": s_eval, "frac_ccn": frac}
+        if as_dict:
+            return {"s": s_eval, "frac_ccn": frac}
+        return frac
 
 
 def build(cfg=None):

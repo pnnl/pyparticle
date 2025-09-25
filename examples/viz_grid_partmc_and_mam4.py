@@ -30,9 +30,9 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 from PyParticle.population import build_population
 from PyParticle.analysis import compute_variable  # Demonstration (not strictly needed in grid path)
-from PyParticle.viz.layout import make_grid  # use local grid constructor instead of scenarios_models
-from PyParticle.viz.plotting import plot_lines
-from PyParticle.viz.stylemap import map_linestyles_for_series  # if needed for custom legend
+from PyParticle.viz_old.layout import make_grid  # use local grid constructor instead of scenarios_models
+from PyParticle.viz_old.plotting import plot_lines
+from PyParticle.viz_old.stylemap import map_linestyles_for_series  # if needed for custom legend
 
 
 from examples.model_helpers import (
@@ -193,7 +193,7 @@ def main():
 
             # Apply formatting (format_axes + legend handled inside helpers typically)
             try:
-                from PyParticle.viz.formatting import format_axes, add_legend
+                from PyParticle.viz_old.formatting import format_axes, add_legend
                 format_axes(ax, xlabel=xlabel, ylabel=ylabel, title=title, grid=False)
                 # Ensure legend labels are present and consistent
                 lines = ax.get_lines()

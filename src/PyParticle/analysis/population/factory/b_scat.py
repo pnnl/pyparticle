@@ -8,9 +8,12 @@ from PyParticle.optics.builder import build_optical_population
 class BScatVar(PopulationVariable):
     meta = VariableMeta(
         name="b_scat",
-        value_key="b_scat",
-        axis_keys=("rh_grid", "wvls"),
+        axis_names=("rh_grid", "wvls"),
         description="Scattering coefficient",
+        units="m$^{-1}$",
+        short_label="$b_{scat}$",
+        long_label="scattering coefficient",
+        scale='linear',
         default_cfg={
             "wvls": [550e-9],
             "rh_grid": [0.0, 0.5, 0.9],
@@ -21,21 +24,23 @@ class BScatVar(PopulationVariable):
         aliases=("total_scat",),
     )
 
-    def compute(self, population):
+    def compute(self, population, as_dict=False):
         cfg = self.cfg
         morph = cfg["morphology"]
         if morph == "core-shell":
             morph = "core_shell"
         ocfg = {
             "rh_grid": list(cfg["rh_grid"]),
-            "wvl_grid": list(cfg["wvls"]),
+            "wvl_grid": list(cfg.get("wvl_grid", cfg.get("wvls", []))),
             "type": morph,
             "temp": cfg["T"],
             "species_modifications": cfg.get("species_modifications", {}),
         }
         optical_pop = build_optical_population(population, ocfg)
         arr = optical_pop.get_optical_coeff("b_scat", rh=None, wvl=None)
-        return {"rh_grid": np.asarray(cfg["rh_grid"]), "wvls": np.asarray(cfg["wvls"]), "b_scat": arr}
+        if as_dict:
+            return {"rh_grid": np.asarray(cfg["rh_grid"]), "wvl_grid": np.asarray(ocfg["wvl_grid"]), "b_scat": arr}
+        return arr
 
 
 def build(cfg=None):

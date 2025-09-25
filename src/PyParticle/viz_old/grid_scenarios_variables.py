@@ -25,8 +25,7 @@ from ..population.builder import build_population
 from ..population.base import ParticlePopulation
 # Prefer analysis.builder as the authoritative source of variable defaults
 from ..analysis.builder import build_variable
-# keep legacy data_prep defaults as a safe fallback
-from .data_prep import build_default_var_cfg as legacy_build_default_var_cfg
+from ..analysis import build_default_var_cfg as legacy_build_default_var_cfg
 
 
 def _load_config_from_path(p: str) -> dict:
@@ -138,7 +137,7 @@ def make_grid_scenarios_variables_same_timestep(
                         var_obj = build_variable(var, scope="population")
                         defaults = dict(getattr(var_obj, "meta").default_cfg)
                     except Exception:
-                        # if analysis builder fails for any reason, fall back to legacy
+                        # if analysis builder fails for any reason, fall back to analysis defaults
                         defaults = legacy_build_default_var_cfg(var)
                     var_defaults_cache[var] = defaults
                 vcfg = dict(var_defaults_cache[var])

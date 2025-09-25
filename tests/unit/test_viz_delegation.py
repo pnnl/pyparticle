@@ -1,5 +1,4 @@
-import types
-from PyParticle.viz import data_prep
+from PyParticle.analysis import compute_plotdat
 
 
 def test_prepare_dNdlnD_delegates(monkeypatch, small_binned_pop):
@@ -9,8 +8,9 @@ def test_prepare_dNdlnD_delegates(monkeypatch, small_binned_pop):
         called['args'] = (pop, name, cfg)
         return {"D": [1.0], "dNdlnD": [10.0]}
 
-    # data_prep imports compute_variable as _compute_variable
-    monkeypatch.setattr(data_prep, "_compute_variable", fake_compute)
-    out = data_prep.prepare_dNdlnD(small_binned_pop, {"N_bins": 5})
+    # monkeypatch dispatcher.compute_variable which compute_plotdat will call
+    import PyParticle.analysis.dispatcher as _disp
+    monkeypatch.setattr(_disp, "compute_variable", fake_compute)
+    out = compute_plotdat(small_binned_pop, "dNdlnD", {"N_bins": 5})
     assert isinstance(out, dict)
     assert called['args'][1] == "dNdlnD"

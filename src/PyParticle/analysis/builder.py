@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import Dict, Any, Callable
 
+# fixme: shouldn't resolve_name, _ALIASES be part of e.g., global_registry.py?
+from .population.factory.registry import resolve_name, _ALIASES
+import warnings
 # Unified builder: routes to population or particle registries
 
 def _get_registry_builder(scope: str) -> Callable[[str], Callable]:
@@ -26,11 +29,19 @@ class VariableBuilder:
 	  VariableBuilder(name, cfg=None, scope='population').build()
 	"""
 	def __init__(self, name: str, cfg: Dict[str, Any] | None = None, scope: str = "population"):
-		self.name = name
+		user_requested = name
+		canon = resolve_name(name)
+		if user_requested != canon and user_requested in _ALIASES:
+			warnings.warn(
+				f"Variable alias '{user_requested}' is deprecated; use '{canon}' instead.",
+				DeprecationWarning,
+				stacklevel=2,
+			)
+		self.name = canon
 		self.cfg = cfg or {}
 		self._mods: Dict[str, Any] = {}
 		self.scope = scope
-
+	
 	def modify(self, **k):
 		self._mods.update(k)
 		return self
@@ -52,14 +63,14 @@ class VariableBuilder:
 		merged = dict(defaults)
 		merged.update(self.cfg)
 		merged.update(self._mods)
-
+		
 		# Call the builder with merged cfg
 		obj = builder(merged)
 		return obj
 
 
-def build_variable(name: str, scope: str = "population", **cfg):
-	return VariableBuilder(name, cfg, scope=scope).build()
+def build_variable(name: str, scope: str = "population", var_cfg={}):
+	return VariableBuilder(name, var_cfg, scope=scope).build()
 
 
 __all__ = ["VariableBuilder", "build_variable"]

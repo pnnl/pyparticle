@@ -5,12 +5,15 @@ from .registry import register_variable
 from PyParticle.optics.builder import build_optical_population
 
 @register_variable("b_ext")
-class BExtVar(PopulationVariable):
+class ExtinctionCoeff(PopulationVariable):
     meta = VariableMeta(
         name="b_ext",
-        value_key="b_ext",
-        axis_keys=("rh_grid", "wvls"),
+        axis_names=("rh_grid", "wvls"),
         description="Extinction coefficient",
+        units="m$^{-1}$",
+        short_label="$b_{\mathrm{text}}$",
+        long_label="extinction coefficient",
+        scale='linear',
         default_cfg={
             "wvls": [550e-9],
             "rh_grid": [0.0, 0.5, 0.9],
@@ -18,26 +21,28 @@ class BExtVar(PopulationVariable):
             "species_modifications": {},
             "T": 298.15,
         },
-        aliases=("total_ext",),
+        aliases=("total_ext","extinction_coeff","ext_coeff","extinction_coefficient",),
     )
 
-    def compute(self, population):
+    def compute(self, population, as_dict=False):
         cfg = self.cfg
         morph = cfg["morphology"]
         if morph == "core-shell":
             morph = "core_shell"
         ocfg = {
-            "rh_grid": list(cfg["rh_grid"]),
-            "wvl_grid": list(cfg["wvls"]),
+            "rh_grid": cfg["rh_grid"],
+            "wvl_grid": cfg["wvl_grid"],
             "type": morph,
             "temp": cfg["T"],
             "species_modifications": cfg.get("species_modifications", {}),
         }
         optical_pop = build_optical_population(population, ocfg)
         arr = optical_pop.get_optical_coeff("b_ext", rh=None, wvl=None)
-        return {"rh_grid": np.asarray(cfg["rh_grid"]), "wvls": np.asarray(cfg["wvls"]), "b_ext": arr}
-
+        if as_dict:
+            return {"rh_grid": np.asarray(cfg["rh_grid"]), "wvl_grid": np.asarray(cfg["wvl_grid"]), "b_ext": arr}
+        else:
+            return arr
 
 def build(cfg=None):
     cfg = cfg or {}
-    return BExtVar(cfg)
+    return ExtinctionCoeff(cfg)

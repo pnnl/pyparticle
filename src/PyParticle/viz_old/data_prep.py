@@ -1,12 +1,12 @@
-"""Data preparation helpers for plotting (plot-ready APIs).
+"""[DEPRECATED] moved to :mod:`PyParticle.analysis.prepare`.
 
-This module refactors plot data assembly out of `analysis.py` into
-small, well-documented functions that return a consistent PlotDat dict:
-  {"x": np.ndarray or None, "y": np.ndarray, "labs": [xlabel,ylabel], "xscale": str, "yscale": str}
+This module was superseded by `analysis.prepare` which now owns the
+vardat->PlotDat preparers and defaults. The file has been kept briefly for
+backwards-compatibility but callers should import `PyParticle.analysis`:
 
-These functions are intentionally thin wrappers around existing calculation
-helpers (compute_dNdlnD, compute_Nccn, compute_optical_coeffs) to preserve
-numerical behavior while providing a clearer API to the viz layer.
+    from PyParticle.analysis import compute_plotdat, build_default_var_cfg
+
+and will be removed in a future release.
 """
 from __future__ import annotations
 
@@ -28,58 +28,60 @@ PlotDat = Dict[str, Any]
 # Deprecated direct compute #
 ############################
 
-def _deprecated(msg: str):
-    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+# def _deprecated(msg: str):
+#     warnings.warn(msg, DeprecationWarning, stacklevel=2)
 
 
-def compute_dNdlnD(*args, **kwargs):  # pragma: no cover - legacy shim
-    _deprecated("viz.data_prep.compute_dNdlnD is deprecated; use analysis.compute_variable('dNdlnD', cfg) or analysis.global_registry.get_variable_builder")
-    population = args[0]
-    cfg = dict(
-        wetsize=kwargs.get("wetsize", True),
-        normalize=kwargs.get("normalize", False),
-        method=kwargs.get("method", "hist"),
-        N_bins=kwargs.get("N_bins", 80),
-        D_min=kwargs.get("D_min", 1e-9),
-        D_max=kwargs.get("D_max", 2e-6),
-        diam_scale=kwargs.get("diam_scale", "log"),
-    )
-    return _compute_variable(population, "dNdlnD", cfg)
+# def compute_dNdlnD(*args, **kwargs):  # pragma: no cover - legacy shim
+#     _deprecated("viz.data_prep.compute_dNdlnD is deprecated; use analysis.compute_variable('dNdlnD', cfg) or analysis.global_registry.get_variable_builder")
+#     population = args[0]
+#     cfg = dict(
+#         wetsize=kwargs.get("wetsize", True),
+#         normalize=kwargs.get("normalize", False),
+#         method=kwargs.get("method", "hist"),
+#         N_bins=kwargs.get("N_bins", 80),
+#         D_min=kwargs.get("D_min", 1e-9),
+#         D_max=kwargs.get("D_max", 2e-6),
+#         diam_scale=kwargs.get("diam_scale", "log"),
+#     )
+#     return _compute_variable(population, "dNdlnD", cfg)
 
 
-def compute_Nccn(population, s_eval, T):  # pragma: no cover - legacy shim
-    _deprecated("viz.data_prep.compute_Nccn deprecated; use analysis.compute_variable('Nccn', cfg)")
-    return _compute_variable(population, "Nccn", {"s_eval": s_eval, "T": T})
+# def compute_Nccn(population, s_eval, T):  # pragma: no cover - legacy shim
+#     _deprecated("viz.data_prep.compute_Nccn deprecated; use analysis.compute_variable('Nccn', cfg)")
+#     return _compute_variable(population, "Nccn", {"s_eval": s_eval, "T": T})
 
 
-def compute_optical_coeffs(population, coeff_types=("b_ext",), wvls=None, rh_grid=None, morphology="core-shell", temp=298.15, species_modifications=None):  # pragma: no cover
-    _deprecated("viz.data_prep.compute_optical_coeffs deprecated; call analysis.compute_variable for each coeff (e.g. 'b_ext') or use analysis.global_registry")
-    if not isinstance(coeff_types, (list, tuple)):
-        coeff_types = [coeff_types]
-    results = {}
-    for coeff in coeff_types:
-        dat = _compute_variable(
-            population,
-            coeff,
-            {
-                "wvls": wvls or [550e-9],
-                "rh_grid": rh_grid or [0.0],
-                "morphology": morphology,
-                "species_modifications": species_modifications or {},
-                "T": temp,
-            },
-        )
-        # unify shape keys
-        if "wvls" in dat:
-            results.setdefault("wvls", dat["wvls"])
-        if "rh_grid" in dat:
-            results.setdefault("rh_grid", dat["rh_grid"])
-        results[coeff] = dat[coeff]
-    return results
+# def compute_optical_coeffs(population, coeff_types=("b_ext",), wvls=None, rh_grid=None, morphology="core-shell", temp=298.15, species_modifications=None):  # pragma: no cover
+#     _deprecated("viz.data_prep.compute_optical_coeffs deprecated; call analysis.compute_variable for each coeff (e.g. 'b_ext') or use analysis.global_registry")
+#     if not isinstance(coeff_types, (list, tuple)):
+#         coeff_types = [coeff_types]
+#     results = {}
+#     for coeff in coeff_types:
+#         dat = _compute_variable(
+#             population,
+#             coeff,
+#             {
+#                 "wvls": wvls or [550e-9],
+#                 "rh_grid": rh_grid or [0.0],
+#                 "morphology": morphology,
+#                 "species_modifications": species_modifications or {},
+#                 "T": temp,
+#             },
+#         )
+#         # unify shape keys
+#         if "wvls" in dat:
+#             results.setdefault("wvls", dat["wvls"])
+#         if "rh_grid" in dat:
+#             results.setdefault("rh_grid", dat["rh_grid"])
+#         results[coeff] = dat[coeff]
+#     return results
 
 # -------------------------------------------------------------------------
 
 
+# fixme: make these generic, move details to analysis
+# fixme: make this "prepare_state_line" or similar
 def prepare_dNdlnD(population, var_cfg: dict) -> PlotDat:
     """Prepare size-distribution data for plotting.
 
@@ -87,21 +89,28 @@ def prepare_dNdlnD(population, var_cfg: dict) -> PlotDat:
     """
     cfg = dict(var_cfg or {})
     diam_scale = cfg.get("diam_scale", "log")
+    varname = "dNdlnD"
     vardat = _compute_variable(
         population,
-        "dNdlnD",
-        {
-            "wetsize": cfg.get("wetsize", True),
-            "normalize": cfg.get("normalize", False),
-            "method": cfg.get("method", "hist"),
-            "N_bins": cfg.get("N_bins", 80),
-            "D_min": cfg.get("D_min", 1e-9),
-            "D_max": cfg.get("D_max", 2e-6),
-            "diam_scale": diam_scale,
-        },
+        varname, 
+        #"dNdlnD", 
+        cfg # now generalized? 
+        # fixme: put this in _compute_variable?
+        # {
+        #     "wetsize": cfg.get("wetsize", True),
+        #     "normalize": cfg.get("normalize", False),
+        #     "method": cfg.get("method", "hist"),
+        #     "N_bins": cfg.get("N_bins", 80),
+        #     "D_min": cfg.get("D_min", 1e-9),
+        #     "D_max": cfg.get("D_max", 2e-6),
+        #     "diam_scale": diam_scale,
+        # },
     )
+
+    # fixme: put this in _compute_variable?
     x = np.asarray(vardat["D"])
     y = np.asarray(vardat["dNdlnD"])
+    # fixme: make vardat contain this info
     return {"x": x, "y": y, "labs": ["D (m)", "dN/dlnD (1/m$^3$)"], "xscale": diam_scale, "yscale": "linear"}
 
 
@@ -186,8 +195,11 @@ def prepare_optical_vs_rh(population, var_cfg: dict) -> PlotDat:
     else:
         y = arr2d.ravel()
     x = np.asarray(vardat.get("rh_grid"))
+    # fixme: include this in analysis -- short labs vs long labs?
     return {"x": x, "y": np.asarray(y), "labs": ["RH (%)", f"{coeff} (1/m)"], "xscale": "linear", "yscale": "linear"}
 
+
+# fixme: include this in analysis?
 
 def build_default_var_cfg(varname: str):
     """Provide default var_cfg dictionaries for plotting helpers.

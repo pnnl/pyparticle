@@ -10,6 +10,7 @@ Public functions mirror layered version for comparison:
 Intended for evaluation only; not wired into visualization layer by default.
 """
 from .dispatcher import compute_variable, list_variables, describe_variable
+from .builder import build_variable
 # Eagerly import factory modules so decorators and build functions are registered.
 from importlib import import_module
 import pkgutil, os
@@ -19,8 +20,19 @@ for _, module_name, _ in pkgutil.iter_modules([_pkg_path]):
     continue
   import_module(f"{__package__}.population.factory.{module_name}")
 
+# # --- Plot data preparers -------------------------------------------------------
+# from .prepare_old import (
+#     compute_plotdat,
+#     build_default_var_cfg,
+#     register_preparer,
+# )
+
 __all__ = [
-    "compute_variable",
-    "list_variables",
-    "describe_variable",
-]
+  "build_variable",
+  "compute_variable"
+  "lists_variables"
+  "describe_variable"]
+#     "compute_plotdat",
+#     "build_default_var_cfg",
+#     "register_preparer",
+# ]

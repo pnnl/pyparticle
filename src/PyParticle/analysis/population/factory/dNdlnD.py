@@ -13,9 +13,12 @@ from .registry import register_variable
 class DNdlnDVar(PopulationVariable):
     meta = VariableMeta(
         name="dNdlnD",
-        value_key="dNdlnD",
-        axis_keys=("D",),
+        axis_names=("D",),
         description="Size distribution dN/dlnD",
+        units="m^-3",
+        scale='linear', # dN/dlnD is typically shown on linear scale; diameter itself on log scale
+        long_label='Number size distribution',
+        short_label='$dN/d\ln D$',
         default_cfg={
             "wetsize": True,
             "normalize": False,
@@ -27,7 +30,7 @@ class DNdlnDVar(PopulationVariable):
         },
     )
 
-    def compute(self, population):
+    def compute(self, population, as_dict=False):
         cfg = self.cfg
         import scipy.stats  # noqa
         edges = np.logspace(np.log10(cfg["D_min"]), np.log10(cfg["D_max"]), cfg["N_bins"] + 1)
@@ -44,7 +47,9 @@ class DNdlnDVar(PopulationVariable):
         with np.errstate(divide="ignore", invalid="ignore"):
             dNdlnD = np.where(dln > 0, hist / dln, 0.0)
         centers = np.sqrt(edges[:-1] * edges[1:])
-        return {"D": centers, "dNdlnD": dNdlnD}
+        if as_dict:
+            return {"D": centers, "dNdlnD": dNdlnD}
+        return dNdlnD
 
 
 def build(cfg=None):
