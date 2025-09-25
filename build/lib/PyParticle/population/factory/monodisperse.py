@@ -20,17 +20,10 @@ def build(config):
     aero_spec_fracs = config['aero_spec_fracs']
     D_is_wet = config.get('D_is_wet', False)
     specdata_path = config.get('specdata_path', None)
-    
-    # Build master species list for the *population*, preserving order
-    pop_species_names = []
-    for part_names in aero_spec_names:
-        for name in part_names:
-            if name not in pop_species_names:
-                pop_species_names.append(name)
 
     species_list = tuple(
-        get_species(spec_name, **species_modifications.get(spec_name, {}))
-        for spec_name in pop_species_names
+        get_species(name, **species_modifications.get(name, {}))
+        for name in aero_spec_names
     )
 
     monodisp_population = ParticlePopulation(
