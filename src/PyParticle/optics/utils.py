@@ -23,3 +23,14 @@ def get_cross_section_array_from_population(population, optics_type, idx_rh=None
     if idx_rh is not None and idx_wvl is not None:
         return arr[:, idx_rh, idx_wvl]
     return arr
+
+# Unit helpers for optics morphologies
+import numpy as np
+
+M_TO_NM = 1e9
+MMINVERSE_TO_MINVERSE = 1e-6  # handy constant (mm^-1 -> m^-1)
+
+
+def m_to_nm(x):
+    """Convert meters to nanometers, returns numpy array-like result."""
+    return np.asarray(x) * M_TO_NM
