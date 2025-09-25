@@ -49,9 +49,6 @@ class StateLinePlotter(Plotter):
             y = y[0]  # flatten single-value arrays
         if len(x) == 1:
             x = x[0]  # flatten single-value arrays
-        print(x)
-        print(y)
-        print(self.var_cfg)
         if x is not None and len(x) != len(y):
             raise ValueError(f"x and y must be same length, got {len(x)} vs {len(y)}.")
 
@@ -69,7 +66,7 @@ class StateLinePlotter(Plotter):
         if pd["x"] is None:
             ax.plot(pd["y"], **style)
         else:
-            ax.plot(pd["x"], pd["y"])#, **style)
+            ax.plot(pd["x"], pd["y"], **style)
         ax.set_xlabel(pd["xlabel"]); ax.set_ylabel(pd["ylabel"])
         ax.set_xscale(pd["xscale"]); ax.set_yscale(pd["yscale"])
         return ax

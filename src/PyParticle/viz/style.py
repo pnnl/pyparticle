@@ -25,7 +25,7 @@ class GeomDefaults:
     alpha: float | None = None
     # Continuous mappings
     cmap: str = "viridis"  # for scatter/surface color mapping
-
+    
     # how to combine when both color and something else cycle
     def combos(self, use_linestyle: bool, use_marker: bool) -> List[Tuple[str, str | None, str | None]]:
         # (color, linestyle, marker)

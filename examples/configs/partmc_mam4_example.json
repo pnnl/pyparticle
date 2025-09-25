@@ -7,7 +7,7 @@
   "mam4_filename": "mam_output.nc",
   "GSD": [1.6, 1.6, 1.8, 1.8],
 
-  "variables": ["dNdlnD", "frac_ccn"],
+  "variables": ["dNdlnD", "frac_ccn", "b_scat"],
   "spec_modifications": { 
     "BC": {"density": 1800, "k_550": 0.8, "n_550": 1.85},
     "SO4": {"density": 1770, "k_550": 0.0, "n_550": 1.45, "kappa": 0.6}

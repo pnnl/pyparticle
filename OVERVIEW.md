@@ -4,11 +4,11 @@ This file is a concise, editable overview of the PyParticle repository meant for
 and future automated agents. Edit freely and use as a single-source summary.
 
 ## Short description
-PyParticle provides data structures and builders for aerosol particles, particle populations,
-optical particle morphologies, and plotting helpers. The package is organized so new
-population types and optical morphologies are discovered automatically via factory
-registries (add a module under the appropriate `factory/` folder with a `build` callable
-or use the provided `@register` decorator).
+PyParticle provides data structures and builders for aerosol particles and particle populations, flexible 
+packages for computing derived properties relevant for atmospheric, engineering, and human health, and
+helpers for visualizing aerosol particles and populations. The package is organized so new population types, 
+particle morphologies, and analysios code are discovered automatically via factory registries (add a module 
+under the appropriate `factory/` folder with a `build` callable and use the provided `@register` decorator).
 
 ## Key modules and responsibilities
 - `src/PyParticle/__init__.py`: public exports, and dataset path resolution (honors `PYPARTICLE_DATA_PATH`).
@@ -16,7 +16,7 @@ or use the provided `@register` decorator).
 - `src/PyParticle/species/`: `AerosolSpecies` dataclass and `registry.py` offering `get_species`, `register_species`, and `retrieve_one_species` (file-based fallback uses `datasets/species_data/aero_data.dat`).
 - `src/PyParticle/population/`: `ParticlePopulation` base class, `build_population(config)` wrapper, and `population/factory` implementations (`binned_lognormals`, `monodisperse`, `partmc`, `mam4`).
 - `src/PyParticle/optics/`: `OpticalParticle` interface, `OpticalPopulation` aggregator, `builder.py`, `refractive_index.py`, and `optics/factory` modules (morphologies like `homogeneous`, `core_shell`).
-- `src/PyParticle/viz/`: plotting primitives and grid helpers (formatting and layout are separate; grid helpers never set axis labels themselves).
+- `src/PyParticle/viz/`: plotting helpers.
 - `datasets/species_data/aero_data.dat`: canonical species definitions used by `retrieve_one_species`.
 
 ## Public API (most used)
