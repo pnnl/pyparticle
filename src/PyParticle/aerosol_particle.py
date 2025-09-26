@@ -22,19 +22,6 @@ from scipy.constants import R
 import scipy.optimize as opt
 import warnings
 
-
-# from .aerosol_species import AerosolSpecies
-# from .aerosol_species import retrieve_one_species
-# from . import data_path
-# from dataclasses import dataclass
-# from typing import Tuple
-# # from typing import Optional
-# import numpy as np
-# from scipy.constants import R
-# import scipy.optimize as opt
-
-#f fixme: 
-@dataclass
 class Particle:
     """Represent an aerosol particle by species composition and masses.
 
@@ -48,8 +35,10 @@ class Particle:
     Methods provide convenient accessors for dry/wet diameters, volumes,
     effective kappa, and critical supersaturation.
     """
-    species: Tuple[AerosolSpecies, ...]
-    masses: Tuple[float, ...]
+
+    def __init__(self, species, masses):
+        self.species=species 
+        self.masses=np.array(masses, dtype=float)
     
     def __post_init__(self):
         assert(len(self.species) == len(self.masses) )

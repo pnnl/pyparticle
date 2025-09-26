@@ -27,7 +27,7 @@ class OpticalParticle(Particle):
     - provide default accessors for cross sections / indices
     """
 
-    def __init__(self, base_particle, config):
+    def __init__(self, base_particle, config, species_modifications={}):
         # copy species + masses
         super().__init__(species=base_particle.species, masses=base_particle.masses)
 
@@ -38,6 +38,7 @@ class OpticalParticle(Particle):
 
         # Options
         self.specdata_path = config.get("specdata_path", data_path / "species_data")
+        # store species_modifications for possible per-morphology overrides
         self.species_modifications = config.get("species_modifications", {}) or {}
 
         # Allocate per-particle cross-section cubes (m²), shape (N_rh, N_wvl)
@@ -48,9 +49,14 @@ class OpticalParticle(Particle):
         self.Cext = np.zeros((N_rh, N_wvl))
         self.g    = np.zeros((N_rh, N_wvl))
 
-        # Attach refractive indices to each species once
-        self._attach_refractive_indices()
+        # No debug printing here.
 
+        # Attach refractive indices to each species once if not already present.
+        # In the new flow, the optics population builder will usually attach RIs
+        # once per species (preferred). This call is guarded so it becomes a
+        # no-op when the population-level attachment ran first.
+        self._attach_refractive_indices()
+    
     def _attach_refractive_indices(self):
         """Attach a wavelength-aware refractive index object to each species."""
         # Allow a single "SOA" override to apply to common organic names
@@ -58,16 +64,20 @@ class OpticalParticle(Particle):
         soa_mods = self.species_modifications.get('SOA', {})
 
         for spec in self.species:
-            name = spec.name
-            mods = self.species_modifications.get(name, {})
-            if not mods and name in soa_names:
-                mods = soa_mods  # inherit SOA envelope if specific override missing
+            # If species already has a wavelength-aware refractive_index attached
+            # with the expected callables, don't rebuild it here.
+            existing = getattr(spec, 'refractive_index', None)
+            if existing is not None and hasattr(existing, 'real_ri_fun') and hasattr(existing, 'imag_ri_fun'):
+                continue
 
+            mods = self.species_modifications.get(spec.name, {})
+            if not mods and spec.name in soa_names:
+                mods = soa_mods  # inherit SOA envelope if specific override missing
             build_refractive_index(
                 spec,
                 self.wvl_grid,
                 modifications=mods,
-                specdata_path=self.specdata_path
+                specdata_path=self.specdata_path,
             )
 
     # --- abstract compute hook ---
@@ -284,3 +294,4 @@ class OpticalPopulation(ParticlePopulation):
             p = self.base_population.get_particle(pid)
             self.tkappas[ii] = float(p.get_tkappa())
             self.shell_tkappas[ii] = float(p.get_shell_tkappa())
+    

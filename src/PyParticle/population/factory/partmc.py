@@ -60,7 +60,13 @@ if _HAS_NETCDF4:
         else:
             raise IndexError('n_particles > len(part_ids)')
 
-        partmc_population = ParticlePopulation(species=species_list, spec_masses=[], num_concs=[], ids=[])
+        partmc_population = ParticlePopulation(
+            species=species_list,
+            spec_masses=[],
+            num_concs=[],
+            ids=[],
+            species_modifications=species_modifications,
+        )
         for ii in idx:
             particle = make_particle_from_masses(
                 aero_spec_names,

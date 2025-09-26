@@ -5,8 +5,8 @@ Base class for particle populations.
 @author: Laura Fierce
 """
 
-from dataclasses import dataclass
-from typing import Tuple
+from dataclasses import dataclass, field
+from typing import Tuple, Dict
 from warnings import warn
 import numpy as np
 
@@ -22,6 +22,8 @@ class ParticlePopulation:
     spec_masses: np.array # shape = (N_particles, N_species)
     num_concs: np.array # shape = N_particles
     ids: Tuple[int, ...] # shape = N_particles
+    # Population-level species modifications (e.g., density, kappa overrides)
+    species_modifications: Dict[str, dict] = field(default_factory=dict)
 
     def find_particle(self, part_id):
         if part_id in self.ids:
@@ -100,7 +102,7 @@ class ParticlePopulation:
        
         vardat = self.get_particle_var(varname, *kwargs)
         if method == 'hist':
-            return np.histogram(vardat,bins=N_bins, range=x_range, density=density, weights=weights)
+            return np.histogram(vardat, bins=N_bins, range=x_range, density=density, weights=weights)
         else:
             raise NotImplementedError(f"{method} not yet implemented")
     

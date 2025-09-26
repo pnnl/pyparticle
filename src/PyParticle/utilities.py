@@ -26,21 +26,36 @@ def get_number(string_val):
     float
         Parsed numeric value.
     """
-    if string_val.endswith('\n'):
-        string_val = string_val[:-2]
+    import re
 
-    if '\u00d7' in string_val:
-        idx = string_val.find('\u00d7')
-        front_part = float(string_val[:idx])
-        back_part = string_val[(idx+1):][2:]
-        if back_part.startswith('\u2212'):
-            exponent = -float(back_part[1:])
-        else:
-            exponent = float(back_part)
-        number = front_part * 10.0 ** exponent
+    # Normalize and trim
+    if isinstance(string_val, str):
+        s = string_val.strip()
     else:
-        number = float(string_val)
-    return number
+        # accept numeric inputs directly
+        return float(string_val)
+
+    # Replace common unicode variants
+    s = s.replace("\u00d7", "x").replace("×", "x")
+    s = s.replace("\u2212", "-")  # unicode minus
+    s = s.replace("\u2013", "-")  # en-dash
+    s = s.replace("\u2009", "").replace("\u202f", "")
+    s = s.replace(" ", "")
+
+    # Convert 'x10^', 'x10', '*10^', etc. into 'e' scientific notation
+    # Examples handled: '1.2x10-3', '1.2x10^3', '3x10^2', '3×10^2'
+    s2 = re.sub(r"[xX\*]10\^?", "e", s)
+    # handle leading '10^...' -> '1e...'
+    s2 = re.sub(r'^10\^', '1e', s2)
+
+    try:
+        return float(s2)
+    except Exception:
+        # final fallback: try plain float on original cleaned string
+        try:
+            return float(s)
+        except Exception:
+            raise ValueError(f"Cannot parse numeric string: {string_val}")
 
 
 def power_moments_from_lognormal(k, N, gmd, gsd):

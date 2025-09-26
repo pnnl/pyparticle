@@ -9,7 +9,7 @@ Public functions mirror layered version for comparison:
 
 Intended for evaluation only; not wired into visualization layer by default.
 """
-from .dispatcher import compute_variable, list_variables, describe_variable
+#from .dispatcher import compute_variable, list_variables, describe_variable
 from .builder import build_variable
 # Eagerly import factory modules so decorators and build functions are registered.
 from importlib import import_module

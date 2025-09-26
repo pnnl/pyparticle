@@ -9,9 +9,11 @@
     "aero_spec_names": [["SO4"]],
     "aero_spec_fracs": [[1.0]],
     "N_bins": 1000,
-    "D_min": 10e-9,
-    "D_max": 2e-6,
-    "refractive_index": [1.75, 0.44]
+    "D_min": 1e-10,
+    "D_max": 1e-4,
+    "species_modifications": {
+      "SO4": {"density": 1770, "k_550": 0.0, "n_550": 1.45, "kappa": 0.6, "alpha_n": 0.0, "alpha_k": 0.0}
+    }
   },
   "b_scat": {
     "wvl_grid": [400e-9, 450e-9, 500e-9, 550e-9, 600e-9, 700e-9],

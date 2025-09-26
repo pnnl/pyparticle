@@ -1,7 +1,18 @@
+# optics/factory/homogeneous.py
 import numpy as np
-from ..base import OpticalParticle
+import math
+
 from .registry import register
-from ...aerosol_particle import Particle
+from ..base import OpticalParticle
+from ..refractive_index import build_refractive_index
+
+try:
+    from PyParticle._patch import patch_pymiescatt
+    patch_pymiescatt()
+    from PyMieScatt import MieQ
+except Exception as e:
+    MieQ = None
+    _PMS_ERR = e
 
 
 @register("homogeneous")
@@ -11,126 +22,111 @@ class HomogeneousParticle(OpticalParticle):
 
     Constructor expects (base_particle, config) to align with the factory builder.
 
-    Config options:
-      - rh_grid: array-like of RH in [0,1]
-      - wvl_grid: array-like of wavelengths in meters
-      - temp: temperature [K], used if your particle supports water equilibrium
-      - diameter_units: 'um' or 'm' for base_particle diameter getters (default 'um')
-      - single_scatter_albedo: fallback SSA when PyMieScatt is unavailable (default 0.9)
-      - fallback_kappa: kappa used in a simple growth model if equilibrium not available (default 0.3)
-      - n_550, alpha_n: optional top-level real RI at 550 nm and spectral slope
-      - k_550, alpha_k: optional top-level imaginary RI at 550 nm and spectral slope
-      - specdata_path, species_modifications: passed through for future effective-RI usage
+    Optional config (read by OpticalParticle or here):
+      - rh_grid, wvl_grid, temp (K), specdata_path, species_modifications
+      - single_scatter_albedo (fallback SSA when PyMieScatt is unavailable; default: 0.9)
     """
 
     def __init__(self, base_particle, config):
-        # Initialize as a Particle using the base particle's composition
-        super().__init__(base_particle.species, base_particle.masses)
+        super().__init__(base_particle, config)
 
-        self.base_particle = base_particle
+        # Refractive indices are attached at the population level by the
+        # optics builder; the base class's _attach_refractive_indices is
+        # guarded and will no-op if the species already have wavelength-aware
+        # RIs. Keep the call to the base preparation intact.
 
-        # Grids and settings
-        self.rh_grid = np.asarray(config.get("rh_grid", [0.0]), dtype=float)
-        self.wvl_grid = np.asarray(config.get("wvl_grid", [550e-9]), dtype=float)  # meters
-        self.temp = float(config.get("temp", 293.15))
-        self.diameter_units = str(config.get("diameter_units", "um")).lower()
-
-        # Options and placeholders
-        self.specdata_path = config.get("specdata_path", None)
-        self.species_modifications = config.get("species_modifications", {})
-
-        # Fallback optical behavior when PyMieScatt isn't available
+        # User-tunable fallback SSA (only used if PyMieScatt is missing)
         self.single_scatter_albedo = float(config.get("single_scatter_albedo", 0.9))
-        self.fallback_kappa = float(config.get("fallback_kappa", 0.3))
 
-        # Optional simple spectral parameterization for n and k
-        self.n_550 = float(config.get("n_550", 1.54))
-        self.alpha_n = float(config.get("alpha_n", 0.0))
-        self.k_550 = float(config.get("k_550", 0.0))
-        self.alpha_k = float(config.get("alpha_k", 0.0))
+        # Precompute geometry & per-wavelength dry/water RIs
+        self._prepare_geometry_and_ris()
 
-        # Allocate outputs
-        N_rh = len(self.rh_grid)
-        N_wvl = len(self.wvl_grid)
-        self.Cabs = np.zeros((N_rh, N_wvl))
-        self.Csca = np.zeros((N_rh, N_wvl))
-        self.Cext = np.zeros((N_rh, N_wvl))
-        self.g    = np.zeros((N_rh, N_wvl))
+        # Do the optics
+        self.compute_optics()
 
-        # Refractive index array per wavelength (placeholder spectral model)
-        self.ri = self._build_ri_spectrum(self.wvl_grid)
-
-    def _build_ri_spectrum(self, wvl_m):
+    def _prepare_geometry_and_ris(self):
         """
-        Simple spectral model for complex refractive index:
-          n(λ) = n_550 * (λ / 0.55e-6)^alpha_n
-          k(λ) = k_550 * (λ / 0.55e-6)^alpha_k
+        Precompute:
+          - dry particle volume
+          - water volumes vs RH (from Dwet - Ddry)
+          - wavelength-dependent RIs for dry mix and water
         """
-        lam0 = 0.55e-6
-        scale = (np.asarray(wvl_m, dtype=float) / lam0).astype(float)
-        n = self.n_550 * np.power(scale, self.alpha_n)
-        k = self.k_550 * np.power(scale, self.alpha_k)
-        return n + 1j * k
+        # Total dry volume (all non-water solid/liquid species "dry")
+        self.dry_vol = float(self.get_vol_dry())
 
-    def _clone_particle(self):
-        # Fresh particle with same species & masses to avoid mutating shared base_particle
-        return Particle(self.base_particle.species, self.base_particle.masses.copy())
+        # Water volumes vs RH from Dwet(RH) and Ddry
+        Ddry = float(self.get_Ddry())
+        vol_dry_geom = (math.pi / 6.0) * (Ddry ** 3)
 
-    def _to_meters(self, D):
-        """Convert diameter from configured units to meters."""
-        if self.diameter_units.startswith("um"):
-            return float(D) * 1e-6
-        return float(D)
+        self.h2o_vols = np.zeros(len(self.rh_grid))
+        for rr, rh in enumerate(self.rh_grid):
+            Dw = float(self.get_Dwet(RH=float(rh), T=self.temp))
+            self.h2o_vols[rr] = (math.pi / 6.0) * (Dw ** 3 - Ddry ** 3) if rh > 0.0 else 0.0
 
-    def _Dwet_at_rh(self, rh):
+        # Per-wavelength complex RIs
+        Nw = len(self.wvl_grid)
+        self.dry_ris = np.zeros(Nw, dtype=complex)
+        self.h2o_ris = np.zeros(Nw, dtype=complex)
+
+        # Species partitioning (use Particle-provided helpers if available)
+        vks = self.get_vks()  # species "dry" volumes for partitioning
+        h2o_idx = self.idx_h2o()
+
+        # Build dry mixture RI by volume-weighted averaging of all non-water species
+        dry_indices = [ii for ii in range(len(self.species)) if ii != h2o_idx]
+
+        # Guard against degenerate dry volume
+        vol_norm = self.dry_vol if self.dry_vol > 0.0 else 1.0
+
+        for ww in range(Nw):
+            # Dry effective RI
+            if len(dry_indices) > 0 and self.dry_vol > 0.0:
+                n_dry = 0.0
+                k_dry = 0.0
+                for ii in dry_indices:
+                    f = float(vks[ii] / vol_norm)
+                    n_dry += self.species[ii].refractive_index.real_ri_fun(self.wvl_grid[ww]) * f
+                    k_dry += self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid[ww]) * f
+                self.dry_ris[ww] = complex(n_dry, k_dry)
+            else:
+                self.dry_ris[ww] = complex(1.0, 0.0)
+
+            # Water RI
+            n_w = self.species[h2o_idx].refractive_index.real_ri_fun(self.wvl_grid[ww])
+            k_w = self.species[h2o_idx].refractive_index.imag_ri_fun(self.wvl_grid[ww])
+            self.h2o_ris[ww] = complex(n_w, k_w)
+
+        # Sanity check: geometric dry volume from Ddry should match sum(vks) reasonably
+        # (not enforcing; just computed above as vol_dry_geom for possible debugging)
+        _ = vol_dry_geom  # kept for parity with CoreShell; not currently used
+
+    def _mixture_ri(self, rr: int, ww: int) -> complex:
         """
-        Return wet diameter (meters) at RH in [0,1].
-        Tries particle's water equilibrium; falls back to simple kappa growth.
+        Volume-weighted homogeneous mixture of dry material and water at a given RH and wavelength.
         """
-        # Try model-native water equilibrium
-        try:
-            p = self._clone_particle()
-            p._equilibrate_h2o(S=float(rh), T=self.temp)  # adjust if API expects percent
-            D = p.get_Dwet()
-            if np.isfinite(D) and D > 0:
-                return self._to_meters(D)
-        except Exception:
-            pass
-
-        # Fallback: kappa-Köhler-like growth factor -> diameter scales with GF^(1/3)
-        rh_safe = float(np.clip(rh, 0.0, 0.99))
-        try:
-            Ddry = self._to_meters(self.base_particle.get_Ddry())
-        except Exception:
-            Ddry = 200e-9
-        GF = (1.0 + self.fallback_kappa * rh_safe / max(1e-6, (1.0 - rh_safe))) ** (1.0 / 3.0)
-        return float(Ddry) * GF
+        v_h2o = self.h2o_vols[rr]
+        v_dry = self.dry_vol
+        if (v_h2o + v_dry) <= 0.0:
+            return complex(1.0, 0.0)
+        return (self.h2o_ris[ww] * v_h2o + self.dry_ris[ww] * v_dry) / (v_h2o + v_dry)
 
     def compute_optics(self):
         """
         Compute cross-sections and asymmetry parameter per (RH, wavelength).
         Prefer PyMieScatt if available; otherwise use a size-parameter-based fallback.
         """
-        # Attempt to use PyMieScatt if available
-        try:
-            from PyMieScatt import MieQ
-            use_pymie = True
-        except ImportError:
-            use_pymie = False
+        use_pymie = MieQ is not None
 
         for rr, rh in enumerate(self.rh_grid):
-            D_m = self._Dwet_at_rh(rh)  # varies with RH
-            if not np.isfinite(D_m) or D_m <= 0.0:
-                continue
-
+            D_m = float(self.get_Dwet(RH=float(rh), T=self.temp, sigma_sa=self.get_surface_tension()))
             r_m = 0.5 * D_m
-            area = np.pi * r_m * r_m  # geometric cross-section
+            area = math.pi * r_m * r_m  # geometric cross-section
 
             if use_pymie:
                 D_nm = D_m * 1e9
                 for ww, lam_m in enumerate(self.wvl_grid):
                     lam_nm = float(lam_m * 1e9)
-                    m = complex(self.ri[ww])
+                    m = complex(self._mixture_ri(rr, ww))
                     out = MieQ(m, lam_nm, D_nm, asDict=True, asCrossSection=False)
                     # Convert efficiencies to absolute cross sections via geometric area
                     self.Cext[rr, ww] = out["Qext"] * area
@@ -138,13 +134,13 @@ class HomogeneousParticle(OpticalParticle):
                     self.Cabs[rr, ww] = out["Qabs"] * area
                     self.g[rr, ww]    = out["g"]
             else:
-                # Fallback: toy Mie-like behavior varying with size parameter x = 2πr/λ
+                # Fallback: simple Mie-like behavior vs size parameter x = 2πr/λ
                 for ww, lam_m in enumerate(self.wvl_grid):
                     lam = float(lam_m)
-                    x = 2.0 * np.pi * r_m / lam
+                    x = 2.0 * math.pi * r_m / lam
 
                     # Extinction efficiency rises toward ~2 as x increases
-                    Qext = 2.0 * (1.0 - np.exp(-x / 2.0))
+                    Qext = 2.0 * (1.0 - math.exp(-x / 2.0))
                     Cext = Qext * area
 
                     # Partition using fallback SSA
@@ -153,7 +149,7 @@ class HomogeneousParticle(OpticalParticle):
                     Cabs = (1.0 - omega0) * Cext
 
                     # Asymmetry parameter grows with x, capped < 1
-                    g = 0.2 + 0.7 * (1.0 - np.exp(-x / 10.0))
+                    g = 0.2 + 0.7 * (1.0 - math.exp(-x / 10.0))
                     g = float(np.clip(g, 0.0, 0.95))
 
                     self.Cext[rr, ww] = Cext
@@ -161,6 +157,7 @@ class HomogeneousParticle(OpticalParticle):
                     self.Cabs[rr, ww] = Cabs
                     self.g[rr, ww]    = g
 
+    # Convenience getters (unchanged)
     def get_cross_sections(self):
         return {
             "Cabs": self.Cabs,
@@ -170,7 +167,7 @@ class HomogeneousParticle(OpticalParticle):
         }
 
     def get_refractive_indices(self):
-        return {"ri": self.ri}
+        return {"dry_ri": self.dry_ris, "h2o_ri": self.h2o_ris}
 
     def get_cross_section(self, optics_type, rh_idx=None, wvl_idx=None):
         key = str(optics_type).lower()

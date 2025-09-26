@@ -14,12 +14,6 @@ class AbsCoeff(PopulationVariable):
         short_label="$b_{\mathrm{abs}}$",
         long_label="absorption coefficient",
         scale='linear',
-        # axis/grid defaults are centralized in analysis.defaults; keep other defaults
-        # default_cfg={
-        #     "morphology": "core-shell",
-        #     "species_modifications": {},
-        #     "T": 298.15,
-        # },
         aliases=("total_abs",),
     )
 

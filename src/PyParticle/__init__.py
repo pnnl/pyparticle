@@ -70,16 +70,3 @@ from .population.base import ParticlePopulation
 from .population import build_population
 
 from .optics.builder import build_optical_particle, build_optical_population
-# from .optics import make_optical_particle, make_optical_population
-# from .optics import RefractiveIndex, RI_fun
-# from .optics import CoreShellParticle, CoreShellPopulation
-
-from .storer import (
-    arrays_to_lists, make_population_dictionary, make_specs_dictionary,
-    separate_ris, get_output_filename, get_sample_padding
-)
-
-# # Optionally import builder submodule and monodisperse population creator
-# from . import builder
-# from .builder import monodisperse
-# # from .builder import partmc

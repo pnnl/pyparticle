@@ -60,7 +60,8 @@ def build(config):
 
     # Create the population object with the right species list
     lognormals_population = ParticlePopulation(
-        species=pop_species_list, spec_masses=[], num_concs=[], ids=[]
+        species=pop_species_list, spec_masses=[], num_concs=[], ids=[],
+        species_modifications=species_modifications
     )
 
     
@@ -81,6 +82,7 @@ def build(config):
         N_per_bins = float(Ntot) * N_per_bins / np.sum(N_per_bins)
         
         for dd, (D, N_per_bin) in enumerate(zip(D_mids, N_per_bins)):
+            # Optional debug printing is available via env var if needed
             particle = make_particle(
                 D,
                 pop_species_list,

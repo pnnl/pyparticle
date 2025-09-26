@@ -12,8 +12,6 @@ class PlotBuilder:
         if not self.type:
             raise ValueError("PlotBuilder requires a 'type' to build a plotter.")
         types = discover_plotter_types()
-        print(f"Discovered plotter types: {list(types.keys())}")
-        print(f"Requested plotter type: {self.type}")
         if self.type not in types:
             raise ValueError(f"Unknown plotter type: {self.type}")
         cls_or_factory = types[self.type]

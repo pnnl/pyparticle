@@ -2,7 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import product
-from typing import Dict, List, Tuple, Iterable, Mapping, Any
+from typing import Dict, List, Tuple, Iterable, Mapping, Any, Set
 import hashlib
 
 # Shared defaults
@@ -41,7 +41,7 @@ class GeomDefaults:
 class Theme:
     # Per-geometry defaults; extend as you add geoms
     geoms: Dict[str, GeomDefaults] = field(default_factory=lambda: {
-        "line": GeomDefaults(linewidth=2.0, alpha=None),
+        "line": GeomDefaults(linewidth=2.0, alpha=None, linestyles='-'),
         "scatter": GeomDefaults(linewidth=1.0, markersize=36.0),
         "bar": GeomDefaults(),
         "box": GeomDefaults(),
@@ -81,22 +81,54 @@ class StyleManager:
         combos = gd.combos(use_ls, use_mk)
         ncombo = len(combos)
 
+        # Allowed kwargs per matplotlib primitive (whitelist defensive approach)
+        _ALLOWED_KWARGS_BY_GEOM: Dict[str, Set[str]] = {
+            "line": {"color", "linestyle", "linewidth", "marker", "markersize", "alpha"},
+            "scatter": {"c", "color", "cmap", "s", "marker", "alpha"},
+            "bar": {"color", "alpha"},
+            "box": {"color", "alpha"},
+            "surface": {"cmap", "alpha"},
+        }
+
+        def _make_style_for_geom(gd: GeomDefaults, geom: str, color: str, linestyle: str | None, marker: str | None) -> Dict[str, Any]:
+            style: Dict[str, Any] = {}
+            if geom == "line":
+                style["color"] = color
+                if linestyle is not None:
+                    style["linestyle"] = linestyle
+                    style["linewidth"] = gd.linewidth
+                if marker is not None:
+                    style["marker"] = marker
+                    # use markersize (Line2D expects points, not area). Use the same numeric value
+                    style["markersize"] = gd.markersize
+                if gd.alpha is not None:
+                    style["alpha"] = gd.alpha
+            elif geom == "scatter":
+                # scatter supports colormap and 's' as area
+                style["c"] = color
+                if marker is not None:
+                    style["marker"] = marker
+                style["s"] = gd.markersize
+                if gd.cmap:
+                    style["cmap"] = gd.cmap
+                if gd.alpha is not None:
+                    style["alpha"] = gd.alpha
+            else:
+                # conservative fallback
+                style["color"] = color
+                if gd.alpha is not None:
+                    style["alpha"] = gd.alpha
+            return style
+
         styles: Dict[str, Dict[str, Any]] = {}
         for i, key in enumerate(series_keys):
             idx = self._index_for_key(key, i) % ncombo
             color, linestyle, marker = combos[idx]
-            base: Dict[str, Any] = {"color": color}
-            if use_ls and linestyle is not None:
-                base["linestyle"] = linestyle
-                base["linewidth"] = gd.linewidth
-            if use_mk and marker is not None:
-                base["marker"] = marker
-                base["s"] = gd.markersize
-            if gd.alpha is not None:
-                base["alpha"] = gd.alpha
-            # Continuous mappings use cmap by name; plotters will apply if needed
-            base["cmap"] = gd.cmap
+            base = _make_style_for_geom(gd, geom, color, linestyle, marker)
+            # apply overrides if any (caller may pass geom-appropriate keys)
             if overrides and key in overrides:
                 base.update(overrides[key])
-            styles[key] = base
+            # whitelist/filter unknown kwargs
+            allowed: Set[str] = _ALLOWED_KWARGS_BY_GEOM.get(geom, set(base.keys()))
+            styles[key] = {k: v for k, v in base.items() if k in allowed}
         return styles

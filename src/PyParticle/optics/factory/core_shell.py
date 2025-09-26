@@ -1,77 +1,98 @@
+# optics/factory/core_shell.py
+from .registry import register
 import numpy as np
 from ..base import OpticalParticle
-from .registry import register
-from ...aerosol_particle import Particle
+from ..utils import m_to_nm
+from ..refractive_index import build_refractive_index
+import math
+
+try:
+    from PyParticle._patch import patch_pymiescatt
+    patch_pymiescatt()
+    from PyMieScatt import MieQCoreShell, MieQ
+except Exception as e:
+    MieQCoreShell = MieQ = None
+    _PMS_ERR = e
 
 @register("core_shell")
 class CoreShellParticle(OpticalParticle):
-    """
-    Core-shell morphology with RH and wavelength dependence.
-    Uses PyMieScatt if available; otherwise a size-parameter-based fallback.
-    """
-
     def __init__(self, base_particle, config):
-        super().__init__(base_particle.species, base_particle.masses)
-        self.base_particle = base_particle
+        super().__init__(base_particle, config)
+        if MieQCoreShell is None:
+            raise ImportError(f"PyMieScatt required for morphology='core_shell': {_PMS_ERR}")
 
-        # Grids
-        self.rh_grid = np.asarray(config.get("rh_grid", [0.0]), dtype=float)
-        self.wvl_grid = np.asarray(config.get("wvl_grid", [550e-9]), dtype=float)  # meters
-        self.temp = float(config.get("temp", 293.15))
+        # Refractive indices should be attached at population construction time
+        # by the optics builder. The base class _attach_refractive_indices is
+        # safe and will only attach if needed.
+        
+        # Precompute geometry and “dry” RIs per wavelength
+        self._prepare_geometry_and_ris()
+        self.compute_optics()
+    
+    # todo: move to base OpticalParticle? Or add to HomogeneousParticle?
+    def _prepare_geometry_and_ris(self):
+        # Core/shell dry volumes from Particle
+        self.core_vol = float(self.get_vol_core())
+        # If you want an explicit helper, you can add get_vol_dry_shell() to Particle;
+        # for now compute from available calls:
+        self.shell_dry_vol = float(self.get_vol_dry() - self.get_vol_core())
 
-        # Options
-        self.specdata_path = config.get("specdata_path", None)
-        self.species_modifications = config.get("species_modifications", {})
-        self.core_frac = float(config.get("core_frac", 0.6))  # D_core = core_frac * D_shell
-        self.single_scatter_albedo = float(config.get("single_scatter_albedo", 0.9))
-        self.fallback_kappa = float(config.get("fallback_kappa", 0.3))
-        # Diameter unit for base particle getters: 'm' or 'um'
-        self.diameter_units = str(config.get("diameter_units", "um")).lower()
+        # Water volumes vs RH
+        Ddry = float(self.get_Ddry())
+        self.h2o_vols = np.zeros(len(self.rh_grid))
+        for rr, rh in enumerate(self.rh_grid):
+            Dw = float(self.get_Dwet(RH=float(rh), T=self.temp))
+            self.h2o_vols[rr] = (math.pi/6.0) * (Dw**3 - Ddry**3) if rh > 0.0 else 0.0
 
-        N_rh = len(self.rh_grid)
-        N_wvl = len(self.wvl_grid)
-        self.Cabs = np.zeros((N_rh, N_wvl))
-        self.Csca = np.zeros((N_rh, N_wvl))
-        self.Cext = np.zeros((N_rh, N_wvl))
-        self.g    = np.zeros((N_rh, N_wvl))
+        # Refractive indices per wavelength
+        Nw = len(self.wvl_grid)
+        self.core_ris = np.zeros(Nw, dtype=complex)
+        self.dry_shell_ris = np.zeros(Nw, dtype=complex)
+        self.h2o_ris = np.zeros(Nw, dtype=complex)
 
-        # Placeholder refractive indices (replace with your effective RI model)
-        self.core_ris  = np.ones(N_wvl) * 1.5
-        self.shell_ris = np.ones((N_rh, N_wvl)) * 1.6
+        # Volume-weighted mixing (core & dry shell) using Particle-provided partitions
+        vks = self.get_vks()
+        core_idx = self.idx_core()
+        shell_idx = self.idx_dry_shell()
+        h2o_idx = self.idx_h2o()
 
-    def _clone_particle(self):
-        return Particle(self.base_particle.species, self.base_particle.masses.copy())
+        for ww in range(Nw):
+            # Core effective RI
+            if self.core_vol > 0.0 and len(core_idx) > 0:
+                n_core = 0.0; k_core = 0.0
+                for ii in core_idx:
+                    f = float(vks[ii] / self.core_vol)
+                    n_core += self.species[ii].refractive_index.real_ri_fun(self.wvl_grid[ww]) * f
+                    k_core += self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid[ww]) * f
+                self.core_ris[ww] = complex(n_core, k_core)
+            else:
+                self.core_ris[ww] = complex(1.0, 0.0)
+            
+            # Dry shell effective RI
+            if self.shell_dry_vol > 0.0 and len(shell_idx) > 0:
+                n_sh = 0.0; k_sh = 0.0
+                for ii in shell_idx:
+                    f = float(vks[ii] / self.shell_dry_vol)
+                    n_sh += self.species[ii].refractive_index.real_ri_fun(self.wvl_grid[ww]) * f
+                    k_sh += self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid[ww]) * f
+                self.dry_shell_ris[ww] = complex(n_sh, k_sh)
+            else:
+                self.dry_shell_ris[ww] = complex(1.0, 0.0)
+            
+            # Water RI
+            n_w = self.species[h2o_idx].refractive_index.real_ri_fun(self.wvl_grid[ww])
+            k_w = self.species[h2o_idx].refractive_index.imag_ri_fun(self.wvl_grid[ww])
+            self.h2o_ris[ww] = complex(n_w, k_w)
 
-    def _to_meters(self, D):
-        # Convert diameter D from configured units to meters
-        if self.diameter_units.startswith("um"):
-            return float(D) * 1e-6
-        return float(D)
-
-    def _Dwet_at_rh(self, rh):
-        """
-        Wet diameter in meters at RH in [0,1].
-        """
-        # Try model-native water equilibrium
-        try:
-            p = self._clone_particle()
-            p._equilibrate_h2o(S=float(rh), T=self.temp)  # adjust if your API expects percent
-            D = p.get_Dwet()
-            if np.isfinite(D) and D > 0:
-                return self._to_meters(D)
-        except Exception:
-            pass
-
-        # Fallback: simple kappa growth (volume-based => diameter^(1))
-        rh_safe = float(np.clip(rh, 0.0, 0.99))
-        try:
-            Ddry = self._to_meters(self.base_particle.get_Ddry())
-        except Exception:
-            Ddry = 200e-9
-        GF = (1.0 + self.fallback_kappa * rh_safe / max(1e-6, (1.0 - rh_safe))) ** (1.0 / 3.0)
-        return float(Ddry) * GF
-
+    def _shell_ri(self, rr: int, ww: int) -> complex:
+        v_h2o = self.h2o_vols[rr]
+        v_dry = self.shell_dry_vol
+        if (v_h2o + v_dry) <= 0.0:
+            return complex(1.0, 0.0)
+        return (self.h2o_ris[ww] * v_h2o + self.dry_shell_ris[ww] * v_dry) / (v_h2o + v_dry)
+    
     def compute_optics(self):
+        # todo: leave options for other optical core-shell optical models
         # Try PyMieScatt first
         try:
             from PyMieScatt import MieQCoreShell
@@ -80,20 +101,20 @@ class CoreShellParticle(OpticalParticle):
             use_pymie = False
 
         for rr, rh in enumerate(self.rh_grid):
-            D_shell_m = self._Dwet_at_rh(rh)   # varies with RH
-            if not np.isfinite(D_shell_m) or D_shell_m <= 0.0:
-                continue
+            D_shell_m = self.get_Dwet(RH=rh, T=self.temp, sigma_sa=self.get_surface_tension())
 
             r_m = 0.5 * D_shell_m
             area = np.pi * r_m * r_m
 
             if use_pymie:
                 D_shell_nm = D_shell_m * 1e9
-                D_core_nm = max(1.0, self.core_frac * D_shell_nm)
+                D_core_nm = self.get_Dcore() * 1e9
+                #D_core_nm = max(1.0, self.core_frac * D_shell_nm)
                 for ww, lam_m in enumerate(self.wvl_grid):
                     lam_nm = float(lam_m * 1e9)
                     mCore = complex(self.core_ris[ww])
-                    mShell = complex(self.shell_ris[rr, ww])
+                    mShell = complex(self._shell_ri(rr, ww))
+                    print(mCore, mShell, lam_nm, D_core_nm, D_shell_nm)
                     out = MieQCoreShell(
                         mCore, mShell, lam_nm, D_core_nm, D_shell_nm,
                         asDict=True, asCrossSection=False
@@ -103,48 +124,60 @@ class CoreShellParticle(OpticalParticle):
                     self.Cabs[rr, ww] = out["Qabs"] * area
                     self.g[rr, ww]    = out["g"]
             else:
-                # Fallback: toy Mie behavior varying with size parameter x
-                for ww, lam_m in enumerate(self.wvl_grid):
-                    lam = float(lam_m)
-                    x = 2.0 * np.pi * r_m / lam
-                    Qext = 2.0 * (1.0 - np.exp(-x / 2.0))       # increases with x, saturates ~2
-                    Cext = Qext * area
-                    omega0 = self.single_scatter_albedo
-                    Csca = omega0 * Cext
-                    Cabs = (1.0 - omega0) * Cext
-                    g = 0.2 + 0.7 * (1.0 - np.exp(-x / 10.0))   # grows with x, < 1
-                    g = float(np.clip(g, 0.0, 0.95))
+                raise ImportError("PyMieScatt is required for core-shell optics calculations.")
+            
+    # def compute_optics(self):
+    #     Nrh, Nw = len(self.rh_grid), len(self.wvl_grid)
+    #     Dcore_m = float(self.get_Dcore())
+    #     Ddry_m  = float(self.get_Ddry())
 
-                    self.Cext[rr, ww] = Cext
-                    self.Csca[rr, ww] = Csca
-                    self.Cabs[rr, ww] = Cabs
-                    self.g[rr, ww]    = g
-    def get_cross_sections(self):
-        return {
-            "Cabs": self.Cabs,
-            "Csca": self.Csca,
-            "Cext": self.Cext,
-            "g": self.g,
-        }
-    
-    def get_refractive_indices(self):
-        return {"ri": self.ri}
-    
-    def get_cross_section(self, optics_type, rh_idx=None, wvl_idx=None):
-        key = str(optics_type).lower()
-        if key in ("b_abs", "absorption", "abs"):
-            arr = self.Cabs
-        elif key in ("b_scat", "scattering", "scat"):
-            arr = self.Csca
-        elif key in ("b_ext", "extinction", "ext"):
-            arr = self.Cext
-        elif key in ("g", "asymmetry"):
-            arr = self.g
-        else:
-            raise ValueError(f"Unknown optics_type: {optics_type}")
-        if rh_idx is not None and wvl_idx is not None:
-            return arr[rh_idx, wvl_idx]
-        return arr
+    #     # Allocate optional variant cubes
+    #     self.Cext_bc = np.zeros((Nrh, Nw)); self.Csca_bc = np.zeros_like(self.Cext_bc)
+    #     self.Cabs_bc = np.zeros_like(self.Cext_bc); self.g_bc = np.zeros_like(self.Cext_bc)
+    #     self.Cpr_bc  = np.zeros_like(self.Cext_bc); self.Cback_bc = np.zeros_like(self.Cext_bc)
 
-def build(base_particle, config):
-    return CoreShellParticle(base_particle, config)
+    #     self.Cext_clear = np.zeros((Nrh, Nw)); self.Csca_clear = np.zeros_like(self.Cext_clear)
+    #     self.Cabs_clear = np.zeros_like(self.Cext_clear); self.g_clear = np.zeros_like(self.Cext_clear)
+    #     self.Cpr_clear  = np.zeros_like(self.Cext_clear); self.Cback_clear = np.zeros_like(self.Cext_clear)
+
+    #     d_core_nm = m_to_nm(Dcore_m)
+    #     core_area_m2 = math.pi * (0.5 * Dcore_m)**2
+
+    #     for rr in range(Nrh):
+    #         Dwet_m = float(self.get_Dwet(RH=float(self.rh_grid[rr]), T=self.temp))
+    #         d_shell_nm = m_to_nm(Dwet_m)
+    #         shell_area_m2 = math.pi * (0.5 * Dwet_m)**2
+
+    #         for ww in range(Nw):
+    #             lam_nm = m_to_nm(self.wvl_grid[ww])
+    #             mCore = self.core_ris[ww]
+    #             mShell = self._shell_ri(rr, ww)
+    #             out = MieQCoreShell(mCore, mShell, lam_nm, d_core_nm, d_shell_nm,
+    #                                 asDict=True, asCrossSection=False)
+    #             self.Cext[rr, ww] = out['Qext'] * shell_area_m2
+    #             self.Csca[rr, ww] = out['Qsca'] * shell_area_m2
+    #             self.Cabs[rr, ww] = out['Qabs'] * shell_area_m2
+    #             self.g[rr, ww]    = out['g']
+    #             self.Cpr[rr, ww]  = out['Qpr'] * shell_area_m2
+    #             self.Cback[rr, ww]= out['Qback'] * shell_area_m2
+
+    #             # Clear-shell variant (imag part removed)
+    #             mShell_clear = complex(mShell.real, 0.0)
+    #             outc = MieQCoreShell(mCore, mShell_clear, lam_nm, d_core_nm, d_shell_nm,
+    #                                  asDict=True, asCrossSection=False)
+    #             self.Cext_clear[rr, ww] = outc['Qext'] * shell_area_m2
+    #             self.Csca_clear[rr, ww] = outc['Qsca'] * shell_area_m2
+    #             self.Cabs_clear[rr, ww] = outc['Qabs'] * shell_area_m2
+    #             self.g_clear[rr, ww]    = outc['g']
+    #             self.Cpr_clear[rr, ww]  = outc['Qpr'] * shell_area_m2
+    #             self.Cback_clear[rr, ww]= outc['Qback'] * shell_area_m2
+
+    #             # BC-only (core only)
+    #             if d_core_nm > 0.0:
+    #                 outb = MieQ(mCore, lam_nm, d_core_nm, asDict=True, asCrossSection=False)
+    #                 self.Cext_bc[rr, ww] = outb['Qext'] * core_area_m2
+    #                 self.Csca_bc[rr, ww] = outb['Qsca'] * core_area_m2
+    #                 self.Cabs_bc[rr, ww] = outb['Qabs'] * core_area_m2
+    #                 self.g_bc[rr, ww]    = outb['g']
+    #                 self.Cpr_bc[rr, ww]  = outb['Qpr'] * core_area_m2
+    #                 self.Cback_bc[rr, ww]= outb['Qback'] * core_area_m2

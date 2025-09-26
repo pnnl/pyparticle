@@ -24,20 +24,3 @@ def discover_plotter_types():
             plotter_types[module_name] = module.build
 
     return plotter_types
-
-
-# #Alternative:
-# # viz/factory/registry.py
-# _registry = {}
-
-# def register(name):
-#     def decorator(cls_or_fn):
-#         _registry[name] = cls_or_fn
-#         return cls_or_fn
-#     return decorator
-
-# def get_registered(name):
-#     try:
-#         return _registry[name]
-#     except KeyError as e:
-#         raise KeyError(f"Unknown plotter '{name}'. Registered: {list(_registry)}") from e

@@ -42,7 +42,7 @@ class StateLinePlotter(Plotter):
             xvar = build_variable("diam_grid","population",  self.var_cfg)
         else:
             raise ValueError(f"State line does not support '{self.varname}'.")
-
+        
         x = xvar.compute(population)
         y = yvar.compute(population)
         if len(y) == 1:
@@ -62,7 +62,6 @@ class StateLinePlotter(Plotter):
     def plot(self, population, ax, **kwargs):
         pd = self.prep(population)
         style = {**self.config.get("style", {}), **kwargs}
-        print(pd['x'], pd['y'])
         if pd["x"] is None:
             ax.plot(pd["y"], **style)
         else:
@@ -73,76 +72,3 @@ class StateLinePlotter(Plotter):
 
 def build(cfg):
     return StateLinePlotter(cfg)
-
-
-# # viz/factory/state_line.py
-
-# from .registry import register
-# from ..base import Plotter
-# from ...analysis import build_variable
-# import numpy as np
-
-# @register("state_line")
-# class StateLinePlotter(Plotter):
-#     def __init__(self, config):
-#         self.type = "state_line"
-#         self.config = config
-#         var_cfgs = config.get("variables",{})
-#         if not var_cfgs or len(var_cfgs) != 1:
-#             raise ValueError("StateLinePlotter requires exactly one variable in 'variables' list.")
-#         self.varname = varnames[0]
-#         self.var_cfg = config.get("var_cfg", {})
-#         if not self.varname:
-#             raise ValueError("StateLinePlotter requires 'varname' in config.")
-    
-#     def prep(self, population):
-#         # todo: validate var_cfg for the varname
-        
-#         yvar = build_variable(self.varname, self.var_cfg)  # ensure variable is built/registered
-        
-#         # todo: should this be moved to variable constrction?
-#         if self.varname in ['Nccn', 'frac_ccn']:
-#             xvar = build_variable("s_grid", self.var_cfg)  # ensure variable is built/registered
-#         elif self.varname in ['b_abs','b_scat','b_ext']:
-#             if len(self.var_cfg.get('wvls',[])) > 1 and len(self.var_cfg.get('rh_grid',[])) > 1:
-#                 raise
-#             elif len(self.var_cfg.get('wvls',[])) > 1:
-#                 xvar = build_variable("wvl_grid", self.var_cfg)  # ensure variable is built/registered
-#             elif len(self.var_cfg.get('rh_grid',[])) > 1:
-#                 xvar = build_variable("rh_grid", self.var_cfg)  # ensure variable is built/registered
-#             else:
-#                 raise ValueError(f"Variable {self.varname} has single wavelength and single RH value; cannot plot state line.")
-#         # todo: generalize density distributions?
-#         elif self.varname in ['dNdlnD']:
-#             xvar = build_variable("diam_grid", self.var_cfg)  # ensure variable is built/registered
-#         else:
-#             raise ValueError(f"State line plotter does not support variable '{self.varname}'")
-        
-#         if len(xvar.meta.unit) > 0:
-#             xlabel = xvar.meta.long_label + " [" + f" ({xvar.meta.unit})" + "]"
-#         else:
-#             xlabel = xvar.meta.long_label
-
-#         if len(yvar.meta.units) > 0:
-#             ylabel = yvar.meta.long_label + " [" + f" ({yvar.meta.units})" + "]"
-#         else:
-#             ylabel = yvar.meta.long_label
-        
-#         plotdat = { 
-#             'x': xvar.compute(population),
-#             'y': yvar.compute(population),
-#             'xlabel': xlabel,
-#             'ylabel': ylabel,
-#             'xscale': 'linear',
-#             'yscale': 'linear'
-#         }
-#         return plotdat
-    
-#     def plot(self, population, ax, **kwargs):
-#         plotdat = self.prep(population)
-#         ax.plot(plotdat['x'], plotdat['y'], **kwargs)
-#         ax.set_xlabel(plotdat['xlabel'])
-#         ax.set_ylabel(plotdat['ylabel'])
-#         ax.set_xscale(plotdat['xscale'])
-#         ax.set_yscale(plotdat['yscale'])
-#         return ax

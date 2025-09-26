@@ -34,7 +34,8 @@ def build(config):
     )
 
     monodisp_population = ParticlePopulation(
-        species=species_list, spec_masses=[], num_concs=[], ids=[])
+        species=species_list, spec_masses=[], num_concs=[], ids=[],
+        species_modifications=species_modifications)
     for i in range(len(N)):
         particle = make_particle(
             D[i],

@@ -54,7 +54,8 @@ class FreezingPopulation(ParticlePopulation):
 
 
 def retrieve_Jhet_val(name, specdata_path=data_path / 'species_data', spec_modifications={}):
-
+    # todo: do we want to add Jhets to the species? Make "FreezingSpecies" class under base and update building?
+    
     aero_datafile = specdata_path / 'freezing_data.dat'
     with open(aero_datafile) as data_file:
         for line in data_file:
