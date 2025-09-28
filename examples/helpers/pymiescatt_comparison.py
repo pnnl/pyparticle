@@ -133,7 +133,7 @@ def pymiescatt_lognormal_optics(pop_cfg, var_cfg) -> Tuple[np.ndarray, np.ndarra
     # lower/upper cutoffs expected in nm; allow var_cfg to provide lower_nm/upper_nm or lower/upper in nm
     lower = var_cfg.get('lower_nm', var_cfg.get('lower', None))
     upper = var_cfg.get('upper_nm', var_cfg.get('upper', None))
-
+    
     # If the population config provides D_min/D_max, prefer those bounds (convert to nm)
     dmin = pop_cfg.get('D_min', None)
     dmax = pop_cfg.get('D_max', None)
@@ -153,36 +153,36 @@ def pymiescatt_lognormal_optics(pop_cfg, var_cfg) -> Tuple[np.ndarray, np.ndarra
         else:
             upper = float(dmax) * M_TO_NM
 
-    # Fall back to safe defaults if neither provided
-    if lower is None:
-        lower = gmd / 20.0 if gmd > 0 else 1.0
-    if upper is None:
-        upper = gmd * 20.0 if gmd > 0 else 1000.0
+    # # Fall back to safe defaults if neither provided
+    # if lower is None:
+    #     lower = dg_nm / 20.0 if gmd > 0 else 1.0
+    # if upper is None:
+    #     upper = dg_nm * 20.0 if gmd > 0 else 1000.0
 
-    # Compute builder-derived bounds if GMD/GSD provided and optics did not explicitly set bounds
-    try:
-        GMD = pop_cfg.get('GMD', None)
-        GSD = pop_cfg.get('GSD', None)
-        if GMD is not None and GSD is not None:
-            gmd_local = float(_first(GMD))
-            gsd_local = float(_first(GSD))
-            N_sigmas = float(pop_cfg.get('N_sigmas', 5.0))
-            import math
-            dmin_builder = math.exp(math.log(gmd_local) - N_sigmas / 2.0 * math.log(gsd_local))
-            dmax_builder = math.exp(math.log(gmd_local) + N_sigmas / 2.0 * math.log(gsd_local))
-            if d_units == 'm':
-                builder_lower = float(dmin_builder) * M_TO_NM
-                builder_upper = float(dmax_builder) * M_TO_NM
-            else:
-                builder_lower = float(dmin_builder)
-                builder_upper = float(dmax_builder)
+    # # Compute builder-derived bounds if GMD/GSD provided and optics did not explicitly set bounds
+    # try:
+    #     GMD = pop_cfg.get('GMD', None)
+    #     GSD = pop_cfg.get('GSD', None)
+    #     if GMD is not None and GSD is not None:
+    #         gmd_local = float(_first(GMD))
+    #         gsd_local = float(_first(GSD))
+    #         N_sigmas = float(pop_cfg.get('N_sigmas', 5.0))
+    #         import math
+    #         dmin_builder = math.exp(math.log(gmd_local) - N_sigmas / 2.0 * math.log(gsd_local))
+    #         dmax_builder = math.exp(math.log(gmd_local) + N_sigmas / 2.0 * math.log(gsd_local))
+    #         if d_units == 'm':
+    #             builder_lower = float(dmin_builder) * M_TO_NM
+    #             builder_upper = float(dmax_builder) * M_TO_NM
+    #         else:
+    #             builder_lower = float(dmin_builder)
+    #             builder_upper = float(dmax_builder)
 
-            if ('lower' not in var_cfg) and ('lower_nm' not in var_cfg):
-                lower = builder_lower
-            if ('upper' not in var_cfg) and ('upper_nm' not in var_cfg):
-                upper = builder_upper
-    except Exception:
-        pass
+    #         if ('lower' not in var_cfg) and ('lower_nm' not in var_cfg):
+    #             lower = builder_lower
+    #         if ('upper' not in var_cfg) and ('upper_nm' not in var_cfg):
+    #             upper = builder_upper
+    # except Exception:
+    #     pass
 
     
     b_scat_Mm1 = []
