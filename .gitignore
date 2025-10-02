@@ -25,3 +25,7 @@
 !.python-version
 !*.envrc
 # idk about !*.env bc you could put secrets in it
+
+# Allow Jupyter notebooks in examples (we want to keep committed example notebooks)
+!examples/*.ipynb
+!examples/**/*.ipynb
