@@ -84,6 +84,9 @@ if _HAS_NETCDF4:
 
 
     def get_ncfile(partmc_output_dir, timestep, repeat):
+
+        if not os.path.exists(partmc_output_dir):
+            raise FileNotFoundError(f"PartMC output directory {partmc_output_dir} does not exist.")
         for root, dirs, files in os.walk(partmc_output_dir):
             f = files[0]
         if f.startswith('urban_plume_wc_'):

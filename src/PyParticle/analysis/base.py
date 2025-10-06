@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Sequence, Tuple, Optional
 
 
-@dataclass(frozen=True)
+#@dataclass(frozen=True)
+@dataclass
 class VariableMeta:
     name: str
     axis_names: Sequence[str]

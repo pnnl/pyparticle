@@ -19,11 +19,13 @@ from PyParticle.optics.builder import build_optical_population
 
 def test_bscat_babs_vs_pymiescatt(small_cfg):
     pop_cfg = small_cfg["population"]
-    var_cfg = {"wvl_grid": np.linspace(450e-9, 800e-9, 6), "rh_grid": [0.0]}
+    var_cfg = small_cfg['b_scat']
+    
+    #var_cfg = {"wvl_grid": np.linspace(450e-9, 800e-9, 6), "rh_grid": [0.0]}
     pop = build_population(pop_cfg)
     
     opop = build_optical_population(pop, {"type":"homogeneous", **var_cfg})
-
+    
     bsc = opop.get_optical_coeff("b_scat", rh=0.0)  # shape [nWvl]
     bab = opop.get_optical_coeff("b_abs", rh=0.0)
 

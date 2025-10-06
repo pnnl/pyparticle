@@ -20,8 +20,16 @@ class NccnVar(PopulationVariable):
     
     def compute(self, population, as_dict=False):
         cfg = self.cfg
-        s_eval = cfg.get("s_eval", [])
-        s_eval = np.asarray(s_eval, dtype=float)
+        s_grid_user = cfg.get("s_grid", None)
+        s_eval_cfg = cfg.get("s_eval", None)
+
+        if s_grid_user is not None:
+            s_eval = np.asarray(s_grid_user, dtype=float)
+        elif s_eval_cfg is not None:
+            s_eval = np.asarray(s_eval_cfg, dtype=float)
+        else:
+            s_eval = np.asarray([], dtype=float)
+        
         out = np.zeros_like(s_eval, dtype=float)
         for idx, s_env in enumerate(s_eval):
             c = 0.0
