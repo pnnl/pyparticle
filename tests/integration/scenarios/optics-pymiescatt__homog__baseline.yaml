@@ -1,0 +1,22 @@
+module: optics
+engine: pymiescatt
+name: "homog_baseline"
+population:
+  type: binned_lognormals
+  N:   [1e9]
+  GMD: [100e-9]
+  GSD: [1.6]
+  N_bins: [20]
+  aero_spec_names: [["SO4"]]
+  aero_spec_fracs: [[1.0]]
+optics:
+  type: homogeneous
+  wvl_grid: [4.5e-7, 5.5e-7, 6.5e-7]
+  rh_grid:  [0.0]
+analysis:
+  variables: [b_scat, b_abs, b_ext]
+checks:
+  invariants:
+    no_nans: true
+    nonnegative: true
+    extinction_balance: {enabled: true, rtol: 0.02, atol: 1e-12}

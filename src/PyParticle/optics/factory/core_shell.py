@@ -6,12 +6,14 @@ from ..utils import m_to_nm
 from ..refractive_index import build_refractive_index
 import math
 
+
+from PyParticle._patch import patch_pymiescatt
+patch_pymiescatt()
 try:
-    from PyParticle._patch import patch_pymiescatt
-    patch_pymiescatt()
-    from PyMieScatt import MieQCoreShell, MieQ
+    from PyMieScatt import MieQCoreShell
+    _PMS_ERR = None
 except Exception as e:
-    MieQCoreShell = MieQ = None
+    MieQCoreShell = None
     _PMS_ERR = e
 
 @register("core_shell")
@@ -83,7 +85,7 @@ class CoreShellParticle(OpticalParticle):
             n_w = self.species[h2o_idx].refractive_index.real_ri_fun(self.wvl_grid[ww])
             k_w = self.species[h2o_idx].refractive_index.imag_ri_fun(self.wvl_grid[ww])
             self.h2o_ris[ww] = complex(n_w, k_w)
-
+    
     def _shell_ri(self, rr: int, ww: int) -> complex:
         v_h2o = self.h2o_vols[rr]
         v_dry = self.shell_dry_vol
@@ -102,7 +104,6 @@ class CoreShellParticle(OpticalParticle):
 
         for rr, rh in enumerate(self.rh_grid):
             D_shell_m = self.get_Dwet(RH=rh, T=self.temp, sigma_sa=self.get_surface_tension())
-
             r_m = 0.5 * D_shell_m
             area = np.pi * r_m * r_m
 
@@ -114,7 +115,6 @@ class CoreShellParticle(OpticalParticle):
                     lam_nm = float(lam_m * 1e9)
                     mCore = complex(self.core_ris[ww])
                     mShell = complex(self._shell_ri(rr, ww))
-                    print(mCore, mShell, lam_nm, D_core_nm, D_shell_nm)
                     out = MieQCoreShell(
                         mCore, mShell, lam_nm, D_core_nm, D_shell_nm,
                         asDict=True, asCrossSection=False

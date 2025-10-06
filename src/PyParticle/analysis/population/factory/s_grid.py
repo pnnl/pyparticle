@@ -20,7 +20,7 @@ class SupersaturationGridVar(PopulationVariable):
     )
     def compute(self, population=None,as_dict=False):
         cfg = self.cfg
-        out = np.asarray(cfg.get("s_grid", []))
+        out = np.asarray(cfg.get("s_grid", cfg.get("s_eval",[])),dtype=float)
         if as_dict:
             return {"s_grid": out}
         return out

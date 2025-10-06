@@ -1,6 +1,6 @@
 import numpy as np
 # Use the builder API to construct optical particles
-from .builder import build_optical_particle
+from ...src.PyParticle.optics.builder import build_optical_particle
 
 class OpticalPopulation:
     """
