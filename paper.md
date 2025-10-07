@@ -1,5 +1,4 @@
 title: "PyParticle: modular tool to build and analyze aerosol particle populations"
-=======
 
 tags:
   - Python
