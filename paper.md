@@ -98,7 +98,7 @@ from PyParticle.freezing [Payton add here]
 
 
 # Acknowledgements
-The PyParticle package was originally developed under the Integrated Cloud, Land-surface, and Aerosol System Study (ICLASS), a Science Focus Area of the U.S. Department of Energy's Atmospheric System Research program at Pacific Nortwhest National Laboratory (PNNL). Optics modules and links to the PartMC and MAM4 modules was supported by PNNL's Laboratory Direct Research and Development program. PNNL is a multi-program national laboratory operated for the U.S. Department of Energy by Battelle Memorial Institute under Contract No. DE-AC05-76RL01830.
+The PyParticle package was originally developed under the Integrated Cloud, Land-surface, and Aerosol System Study (ICLASS), a Science Focus Area of the U.S. Department of Energy's Atmospheric System Research program at Pacific Northwest National Laboratory (PNNL). Optics modules and links to the PartMC and MAM4 modules was supported by PNNL's Laboratory Direct Research and Development program. PNNL is a multi-program national laboratory operated for the U.S. Department of Energy by Battelle Memorial Institute under Contract No. DE-AC05-76RL01830.
 
 # References
 
