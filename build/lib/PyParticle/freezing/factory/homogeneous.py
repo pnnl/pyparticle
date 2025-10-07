@@ -42,7 +42,7 @@ class HomogeneousParticle(FreezingParticle):
             if species.name != 'H2O':
                 spec_Jhets.append(10**(m * delta_aw + b))
                 vks.append(self.base_particle.get_spec_vol(species.name)[0])
-        return np.average(spec_Jhets, weights=vks, axis=0)
+        return np.average(spec_Jhets, weights=vks)
         
 
 def build(base_particle, config):

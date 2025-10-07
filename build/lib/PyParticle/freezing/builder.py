@@ -55,20 +55,18 @@ def build_freezing_population(base_population, config, T=None):
     """
     
     # Pass the base population so FreezingPopulation can inherit ids/num_concs/etc.
-    
+    freezing_population = FreezingPopulation(base_population)
     T_units = config.get("T_units", None)
     if not T:
         T = config.get("T_grid", None)
         T = np.array(T)
     
     if T_units=="C":
-        freezing_population = FreezingPopulation(base_population, T+273.15)
         for part_id in base_population.ids:
             base_particle = base_population.get_particle(part_id)
             freezing_particle = build_freezing_particle(base_particle, config)
             freezing_population.add_freezing_particle(freezing_particle, part_id, T+273.15)
     elif T_units=="K":
-        freezing_population = FreezingPopulation(base_population, T)
         for part_id in base_population.ids:
             base_particle = base_population.get_particle(part_id)
             freezing_particle = build_freezing_particle(base_particle, config)

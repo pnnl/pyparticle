@@ -31,7 +31,7 @@ class FreezingPopulation(ParticlePopulation):
     Holds cross-section cubes per particle and provides population-aggregated optics.
     """
 
-    def __init__(self, base_population, T_grid):
+    def __init__(self, base_population):
         # Initialize ParticlePopulation state
         super().__init__(
             species=base_population.species,
@@ -42,17 +42,16 @@ class FreezingPopulation(ParticlePopulation):
 
         # Prepare storage for per-particle Jhet values
         N_part = len(self.ids)
-        self.T_grid = T_grid
-        self.Jhet = np.zeros((len(T_grid), N_part), dtype=float)
-        self.INSA = np.zeros((len(T_grid), N_part), dtype=float)
+        self.Jhet = np.zeros((N_part), dtype=float)
+        self.INSA = np.zeros((N_part), dtype=float)
 
     def add_freezing_particle(self, freezing_particle, part_id, T, **kwargs):
         idx = self.find_particle(part_id)
         if idx >= len(self.ids) or self.ids[idx] != part_id:
             raise ValueError(f"part_id {part_id} not found in OpticalPopulation ids.")
-        self.Jhet[:,idx] = freezing_particle.get_Jhet(T)
-        self.INSA[:,idx] = freezing_particle.INSA
-        
+        self.Jhet[idx] = freezing_particle.get_Jhet(T)        
+        self.INSA[idx] = freezing_particle.INSA
+
 
 def retrieve_Jhet_val(name, specdata_path=data_path / 'species_data', spec_modifications={}):
     # todo: do we want to add Jhets to the species? Make "FreezingSpecies" class under base and update building?
