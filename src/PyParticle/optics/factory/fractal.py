@@ -5,7 +5,11 @@ from scipy.optimize import fsolve
 from .registry import register
 from ..base import OpticalParticle
 from ..refractive_index import build_refractive_index
-import pyBCabs.retrieval as pbca
+
+try:
+    import pyBCabs.retrieval as pbca
+except:
+    raise ImportError("pyBCabs package required for fractal morphology")
 
 @register("fractal")
 class FractalParticle(OpticalParticle):
