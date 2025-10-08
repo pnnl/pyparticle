@@ -3,6 +3,7 @@ from typing import Dict, Any, Callable
 
 # fixme: shouldn't resolve_name, _ALIASES be part of e.g., global_registry.py?
 from .population.factory.registry import resolve_name, _ALIASES
+from .particle.factory.registry import resolve_particle_name
 from .defaults import get_defaults_for_variable as _get_defaults_for_var
 import warnings
 # Unified builder: routes to population or particle registries
@@ -17,7 +18,7 @@ def _get_registry_builder(scope: str) -> Callable[[str], Callable]:
 	if scope == "population":
 		from .population.factory.registry import get_population_builder as _g
 		return _g
-	if scope == "particle":
+	if scope == "particle":        
 		from .particle.factory.registry import get_particle_builder as _g
 		return _g
 	raise ValueError(f"Unknown scope '{scope}'")
@@ -30,8 +31,11 @@ class VariableBuilder:
 	  VariableBuilder(name, cfg=None, scope='population').build()
 	"""
 	def __init__(self, name: str, cfg: Dict[str, Any] | None = None, scope: str = "population"):
-		user_requested = name
-		canon = resolve_name(name)
+		user_requested = name	
+		if scope == 'population':
+			canon = resolve_name(name)
+		elif scope == 'particle':
+			canon = resolve_particle_name(name)
 		if user_requested != canon and user_requested in _ALIASES:
 			warnings.warn(
 				f"Variable alias '{user_requested}' is deprecated; use '{canon}' instead.",
@@ -83,8 +87,8 @@ class VariableBuilder:
 		obj = builder(merged)
 		return obj
 
-def build_variable(name: str, scope: str = "population", var_cfg={}):
-	return VariableBuilder(name, var_cfg, scope=scope).build()
+def build_variable(name: str, scope: str = "population", var_cfg={}):	
+    return VariableBuilder(name, var_cfg, scope=scope).build()
 
 
 __all__ = ["VariableBuilder", "build_variable"]
