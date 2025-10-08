@@ -22,10 +22,12 @@ class StateLinePlotter(Plotter):
     
     def prep(self, population):
         #yvar = build_variable(self.varname, self.var_cfg)
-        yvar = build_variable(name=self.varname, scope="population", var_cfg=self.var_cfg)
+        yvar = build_variable(name=self.varname, scope="population", var_cfg=self.var_cfg)  
         # choose x-axis variable (simplified)
         if self.varname in ("Nccn", "frac_ccn"):
             xvar = build_variable("s_grid", scope="population", var_cfg=self.var_cfg)
+        elif self.varname in ("avg_Jhet", "nucleating_sites", "frozen_frac"):
+            xvar = build_variable("T_grid", scope="population", var_cfg=self.var_cfg)
         elif self.varname in ("b_abs","b_scat","b_ext"):
             has_w = len(self.var_cfg.get("wvl_grid", [])) > 1
             has_rh = len(self.var_cfg.get("rh_grid", [])) > 1
@@ -45,6 +47,7 @@ class StateLinePlotter(Plotter):
         
         x = xvar.compute(population)
         y = yvar.compute(population)
+
         if len(y) == 1:
             y = y[0]  # flatten single-value arrays
         if len(x) == 1:

@@ -11,6 +11,7 @@ import numpy as np
 from ..aerosol_particle import Particle
 from ..population.base import ParticlePopulation
 from .. import data_path
+from scipy.integrate import trapezoid
 
 
 class FreezingParticle(Particle):
@@ -52,6 +53,39 @@ class FreezingPopulation(ParticlePopulation):
             raise ValueError(f"part_id {part_id} not found in OpticalPopulation ids.")
         self.Jhet[:,idx] = freezing_particle.get_Jhet(T)
         self.INSA[:,idx] = freezing_particle.INSA
+        
+    def get_avg_Jhet(self):
+        weights = np.tile(self.num_concs, (len(self.T_grid), 1))
+        return np.average(self.Jhet, weights=weights, axis=1)
+    
+    def get_nucleating_sites(self, dT_dt):
+        out = np.zeros(self.T_grid.shape)
+        if self.T_grid[-1]>self.T_grid[0]:
+            for ii in range(1, len(self.T_grid)+1):
+                out[-ii] = np.sum((self.num_concs/dT_dt)*trapezoid(np.flip(self.Jhet[-ii:]), x=np.flip(self.T_grid[-ii:]), axis=0))
+        else: 
+            for ii in range(0, len(self.T_grid)):
+                out[ii] = np.sum((self.num_concs/dT_dt)*trapezoid(self.Jhet[:ii], x=self.T_grid[:ii], axis=0))       
+        return out
+    
+    def get_frozen_fraction(self, dT_dt):
+        out = np.zeros(self.T_grid.shape)
+        weights = self.num_concs/np.sum(self.num_concs)
+        if self.T_grid[-1]>self.T_grid[0]:
+            for ii in range(1, len(self.T_grid)+1):
+                ns = (1/dT_dt)*trapezoid(np.flip(self.Jhet[-ii:]), x=np.flip(self.T_grid[-ii:]), axis=0)
+                out[-ii]=1-np.sum(weights*np.exp(-1.0*ns*self.INSA[-ii]))
+        else: 
+            for ii in range(0, len(self.T_grid)):
+                ns = (1/dT_dt)*trapezoid(self.Jhet[:ii], x=self.T_grid[:ii], axis=0)
+                out[ii]=1-np.sum(weights*np.exp(-1.0*ns*self.INSA[ii]))
+        return out
+        
+        
+    
+    def get_freezing_probs(self):
+        return 1-np.exp(-self.Jhet*self.INSA*1.0)
+
         
 
 def retrieve_Jhet_val(name, specdata_path=data_path / 'species_data', spec_modifications={}):

@@ -287,7 +287,7 @@ class OpticalPopulation(ParticlePopulation):
             raise ValueError(f"optics_type = {optics_type} not implemented.")
         
         #out = total[rh_idx, wvl_idx]
-        out = self._safe_index_2d(total, rh_idx, wvl_idx)
+        out = self._safe_index_2d(total, rh_idx, wvl_idx)        
         if np.ndim(out) == 0:
             return float(out)
         return out

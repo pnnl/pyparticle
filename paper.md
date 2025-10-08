@@ -12,7 +12,7 @@ authors:
     orcid: 0000-0000-0000-0000
     affiliation: 1
   - name: Payton Beeler
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0003-4759-1461
     affiliation: 1
 affiliations:
   - name: Pacific Northwest National Laboratory
@@ -42,9 +42,9 @@ The physical properties of aerosols must be well quantified for a variety of atm
 
 **Leveraging existing models.** PyParticle is designed to interoperate with established aerosol-property and optical models rather than reimplementing them. For optical validations and reference calculations the package can call external packages such as PyMieScatt [@PyMieScatt]. For hygroscopicity and CCN-relevant calculations it follows the kappa-Köhler framework [@Petters2007], treating kappa as a per-species property that can be supplied by the species registry or overridden at runtime. Model loaders (e.g., MAM4, PartMC) convert model outputs to the PyParticle internal representation so downstream analyses (CCN, optics, freezing) can use the same utilities. Where third-party packages are optional (e.g., `netCDF4` for NetCDF I/O or PyMieScatt for reference curves) PyParticle raises explicit errors with clear remediation so analyses are deterministic and reproducible.
 
-**Modular structure.** The codebase follows a strict builder/registry pattern so new capabilities are added by dropping a single module into a `factory/` folder. Population builders (`population/factory/`), optics morphologies (`optics/factory/`), and species providers (`species/`) expose a small, well-documented `build(...)` function (or use a decorator-based registry). At runtime, discovery maps the config `type` string to the appropriate builder. This keeps the public API small while enabling experiment-specific extensions without changing core code.
+**Modular structure.** The codebase follows a strict builder/registry pattern so new capabilities are added by dropping a single module into a `factory/` folder. Population builders (`population/factory/`), optics morphologies (`optics/factory/`), freezing morphologies (`freezing/factory/`), and species providers (`species/`) expose a small, well-documented `build(...)` function (or use a decorator-based registry). At runtime, discovery maps the config `type` string to the appropriate builder. This keeps the public API small while enabling experiment-specific extensions without changing core code.
 
-**Implication for practice.** The same downstream computations (e.g., CCN spectra, optical coefficients, freezing propensity) can be run on a MAM4 snapshot, a PartMC particle file, or a synthetic lognormal mixture with identical configuration. Because species properties and morphologies are provided through modular factories, sensitivity studies (e.g., refractive indices, mixing rules, or kappa values) become simple configuration changes rather than code forks. This encourages transparent, process-level benchmarking across diverse datasets.
+**Implication for practice.** The same downstream computations (e.g., CCN spectra, optical coefficients, freezing propensity) can be run on a MAM4 snapshot, a PartMC particle file, or a synthetic lognormal mixture with identical configuration. Because species properties and morphologies are provided through modular factories, sensitivity studies (e.g., refractive indices, mixing rules, ice nucleation rate, or kappa values) become simple configuration changes rather than code forks. This encourages transparent, process-level benchmarking across diverse datasets.
 
 # Software description
 
@@ -84,9 +84,17 @@ opt_pop = build_optical_population(pop, {"type": "homogeneous", "wvl_grid": [550
 print(opt_pop.get_optical_coeff("b_scat", rh=0.0, wvl=550e-9))
 ```
 
-* **`freezing/`** — Contains routines for assessing ice nucleation potential (INP). Uses particle composition and surface area to calculate freezing proxies and exposes a builder pattern so new parameterizations can be added. Accepts `Particle` or `ParticlePopulation` inputs and returns particle-level and population metrics (e.g., activated fraction vs. T).
+* **`freezing/`** — Contains routines for assessing ice nucleation potential (INP). Uses particle composition and surface area to calculate freezing proxies and exposes a builder pattern so new parameterizations can be added. Accepts `Particle` or `ParticlePopulation` inputs and returns particle-level and population metrics (e.g., total ice nucleation rate, activated fraction vs. time).
 
-
+```python
+from PyParticle.population import build_population
+from PyParticle.freezing import build_freezing_population
+pop = build_population({"type": "binned_lognormals", "N": [1e7], "GMD": [100e-9],
+                        "GSD": [1.6], "aero_spec_names": [["SO4"]],
+                        "aero_spec_fracs": [[1.0]], "N_bins": 120})
+freezing_pop = build_freezing_population(pop, {"morphology": "homogeneous", "T_grid": [-60, -50, -40, -30], "T_units": "C"})
+print(freezing_pop.get_nucleation_rate(T=-30))
+```
 
 * **`analysis/`** — Provides utilities for size distributions (`dN/dlnD`), moments, mass/volume fractions, hygroscopic growth factors, and CCN spectra. Returns NumPy arrays or lightweight dataclasses for plotting and statistics.
 
@@ -129,6 +137,18 @@ pop = build_population({
 from PyParticle.optics import build_optical_population
 opt_pop = build_optical_population(pop, {"type": "homogeneous", "wvl_grid": [550e-9], "rh_grid": [0.0]})
 print(opt_pop.get_optical_coeff("b_scat", rh=0.0, wvl=550e-9))
+```
+
+- `freezing/` — Freezing particle builders and morphologies. `build_freezing_population(base_population, config)` accepts `T_grid` (Celcius or Kelvin), `T_units` (default `K`), and `apecies_modifications` (default `{}`). It attaches temperature‑aware ice nucleation rate to species (via `base.retrieve_Jhet_val`), constructs an `FreezingPopulation(base_population)`, then builds per‑particle morphology instances via the morphology registry and copies per‑particle `Jhet` and `INSA` arrays into the population. Species-level `species_modifications` are taken from `config` (preferred) or from `base_population.species_modifications`. Morphologies implement `compute_Jhet()` to populate per‑particle Jhet.
+
+```python
+from PyParticle.population import build_population
+from PyParticle.freezing import build_freezing_population
+pop = build_population({"type": "binned_lognormals", "N": [1e7], "GMD": [100e-9],
+                        "GSD": [1.6], "aero_spec_names": [["SO4"]],
+                        "aero_spec_fracs": [[1.0]], "N_bins": 120})
+freezing_pop = build_freezing_population(pop, {"morphology": "homogeneous", "T_grid": [-60, -50, -40, -30], "T_units": "C"})
+print(freezing_pop.get_nucleation_rate(T=-30))
 ```
 
 *Implementation notes.* The codebase uses SI units internally (meters for diameters/wavelengths) and defaults `rh_grid` to `[0.0]`. Optional dependencies such as `netCDF4` or `PyMieScatt` are imported only where needed; in their absence the code raises `ModuleNotFoundError` with an actionable message rather than silently substituting mock data.

@@ -2,8 +2,6 @@
 from .registry import register
 import numpy as np
 from ..base import OpticalParticle
-from ..utils import m_to_nm
-from ..refractive_index import build_refractive_index
 import math
 
 try:
@@ -99,7 +97,7 @@ class CoreShellParticle(OpticalParticle):
             use_pymie = True
         except ImportError:
             use_pymie = False
-
+                
         for rr, rh in enumerate(self.rh_grid):
             D_shell_m = self.get_Dwet(RH=rh, T=self.temp, sigma_sa=self.get_surface_tension())
             r_m = 0.5 * D_shell_m
@@ -113,7 +111,7 @@ class CoreShellParticle(OpticalParticle):
                     lam_nm = float(lam_m * 1e9)
                     mCore = complex(self.core_ris[ww])
                     mShell = complex(self._shell_ri(rr, ww))
-                    #print(mCore, mShell, lam_nm, D_core_nm, D_shell_nm)
+                    #print(mCore, mShell, lam_nm)
                     out = MieQCoreShell(
                         mCore, mShell, lam_nm, D_core_nm, D_shell_nm,
                         asDict=True, asCrossSection=False
@@ -135,9 +133,11 @@ class CoreShellParticle(OpticalParticle):
                         self.Cabs_bc[rr, ww] = out["Qabs"] * area
                         self.g_bc[rr, ww]    = out["g"]
                     
-                    
             else:
                 raise ImportError("PyMieScatt is required for core-shell optics calculations.")
+        
+                    
+        
             
     # def compute_optics(self):
     #     Nrh, Nw = len(self.rh_grid), len(self.wvl_grid)
