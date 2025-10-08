@@ -36,6 +36,10 @@ class AbsCoeff(PopulationVariable):
         return arr
 
 
-# def build(cfg=None):
-#     cfg = cfg or {}
-#     return AbsCoeff(cfg)
+def build(cfg=None):
+    """
+    Canonical factory entry point for analysis variables.
+    Mirrors b_scat/b_ext API so runners can uniformly call module.build(cfg).
+    """
+    cfg = cfg or {}
+    return AbsCoeff(cfg)

@@ -68,6 +68,9 @@ class StateLinePlotter(Plotter):
             ax.plot(pd["x"], pd["y"], **style)
         ax.set_xlabel(pd["xlabel"]); ax.set_ylabel(pd["ylabel"])
         ax.set_xscale(pd["xscale"]); ax.set_yscale(pd["yscale"])
+        
+        # fixme: should this be in here or elsewhere?
+        ax.set_xlim(pd["x"].min(), pd["x"].max())
         return ax
 
 def build(cfg):

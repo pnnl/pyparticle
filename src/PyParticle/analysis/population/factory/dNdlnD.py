@@ -59,4 +59,23 @@ def build(cfg=None):
     Returns an instantiated variable ready to compute.
     """
     cfg = cfg or {}
-    return DNdlnDVar(cfg)
+    if cfg.get("normalize") is None:
+        normalize = False
+    else:
+        normalize = bool(cfg.get("normalize"))
+    if cfg.get("wetsize") is None:
+        wetsize = True
+    else:
+        wetsize = bool(cfg.get("wetsize"))
+    
+    var = DNdlnDVar(cfg)
+    if normalize:
+        var.meta.units = ""
+    
+    if not wetsize:
+        var = DNdlnDVar(cfg)
+        var.meta.long_label = "Dry number size distribution"
+        var.meta.short_label = "$dN/d\ln D_{dry}$"
+    
+    return var
+    #return DNdlnDVar(cfg)

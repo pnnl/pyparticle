@@ -20,7 +20,30 @@ class FracCCNVar(PopulationVariable):
 
     def compute(self, population, as_dict=False):
         cfg = self.cfg
-        s_eval = np.asarray(cfg.get("s_eval", cfg.get("s_grid", [])), dtype=float)
+        # Prefer an explicit s_grid provided by the user. If both
+        # 's_grid' and 's_eval' are present but differ in length, prefer
+        # 's_grid' (it is typically the user-supplied grid) and warn so the
+        # caller can reconcile the inputs. This prevents x/y length
+        # mismatches when plotting (see issue where x length 50 vs y length 100).
+        s_eval = None
+        if cfg.get("s_grid", None) is not None:
+            s_eval = np.asarray(cfg.get("s_grid"), dtype=float)
+            # If an s_eval exists and lengths differ, warn the user.
+            if cfg.get("s_eval", None) is not None:
+                s_eval_cfg = np.asarray(cfg.get("s_eval"), dtype=float)
+                if s_eval_cfg.shape != s_eval.shape:
+                    import warnings
+
+                    warnings.warn(
+                        f"Both 's_grid' and 's_eval' provided with different lengths ({s_eval.shape[0]} vs {s_eval_cfg.shape[0]}). Using 's_grid'.",
+                        UserWarning,
+                    )
+        elif cfg.get("s_eval", None) is not None:
+            s_eval = np.asarray(cfg.get("s_eval"), dtype=float)
+        else:
+            s_eval = np.asarray([], dtype=float)
+        # debugging helper
+        # print(s_eval.shape)
         # reuse logic from NccnVar
         nccn = []
         for s_env in s_eval:

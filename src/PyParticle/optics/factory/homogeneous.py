@@ -51,12 +51,8 @@ class HomogeneousParticle(OpticalParticle):
           - water volumes vs RH (from Dwet - Ddry)
           - wavelength-dependent RIs for dry mix and water
         """
-        # Total dry volume (all non-water solid/liquid species "dry")
-        self.dry_vol = float(self.get_vol_dry())
-
         # Water volumes vs RH from Dwet(RH) and Ddry
         Ddry = float(self.get_Ddry())
-        vol_dry_geom = (math.pi / 6.0) * (Ddry ** 3)
 
         self.h2o_vols = np.zeros(len(self.rh_grid))
         for rr, rh in enumerate(self.rh_grid):
@@ -74,32 +70,21 @@ class HomogeneousParticle(OpticalParticle):
 
         # Build dry mixture RI by volume-weighted averaging of all non-water species
         dry_indices = [ii for ii in range(len(self.species)) if ii != h2o_idx]
-
-        # Guard against degenerate dry volume
-        vol_norm = self.dry_vol if self.dry_vol > 0.0 else 1.0
-
+        self.dry_vol = np.sum([vks[ii] for ii in dry_indices])
         for ww in range(Nw):
-            # Dry effective RI
-            if len(dry_indices) > 0 and self.dry_vol > 0.0:
-                n_dry = 0.0
-                k_dry = 0.0
-                for ii in dry_indices:
-                    f = float(vks[ii] / vol_norm)
-                    n_dry += self.species[ii].refractive_index.real_ri_fun(self.wvl_grid[ww]) * f
-                    k_dry += self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid[ww]) * f
-                self.dry_ris[ww] = complex(n_dry, k_dry)
-            else:
-                self.dry_ris[ww] = complex(1.0, 0.0)
-
-            # Water RI
+            # fixme: should this go in some effective_ri helper?
+            n_dry = 0.0
+            k_dry = 0.0
+            for ii in dry_indices:
+                f = float(vks[ii] / self.dry_vol)
+                n_dry += self.species[ii].refractive_index.real_ri_fun(self.wvl_grid[ww]) * f
+                k_dry += self.species[ii].refractive_index.imag_ri_fun(self.wvl_grid[ww]) * f
+            self.dry_ris[ww] = complex(n_dry, k_dry)
+            # Water RI (always set)
             n_w = self.species[h2o_idx].refractive_index.real_ri_fun(self.wvl_grid[ww])
             k_w = self.species[h2o_idx].refractive_index.imag_ri_fun(self.wvl_grid[ww])
             self.h2o_ris[ww] = complex(n_w, k_w)
-
-        # Sanity check: geometric dry volume from Ddry should match sum(vks) reasonably
-        # (not enforcing; just computed above as vol_dry_geom for possible debugging)
-        _ = vol_dry_geom  # kept for parity with CoreShell; not currently used
-
+    
     def _mixture_ri(self, rr: int, ww: int) -> complex:
         """
         Volume-weighted homogeneous mixture of dry material and water at a given RH and wavelength.
@@ -115,48 +100,32 @@ class HomogeneousParticle(OpticalParticle):
         Compute cross-sections and asymmetry parameter per (RH, wavelength).
         Prefer PyMieScatt if available; otherwise use a size-parameter-based fallback.
         """
-        use_pymie = MieQ is not None
 
         for rr, rh in enumerate(self.rh_grid):
             D_m = float(self.get_Dwet(RH=float(rh), T=self.temp, sigma_sa=self.get_surface_tension()))
             r_m = 0.5 * D_m
             area = math.pi * r_m * r_m  # geometric cross-section
 
-            if use_pymie:
-                D_nm = D_m * 1e9
-                for ww, lam_m in enumerate(self.wvl_grid):
-                    lam_nm = float(lam_m * 1e9)
-                    m = complex(self._mixture_ri(rr, ww))
-                    out = MieQ(m, lam_nm, D_nm, asDict=True, asCrossSection=False)
-                    # Convert efficiencies to absolute cross sections via geometric area
-                    self.Cext[rr, ww] = out["Qext"] * area
-                    self.Csca[rr, ww] = out["Qsca"] * area
-                    self.Cabs[rr, ww] = out["Qabs"] * area
-                    self.g[rr, ww]    = out["g"]
-            else:
-                # Fallback: simple Mie-like behavior vs size parameter x = 2πr/λ
-                for ww, lam_m in enumerate(self.wvl_grid):
-                    lam = float(lam_m)
-                    x = 2.0 * math.pi * r_m / lam
-
-                    # Extinction efficiency rises toward ~2 as x increases
-                    Qext = 2.0 * (1.0 - math.exp(-x / 2.0))
-                    Cext = Qext * area
-
-                    # Partition using fallback SSA
-                    omega0 = self.single_scatter_albedo
-                    Csca = omega0 * Cext
-                    Cabs = (1.0 - omega0) * Cext
-
-                    # Asymmetry parameter grows with x, capped < 1
-                    g = 0.2 + 0.7 * (1.0 - math.exp(-x / 10.0))
-                    g = float(np.clip(g, 0.0, 0.95))
-
-                    self.Cext[rr, ww] = Cext
-                    self.Csca[rr, ww] = Csca
-                    self.Cabs[rr, ww] = Cabs
-                    self.g[rr, ww]    = g
-
+            D_nm = D_m * 1e9
+            for ww, lam_m in enumerate(self.wvl_grid):
+                lam_nm = float(lam_m * 1e9)
+                m = complex(self._mixture_ri(rr, ww))
+                # out = MieQ(m, lam_nm, D_nm, asDict=True, asCrossSection=False)
+                # # Convert efficiencies to absolute cross sections via geometric area
+                # self.Cext[rr, ww] = out["Qext"] * area
+                # self.Csca[rr, ww] = out["Qsca"] * area
+                # self.Cabs[rr, ww] = out["Qabs"] * area
+                
+                out = MieQ(m, lam_nm, D_nm, asDict=True, asCrossSection=False)
+                # Convert efficiencies to absolute cross sections via geometric area
+                self.Cext[rr, ww] = out["Qext"] * np.pi/4 * D_nm**2 * 1e-18 # from nm^2 to m^2
+                self.Csca[rr, ww] = out["Qsca"] * np.pi/4 * D_nm**2 * 1e-18 # from nm^2 to m^2
+                self.Cabs[rr, ww] = out["Qabs"] * np.pi/4 * D_nm**2 * 1e-18 # from nm^2 to m^2
+                self.g[rr, ww]    = out["g"]
+            # else:
+            #     raise ImportError(
+            #         "PyMieScatt is required for homogeneous sphere optics but is not available")
+    
     # Convenience getters (unchanged)
     def get_cross_sections(self):
         return {
