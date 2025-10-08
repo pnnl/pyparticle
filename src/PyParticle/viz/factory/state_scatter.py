@@ -39,10 +39,11 @@ class StateScatterPlotter(Plotter):
 
     def prep(self, population):
         # fixme: make these particle variables -- different function?
-        xvar = build_variable(self.xname, self.var_cfg)
-        yvar = build_variable(self.yname, self.var_cfg)
-        x = xvar.compute(population)
-        y = yvar.compute(population)
+        xvar = build_variable(self.xname, 'particle', self.var_cfg)
+        yvar = build_variable(self.yname, 'particle', self.var_cfg)
+        x = xvar.compute_all(population)
+        y = yvar.compute_all(population)
+
         if len(x) != len(y):
             raise ValueError(f"x and y must be same length, got {len(x)} vs {len(y)}.")
 
@@ -67,10 +68,11 @@ class StateScatterPlotter(Plotter):
             "xlabel": self._fmt_label(xvar.meta.long_label, getattr(xvar.meta, "units", "")),
             "ylabel": self._fmt_label(yvar.meta.long_label, getattr(yvar.meta, "units", "")),
             "clabel": self.config.get("clabel", clabel),
+            "xscale": xvar.meta.scale, "yscale": yvar.meta.scale
         }
 
     def plot(self, population, ax, **kwargs):
-        pd = self.prep(population)
+        pd = self.prep(population)        
         style = {**self.config.get("style", {}), **kwargs}
         # If c provided, prefer continuous mapping (use cmap in style/theme)
         scatter_kwargs = dict(style)
@@ -83,6 +85,7 @@ class StateScatterPlotter(Plotter):
 
         h = ax.scatter(pd["x"], pd["y"], **scatter_kwargs)
         ax.set_xlabel(pd["xlabel"]); ax.set_ylabel(pd["ylabel"])
+        ax.set_xscale(pd["xscale"]); ax.set_yscale(pd["yscale"])
 
         # optional colorbar
         if pd["c"] is not None and self.config.get("colorbar", True):
