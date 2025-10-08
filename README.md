@@ -1,7 +1,9 @@
 # PyParticle
 
 ![CI](https://github.com/lfierce2/PyParticle/actions/workflows/ci-codecov.yml/badge.svg?branch=tests_scaffold)
-<!-- * codecov: [![codecov](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold/graph/badge.svg)](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold) -->
+<!-- * codecov: [ -->
+![codecov](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold/graph/badge.svg)](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold)
+
 
 A Python library for constructing aerosol particle populations, attaching species-level physical properties, building per-particle morphologies, and aggregating to population-level aerosol properties. The package uses factory/builder discovery, so new population types, aerosol species, and morphologies can be added by dropping small modules into factory/ folders.
 
