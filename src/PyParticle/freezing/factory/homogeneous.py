@@ -2,7 +2,7 @@ import numpy as np
 from ..base import FreezingParticle, retrieve_Jhet_val
 from .registry import register
 from ...aerosol_particle import Particle
-from ..utils import calculate_Psat
+from .utils import calculate_Psat
 
 @register("homogeneous")
 class HomogeneousParticle(FreezingParticle):

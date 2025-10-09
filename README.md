@@ -37,7 +37,7 @@ pip install PyMieScatt netCDF4
 
 Build a population → attach morphology (if needed) → query an aerosol property.
 
-Example (optics shown here; the same pattern applies to other morphologies such as freezing):
+Example (optics shown here; the same pattern applies to freezing):
 
 ```python
 from PyParticle.population.builder import build_population
@@ -61,7 +61,7 @@ opt_cfg = {"type": "homogeneous", "wvl_grid": [550e-9], "rh_grid": [0.0]}
 opt_pop = build_optical_population(pop, opt_cfg)
 
 # 3) Query scattering coefficient at RH=0, λ=550 nm (SI units inside: meters)
-b_scat = opt_pop.get_optical_coeff("b_scat", rh=0.0)  # numpy array or float depending on wvl_grid
+b_scat = opt_pop.get_optical_coeff("b_scat", rh=0.0)  # numpy array or float depending on wvl_grid defined in opt_cfg
 print(b_scat)
 ```
 
@@ -71,9 +71,9 @@ print(b_scat)
 * **ParticlePopulation**: container for many `Particle` items with number concentrations and IDs; carries `species_modifications: Dict[str, dict]` for runtime overrides.
 * **Derived properties**:
 
-  * **OpticalParticle / OpticalPopulation**: wraps base particles to compute per-particle cross sections (Csca, Cabs, Cext, g) and aggregates to coefficients (b_scat, b_abs, etc.).
+  * **OpticalParticle / OpticalPopulation**: wraps base particles to compute per-particle optical cross-sections (Csca, Cabs, Cext, g) and aggregates to optical coefficients (b_scat, b_abs, etc.).
   * **CCN (cloud condensation nuclei)**: water uptake and activation are computed on the **base** `Particle` / `ParticlePopulation`.
-  * **FreezingParticle / FreezingPopulation**: wraps base particles to evaluate heterogeneous ice nucleation potential (e.g., Jhet/IN metrics) and aligns results with population IDs.
+  * **FreezingParticle / FreezingPopulation**: wraps base particles to evaluate heterogeneous ice nucleation properties (e.g., Jhet/IN metrics) and aligns results with population IDs.
 
 # Discovery / extension points
 
@@ -92,7 +92,7 @@ Developer guidance and templates are available in `docs/developer/factories.md`.
   * `population/` (builder, base, factories)
   * `optics/` (builder, base, refractive_index, factories)
   * `species/` (registry and data readers)
-  * `freezing/`
+  * `freezing/` (builder, base, factories)
   * `analysis/` (particle- and population-level)
   * `viz/` (plotting helpers)
 * `examples/`
