@@ -1,46 +1,49 @@
+---
 title: "PyParticle: modular tool to build and analyze aerosol particle populations"
-
+author:
+  - "Laura Fierce"
+  - "Payton Beeler"
 tags:
   - Python
   - aerosols
   - atmospheric science
   - aerosol-cloud interactions
   - aerosol-radiation interactions
-
 authors:
   - name: Laura Fierce
-    orcid: 0000-0002-8682-1453
+    orcid: "0000-0002-8682-1453"
     affiliation: 1
   - name: Payton Beeler
-    orcid: 0000-0003-4759-1461
+    orcid: "0000-0003-4759-1461"
     affiliation: 1
 affiliations:
   - name: Pacific Northwest National Laboratory
     index: 1
-date: 2025-10-02
 bibliography: paper.bib
+link-citations: true
+nocite: |
+  @*
 ---
 
 # Summary
 
-**PyParticle** is a lightweight Python library for describing and analyzing aerosol particle populations. The package includes modular builders for aerosol species, particle populations, and particle morphologies, which interface with existing models for derived aerosol properties, such as cloud condensation nuclei (CCN) activity, ice nucleation particle (INP) potential, and optical properties. Its **builder/registry** design allows new aerosol species, population types, and morphologies to be added by adding small modules to the appropriate `factory/` folders without modifying code API. This modular, reproducible framework facilitates process-level investigations, sensitivity analyses, and intercomparison studies across diverse model and observational datasets. 
+**PyParticle** is a lightweight Python library for describing and analyzing aerosol particle populations. The package includes modular builders for aerosol species, particle populations, and particle morphologies, which interface with existing models for derived aerosol properties, such as cloud condensation nuclei (CCN) activity, ice-nucleating particle (INP) potential, and optical properties. Its **builder/registry** design allows new aerosol species, population types, and morphologies to be added by adding small modules to the appropriate `factory/` folders without modifying code API. This modular, reproducible framework facilitates process-level investigations, sensitivity analyses, and intercomparison studies across diverse model and observational datasets. 
 
 The core components include:
 - **AerosolSpecies**, **AerosolParticle**, **ParticlePopulation** classes that provide a standardized representation of aerosol particles from diverse data sources.
 - **Species builder** that supplies physical properties (e.g., density, hygroscopicity parameter, refractive index) for aerosol species, with optional per-species overrides.
 - **Population builders** for parametric and model-derived populations (e.g., *binned lognormal*, *monodisperse*, and loaders for *MAM4* and *PartMC* simulation output).
-- **Optical particle builders** that compute wavelength- and RH-dependent optical properties for different particle morphologies (e.g., *homogeneous*, *core–shell*) using existing libraries
+- **Optical particle builders** that compute wavelength- and RH-dependent optical properties for different particle morphologies (e.g., *homogeneous*, *core–shell*) using existing libraries.
 - **Freezing particle builders** that estimate INP-relevant metrics from particle composition and size.
 - An **analysis module** that calculates particle- and population-level variables from PyParticle populations.
 - A **viz** package to generate figures from PyParticle populations.
 
 Example scripts demonstrate (i) optical properties for lognormal mixtures, (ii) comparisons of CCN activity between MAM4- and PartMC-derived populations, and (iii) freezing-oriented calculations on common temperature/RH grids.
 
-
 # Statement of need
 The physical properties of aerosols must be well quantified for a variety of atmospheric, air quality, and industrial applications. A wide range of tools have been developed to simulate [e.g., @Riemer2009_JGR_PartMC; @Liu2016_GMD_MAM4; @Bauer2008_ACP_MATRIX; @Zaveri2008_JGR_MOSAIC] and observe [e.g., @Jayne2000_AST_AMS; @DeCarlo2006_AnalChem_HRToFAMS; @Knutson1975_JAS_DMA; @Wang1990_AST_SEMS; @Schwarz2006_JGR_SP2; @Schwarz2008_JGR_SP2; @Zelenyuk2015_JASMS_miniSPLAT] aerosol particle populations, producing varied aerosol data that is often difficult to compare directly. **PyParticle** provides a standardized description of aerosol particle populations and facilitates evaluation of derived aerosol properties.
 
-**Leveraging existing models.** PyParticle is designed to interoperate with established aerosol-property models rather than reimplementing them. The current implementation focuses on aerosol effects relevant for the atmosphere, with many functions adapted from previous studies of CCN activity [@Fierce2013_JGR; @Fierce2017_JGR; @Fierce2024_JAS], optical properties [@Fierce2016_NatComm, @Fierce2020_PNAS], and mixing state approximations [@Fierce2015_ACP, @Fierce2017_BAMS, @Fierce2025_JAS]. For optical calculations, PyParticle can call external packages such as PyMieScatt [@PyMieScatt]. For hygroscopicity and CCN-relevant calculations it follows the kappa-Köhler framework [@Petters2007_ACP], treating kappa as a per-species property that can be supplied by the species registry or overridden at runtime. Immersion freezing is represented using the stochastic immersion freezing model [@KnopfAlpert2013_Faraday,@AlpertKnopf2016_ACP]. Model loaders (e.g., MAM4, PartMC) convert model outputs to the PyParticle internal representation so downstream analyses (CCN, optics, freezing) can use the same utilities. Where third-party packages are optional (e.g., `netCDF4` for NetCDF I/O or PyMieScatt for reference curves), PyParticle raises explicit errors with clear remediation so analyses are deterministic and reproducible.
+**Leveraging existing models.** PyParticle is designed to interoperate with established aerosol-property models rather than reimplementing them. The current implementation focuses on aerosol effects relevant for the atmosphere, with many functions adapted from previous studies of CCN activity [@Fierce2013_JGR; @Fierce2017_JGR; @Fierce2024_JAS], optical properties [@Fierce2016_NatComm; @Fierce2020_PNAS], and mixing state approximations [@Fierce2015_ACP; @Fierce2024_JAS; @Zheng2022_ACP_mixing_state]. For optical calculations, PyParticle can call external packages such as PyMieScatt [@PyMieScatt2018_JQSRT]. For hygroscopicity and CCN-relevant calculations it follows the kappa-Köhler framework [@Petters2007_ACP], treating kappa as a per-species property that can be supplied by the species registry or overridden at runtime. Immersion freezing is represented using the stochastic immersion freezing model [@KnopfAlpert2013_Faraday; @AlpertKnopf2016_ACP]. Model loaders (e.g., MAM4, PartMC) convert model outputs to the PyParticle internal representation so downstream analyses (CCN, optics, freezing) can use the same utilities. Where third-party packages are optional (e.g., `netCDF4` for NetCDF I/O or PyMieScatt for reference curves), PyParticle raises explicit errors with clear remediation so analyses are deterministic and reproducible.
 
 **Modular structure.** The codebase follows a strict builder/registry pattern so new capabilities are added by dropping a single module into a `factory/` folder. Modules for particle populations (`population/factory/`), optics morphologies (`optics/factory/`), freezing models (`freezing/factory/`), and aerosol species (`species/`) expose a small, well-documented `build(...)` function (or use a decorator-based registry). At runtime, discovery maps the config `type` string to the appropriate builder. This keeps the public API small while enabling application-specific extensions without changing core code.
 
@@ -57,9 +60,9 @@ The repository is organized around clear extension points:
 ```python
 from PyParticle.species.registry import get_species
 so4 = get_species("SO4", kappa=0.6)
-````
+```
 
-* **`aerosol_particle`** — Defines the `Particle` class and helpers to build particles from species names and masses/diameters. A `Particle` stores per-species masses, dry/wet diameters, effective kappa, and basic metadata. Helpers provide kappa-Köhler growth and CCN activity [@Petters2007_ACP]. By default, CCN is treated with the homogeneous-sphere assumption and water surface tension. An example for 
+* **`aerosol_particle`** — Defines the `Particle` class and helpers to build particles from species names and masses/diameters. A `Particle` stores per-species masses, dry/wet diameters, effective kappa, and basic metadata. Helpers provide kappa-Köhler growth and CCN activity [@Petters2007_ACP]. By default, CCN is treated with the homogeneous-sphere assumption and water surface tension. An example:
 
 ```python
 from PyParticle.aerosol_particle import make_particle
@@ -85,20 +88,20 @@ print(opt_pop.get_optical_coeff("b_scat", rh=0.0, wvl=550e-9))
 ```
 
 * **`freezing/`** — Contains routines for assessing the potential for immersion freezing. The freezing module uses particle composition and surface area to calculate freezing proxies and exposes a builder pattern so new parameterizations can be added. Accepts `Particle` or `ParticlePopulation` inputs and returns particle-level and population metrics (e.g., activated fraction vs. T).
+
 ```python
-from PyParticle.freezing [Payton add here]
+# Placeholder example (update when API is finalized):
+# from PyParticle.freezing import build_freezing_population
+# frz = build_freezing_population(pop, {"type": "stochastic"})
 ```
 
 * **`analysis/`** — Provides utilities for size distributions (`dN/dlnD`), moments, mass/volume fractions, hygroscopic growth factors, and CCN spectra. Returns NumPy arrays or lightweight dataclasses for plotting and statistics.
 
 * **`viz/`** — Provides plotter builders, style management, and grid helpers for consistent visualization of population outputs.
 
-
 *Implementation notes.* The codebase uses SI units internally (meters for diameters/wavelengths) and defaults `rh_grid` to `[0.0]`. Optional dependencies such as `netCDF4` or `PyMieScatt` are imported only where needed; in their absence the code raises `ModuleNotFoundError` with an actionable message rather than silently substituting mock data.
-
 
 # Acknowledgements
 The PyParticle package was originally developed under the Integrated Cloud, Land-surface, and Aerosol System Study (ICLASS), a Science Focus Area of the U.S. Department of Energy's Atmospheric System Research program at Pacific Northwest National Laboratory (PNNL). Optics modules and links to the PartMC and MAM4 modules was supported by PNNL's Laboratory Direct Research and Development program. PNNL is a multi-program national laboratory operated for the U.S. Department of Energy by Battelle Memorial Institute under Contract No. DE-AC05-76RL01830.
 
 # References
-
