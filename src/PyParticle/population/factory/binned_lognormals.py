@@ -92,7 +92,7 @@ def build(config):
             if not (mode_D_min > 0 and mode_D_max > 0 and mode_D_min < mode_D_max):
                 raise ValueError(f"Invalid mode edges for mode {mode_idx}: {mode_D_min}, {mode_D_max}")
             D_edges = np.logspace(np.log10(mode_D_min), np.log10(mode_D_max), num=int(N_bins) + 1)
-
+        
         # geometric bin centers
         D_mids = np.sqrt(D_edges[:-1] * D_edges[1:])
         bin_width = np.log10(D_mids[1]) - np.log10(D_mids[0])
