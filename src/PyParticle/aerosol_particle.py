@@ -200,7 +200,7 @@ class Particle:
     def get_Dwet(
             self,RH=None,T=None,
             sigma_sa=None, # more general than sigma_h2o
-            sigma_h2o=None, # todo: remove sigma_h2o
+            sigma_h2o=0.072, # todo: remove sigma_h2o
             rho_h2o=1000., MW_h2o=18e-3):
         
         if sigma_sa == None: 
@@ -208,7 +208,7 @@ class Particle:
                 sigma_sa = self.get_surface_tension()
             else:
                 sigma_sa = sigma_h2o
-                
+        
         if RH==None:
             vol_wet = self.get_vol_tot()
             Dwet = (vol_wet*6./np.pi)**(1./3.)

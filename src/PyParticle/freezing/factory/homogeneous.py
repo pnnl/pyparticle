@@ -2,7 +2,7 @@ import numpy as np
 from ..base import FreezingParticle, retrieve_Jhet_val
 from .registry import register
 from ...aerosol_particle import Particle
-from ..utils import calculate_Psat
+from .utils import calculate_Psat
 
 @register("homogeneous")
 class HomogeneousParticle(FreezingParticle):
@@ -42,7 +42,7 @@ class HomogeneousParticle(FreezingParticle):
             if species.name != 'H2O':
                 spec_Jhets.append(10**(m * delta_aw + b))
                 vks.append(self.base_particle.get_spec_vol(species.name)[0])
-        return np.average(spec_Jhets, weights=vks)
+        return np.average(spec_Jhets, weights=vks, axis=0)
         
 
 def build(base_particle, config):
