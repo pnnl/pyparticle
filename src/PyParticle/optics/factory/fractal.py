@@ -1,6 +1,6 @@
 # optics/factory/fractal.py
 import numpy as np
-import math
+import math, warnings
 from scipy.optimize import fsolve
 from .registry import register
 from ..base import OpticalParticle
@@ -10,6 +10,16 @@ try:
     import pyBCabs.retrieval as pbca
 except:
     raise ImportError("pyBCabs package required for fractal morphology")
+
+from PyParticle._patch import patch_pymiescatt
+patch_pymiescatt()
+try:
+    from PyMieScatt import MieQCoreShell
+    _PMS_ERR = None
+except Exception as e:
+    MieQCoreShell = None
+    _PMS_ERR = e
+
 
 @register("fractal")
 class FractalParticle(OpticalParticle):
@@ -109,11 +119,12 @@ class FractalParticle(OpticalParticle):
         vol_core = self.get_vol_core()
         vol_mon = (4.0/3.0)*np.pi*(20e-9)**3
         Npp = vol_core/vol_mon
+        warnings.warn("Scattering by fractal particles is not yet implemented! Using core-shell Mie Theory values.", UserWarning)
         
         for rr, rh in enumerate(self.rh_grid):
             D_m = float(self.get_Dwet(RH=float(rh), T=self.temp, sigma_sa=self.get_surface_tension()))
             r_m = 0.5 * D_m
-            # area = math.pi * r_m * r_m  # geometric cross-section
+            area = math.pi * r_m * r_m  # geometric cross-section
             vol_tot = (4.0/3.0)*np.pi*r_m**3
             Vratio = vol_tot/self.get_vol_core()
             mass_h2o = 1000.0*(vol_tot-self.get_vol_tot()) # kg
@@ -130,8 +141,21 @@ class FractalParticle(OpticalParticle):
                     MAC = pbca.small_PSP(Mtot_Mbc, lam_m*1e9, mShell)
                 else:
                     MAC = pbca.large_PSP(Mtot_Mbc, phase_shift, lam_m*1e9, mShell)
-            
                 self.Cabs[rr, ww] = MAC*1e3*mass_BC  
+                
+                # Fall back to PyMieScatt for scattering and extinction
+                mCore = complex(self.core_ris[ww])
+                mShell = complex(self._shell_ri(rr, ww))
+                lam_nm = lam_m*1e9
+                D_core_nm = self.get_Dcore() * 1e9
+                D_shell_nm = D_m*1e9
+                out = MieQCoreShell(
+                    mCore, mShell, lam_nm, D_core_nm, D_shell_nm,
+                    asDict=True, asCrossSection=False
+                )
+                self.Csca[rr, ww] = out["Qsca"] * area
+                self.Cext[rr, ww] = self.Cabs[rr, ww] + self.Csca[rr, ww]
+                self.g[rr, ww]    = out["g"]
             
             
     def get_x(self, Npp, Vratio, a1=1.0844906985904168, a2=-0.03072545646660544, a3=-0.8083509246658951, x0=0.46):
