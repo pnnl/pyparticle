@@ -33,13 +33,12 @@ jobs:
 
       - name: Run tests with coverage (xml)
         run: |
-          pytest -q --cov=<import_name> --cov-report=xml:coverage.xml --cov-report=term
+          pytest -q --cov=pyparticle --cov-report=xml:coverage.xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
-          token: ${{ secrets.CODECOV_TOKEN }} # optional for public repos
           flags: unittests
           fail_ci_if_error: false
           verbose: true
