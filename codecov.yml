@@ -6,6 +6,9 @@ comment: false
 github_checks:
   annotations: false
 
+# Minimal public Codecov config
+comment: false
+
 coverage:
   status:
     project:
