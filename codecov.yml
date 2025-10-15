@@ -1,3 +1,13 @@
+# >>> RELEASE KIT START
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+ignore:
+  - "tests/*"
+# <<< RELEASE KIT END
 # Codecov configuration
 # Make coverage reporting robust and avoid failing PRs on upload glitches.
 

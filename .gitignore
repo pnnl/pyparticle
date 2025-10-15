@@ -1,3 +1,14 @@
+# >>> RELEASE KIT START
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.build/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+# <<< RELEASE KIT END
 # Note: This is restrictive but it might be possible
 # to compartmentalize some specific ignores in (subfolders/workdirs)
 # by using a .gitignore there
