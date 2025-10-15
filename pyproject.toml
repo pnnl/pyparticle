@@ -38,9 +38,9 @@ dev = [
   "mypy>=1.8",
   "pyrcel>=0.4",
   "matplotlib",
+  "pymiescatt>=1.14",
+  "netCDF4"
 ]
-optics = ["pymiescatt>=1.14"]
-partmc = ["netCDF4"]
 
 [project.urls]
 Homepage = "https://github.com/<newaccount>/<reponame>"
