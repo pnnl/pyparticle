@@ -22,42 +22,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install package + dev deps
+      - name: Install package + test deps (robust)
         run: |
           python -m pip install --upgrade pip
-          # If you defined a [project.optional-dependencies].dev extra, keep the first line.
-          # Otherwise, the fallback line installs the package without extras.
-          pip install -e .[dev] || pip install -e .
+          # Try dev extras; fall back to base + explicit pytest deps
+          pip install -e .[dev] || (pip install -e . && pip install pytest pytest-cov)
+
+      - name: Sanity: pytest & import pyparticle
+        run: |
+          python - <<'PY'
+          import sys
+          import pytest
+          print("pytest:", pytest.__version__, "python:", sys.version.split()[0])
+          try:
+            import pyparticle
+            print("pyparticle from:", getattr(pyparticle, "__file__", None))
+          except Exception as e:
+            print("IMPORT ERROR:", e); raise
+          PY
 
       - name: Run tests with coverage (xml + terminal)
         run: |
-          pytest -q --cov=pyparticle --cov-report=xml:coverage.xml --cov-report=term-missing
-
-      # Optional: enforce minimum coverage (set MIN_COVERAGE to taste, or leave 0)
-      - name: Enforce minimum coverage
-        env:
-          MIN_COVERAGE: "0"
-        run: |
-          python - <<'PY'
-          import os, sys, xml.etree.ElementTree as ET
-          rate = float(ET.parse('coverage.xml').getroot().get('line-rate') or 0.0) * 100
-          thresh = float(os.environ.get('MIN_COVERAGE','0'))
-          print(f"Coverage: {rate:.2f}% (min {thresh:.2f}%)")
-          if (summary := os.environ.get('GITHUB_STEP_SUMMARY')):
-              with open(summary,'a') as f: f.write(f"## Test coverage\n\n- **Line coverage:** {rate:.2f}%\n- **Threshold:** {thresh:.2f}%\n")
-          if rate < thresh: sys.exit(1)
-          PY
-
-      - name: Build HTML coverage report
-        run: |
-          python -m pip install coverage
-          coverage html -i -d htmlcov
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-artifacts
-          path: |
-            coverage.xml
-            htmlcov/
-          retention-days: 7
+          python -m pytest -q --cov=pyparticle --cov-report=xml:coverage.xml --cov-report=term-missing
