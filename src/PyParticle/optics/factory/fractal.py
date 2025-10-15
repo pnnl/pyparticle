@@ -11,7 +11,7 @@ try:
 except:
     raise ImportError("pyBCabs package required for fractal morphology")
 
-from PyParticle._patch import patch_pymiescatt
+from pyparticle._patch import patch_pymiescatt
 patch_pymiescatt()
 try:
     from PyMieScatt import MieQCoreShell

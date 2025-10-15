@@ -5,8 +5,8 @@ Routine tests for the viz builder and base plotter API.
 """
 import pytest
 
-from PyParticle.viz.builder import build_plotter
-from PyParticle.viz.base import Plotter
+from pyparticle.viz.builder import build_plotter
+from pyparticle.viz.base import Plotter
 
 
 def test_build_plotter_missing_type_raises():

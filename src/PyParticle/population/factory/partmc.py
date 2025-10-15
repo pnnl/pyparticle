@@ -6,8 +6,8 @@ Build a population from a PARTMC NetCDF file
 """
 
 from ..base import ParticlePopulation
-from PyParticle import make_particle_from_masses
-from PyParticle.species.registry import get_species
+from pyparticle import make_particle_from_masses
+from pyparticle.species.registry import get_species
 import numpy as np
 import os
 from pathlib import Path

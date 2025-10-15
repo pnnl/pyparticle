@@ -5,7 +5,7 @@ Routine tests for the public population API surface.
 """
 import pytest
 
-from PyParticle import build_population, ParticlePopulation
+from pyparticle import build_population, ParticlePopulation
 
 
 def test_build_population_missing_type_raises():

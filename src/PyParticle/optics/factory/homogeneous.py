@@ -7,7 +7,7 @@ from ..base import OpticalParticle
 from ..refractive_index import build_refractive_index
 
 try:
-    from PyParticle._patch import patch_pymiescatt
+    from pyparticle._patch import patch_pymiescatt
     patch_pymiescatt()
     from PyMieScatt import MieQ
 except Exception as e:

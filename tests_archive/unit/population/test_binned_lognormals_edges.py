@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from PyParticle.population.builder import build_population
+from pyparticle.population.builder import build_population
 
 
 def _cfg(global_edges=False):

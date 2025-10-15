@@ -6,8 +6,8 @@ Build a monodisperse population
 """
 
 from ..base import ParticlePopulation
-from PyParticle import make_particle
-from PyParticle.species.registry import get_species
+from pyparticle import make_particle
+from pyparticle.species.registry import get_species
 import numpy as np
 from .registry import register
 

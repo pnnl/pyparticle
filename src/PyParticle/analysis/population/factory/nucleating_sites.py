@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ..base import PopulationVariable, VariableMeta
 from .registry import register_variable
-from PyParticle.freezing.builder import build_freezing_population
+from pyparticle.freezing.builder import build_freezing_population
 import numpy as np
 
 @register_variable("nucleating_sites")

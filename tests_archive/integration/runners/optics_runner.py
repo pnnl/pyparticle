@@ -18,11 +18,11 @@ def run_optics(cfg: Dict[str, Any], base_dir, tmp_dir):
     build optical population from cfg['optics'] (must include 'type' morphology),
     then compute requested analysis variables (default: b_scat, b_abs, b_ext).
     """
-    from PyParticle.population.builder import build_population
-    from PyParticle.optics.builder import build_optical_population
-    from PyParticle.analysis.population.factory import b_scat as _bscat
-    from PyParticle.analysis.population.factory import b_abs as _babs
-    from PyParticle.analysis.population.factory import b_ext as _bext
+    from pyparticle.population.builder import build_population
+    from pyparticle.optics.builder import build_optical_population
+    from pyparticle.analysis.population.factory import b_scat as _bscat
+    from pyparticle.analysis.population.factory import b_abs as _babs
+    from pyparticle.analysis.population.factory import b_ext as _bext
 
     pop_cfg   = cfg["population"]
     optics_cfg = cfg.get("optics") or {}

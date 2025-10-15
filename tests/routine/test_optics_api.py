@@ -6,9 +6,9 @@ Routine tests for optics builder helpers and OpticalPopulation.
 import pytest
 import numpy as np
 
-from PyParticle import AerosolSpecies
-from PyParticle.optics.builder import build_optical_particle, build_optical_population
-from PyParticle.population.base import ParticlePopulation
+from pyparticle import AerosolSpecies
+from pyparticle.optics.builder import build_optical_particle, build_optical_population
+from pyparticle.population.base import ParticlePopulation
 
 
 def make_minimal_population():
@@ -21,7 +21,7 @@ def make_minimal_population():
 
 
 def test_build_optical_particle_missing_type_raises():
-    from PyParticle.aerosol_particle import Particle
+    from pyparticle.aerosol_particle import Particle
     base_particle = make_minimal_population().get_particle(0)
     with pytest.raises(ValueError):
         build_optical_particle(base_particle, {})

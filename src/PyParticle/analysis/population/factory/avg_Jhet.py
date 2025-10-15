@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 from ..base import PopulationVariable, VariableMeta
 from .registry import register_variable
-from PyParticle.freezing.builder import build_freezing_population
+from pyparticle.freezing.builder import build_freezing_population
 
 @register_variable("avg_Jhet")
 class avgJhetVar(PopulationVariable):

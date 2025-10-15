@@ -27,7 +27,7 @@ def _assert_monotonic(arr, name):
 
 @pytest.mark.parametrize("case_file", _iter_cases(), ids=lambda p: p.name)
 def test_population_case(case_file):
-    from PyParticle.population.builder import build_population
+    from pyparticle.population.builder import build_population
     case = _load_case(case_file)
     pop = build_population(case["population"])
 
