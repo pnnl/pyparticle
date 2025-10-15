@@ -29,15 +29,6 @@ jobs:
           # Otherwise, the fallback line installs the package without extras.
           pip install -e .[dev] || pip install -e .
 
-      - name: Sanity: import pyparticle
-        run: |
-          python - <<'PY'
-          import sys
-          print("sys.path[0:3]:", sys.path[0:3])
-          import pyparticle
-          print("pyparticle loaded from:", pyparticle.__file__)
-          PY
-
       - name: Run tests with coverage (xml + terminal)
         run: |
           pytest -q --cov=pyparticle --cov-report=xml:coverage.xml --cov-report=term-missing
