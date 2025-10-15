@@ -4,7 +4,7 @@ from scipy.stats import norm
 
 # Compatibility: patch PyMieScatt if the project provides a patch hook
 try:
-    from PyParticle._patch import patch_pymiescatt
+    from pyparticle._patch import patch_pymiescatt
     patch_pymiescatt()
     from PyMieScatt import AutoMieQ, Mie_Lognormal, Mie_SD, MieQ, MieQCoreShell
 except Exception as exc:  # pragma: no cover - visible in runtime only
@@ -408,7 +408,7 @@ import numpy as np
 import warnings
 
 try:
-    from PyParticle._patch import patch_pymiescatt
+    from pyparticle._patch import patch_pymiescatt
     patch_pymiescatt()
     #import PyMieScatt as PMS
     from PyMieScatt import Mie_Lognormal

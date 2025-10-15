@@ -7,8 +7,8 @@ Build a binned lognormal population
 
 from ..base import ParticlePopulation
 from ..utils import expand_compounds_for_population
-from PyParticle import make_particle
-from PyParticle.species.registry import get_species
+from pyparticle import make_particle
+from pyparticle.species.registry import get_species
 from .registry import register
 from scipy.stats import norm
 import numpy as np

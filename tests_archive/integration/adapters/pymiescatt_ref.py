@@ -167,7 +167,7 @@ def pymiescatt_adapter_core_shell(pop_cfg: dict, var_cfg: dict, core_specs=("BC"
         global_edges = _global_edges(pop_cfg, nb)
 
     # helper to get species density via registry
-    from PyParticle.species.registry import get_species
+    from pyparticle.species.registry import get_species
 
     # Aggregate outputs
     b_scat = np.zeros_like(wvl_grid_m, dtype=float)

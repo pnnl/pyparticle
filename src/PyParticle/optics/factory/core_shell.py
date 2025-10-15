@@ -7,7 +7,7 @@ from ..refractive_index import build_refractive_index
 import math
 
 
-from PyParticle._patch import patch_pymiescatt
+from pyparticle._patch import patch_pymiescatt
 patch_pymiescatt()
 try:
     from PyMieScatt import MieQCoreShell

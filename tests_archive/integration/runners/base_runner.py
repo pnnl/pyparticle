@@ -13,8 +13,8 @@ def run_base(cfg: Dict[str, Any], base_dir, tmp_dir):
     then run foundational invariants (units, monotonicity, no NaNs, nonnegative),
     and optional gold comparisons (e.g., Ddry_m, dNdlnD).
     """
-    from PyParticle.population.builder import build_population
-    from PyParticle.analysis.builder import build_variable
+    from pyparticle.population.builder import build_population
+    from pyparticle.analysis.builder import build_variable
 
     pop_cfg = cfg["population"]  # expects top-level 'type' per your builder
     population = build_population(pop_cfg)

@@ -5,7 +5,7 @@ Routine tests for AerosolSpecies behavior.
 """
 import pytest
 
-from PyParticle.species.base import AerosolSpecies
+from pyparticle.species.base import AerosolSpecies
 
 
 def test_aerosol_species_loads_defaults():

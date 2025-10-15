@@ -15,8 +15,8 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from PyParticle.species.registry import get_species
-from PyParticle import data_path
+from pyparticle.species.registry import get_species
+from pyparticle import data_path
 
 
 def _read_available_species_tokens() -> List[str]:

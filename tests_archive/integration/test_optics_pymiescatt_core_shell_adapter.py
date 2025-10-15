@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from PyParticle.population.builder import build_population
-from PyParticle.analysis.population.factory import b_scat, b_abs
+from pyparticle.population.builder import build_population
+from pyparticle.analysis.population.factory import b_scat, b_abs
 
 from tests.integration.adapters.pymiescatt_ref import HAS_PYMIESCATT, pymiescatt_adapter_core_shell
 

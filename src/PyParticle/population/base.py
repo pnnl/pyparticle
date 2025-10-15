@@ -10,8 +10,8 @@ from typing import Tuple, Dict
 from warnings import warn
 import numpy as np
 
-from PyParticle import Particle
-from PyParticle import AerosolSpecies
+from pyparticle import Particle
+from pyparticle import AerosolSpecies
 
 @dataclass
 class ParticlePopulation:
