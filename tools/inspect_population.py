@@ -18,7 +18,7 @@ if not cfg_path.exists():
     print("Config not found:", cfg_path)
     sys.exit(2)
 
-from PyParticle.population.builder import build_population
+from pyparticle.population.builder import build_population
 
 cfg = json.loads(cfg_path.read_text())
 pop_cfg = cfg.get("population")

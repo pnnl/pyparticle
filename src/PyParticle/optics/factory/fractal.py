@@ -11,7 +11,7 @@ try:
 except:
     raise ImportError("pyBCabs package required for fractal morphology")
 
-from PyParticle._patch import patch_pymiescatt
+from pyparticle._patch import patch_pymiescatt
 patch_pymiescatt()
 try:
     from PyMieScatt import MieQCoreShell
@@ -194,73 +194,6 @@ class FractalParticle(OpticalParticle):
         if (v_h2o + v_dry) <= 0.0:
             return complex(1.0, 0.0)
         return (self.h2o_ris[ww] * v_h2o + self.dry_shell_ris[ww] * v_dry) / (v_h2o + v_dry)
-    
-    
-    '''
-            if use_pymie:
-                D_nm = D_m * 1e9
-                for ww, lam_m in enumerate(self.wvl_grid):
-                    lam_nm = float(lam_m * 1e9)
-                    m = complex(self._mixture_ri(rr, ww))
-                    out = MieQ(m, lam_nm, D_nm, asDict=True, asCrossSection=False)
-                    # Convert efficiencies to absolute cross sections via geometric area
-                    self.Cext[rr, ww] = out["Qext"] * area
-                    self.Csca[rr, ww] = out["Qsca"] * area
-                    self.Cabs[rr, ww] = out["Qabs"] * area
-                    self.g[rr, ww]    = out["g"]
-            else:
-                # Fallback: simple Mie-like behavior vs size parameter x = 2πr/λ
-                for ww, lam_m in enumerate(self.wvl_grid):
-                    lam = float(lam_m)
-                    x = 2.0 * math.pi * r_m / lam
-
-                    # Extinction efficiency rises toward ~2 as x increases
-                    Qext = 2.0 * (1.0 - math.exp(-x / 2.0))
-                    Cext = Qext * area
-
-                    # Partition using fallback SSA
-                    omega0 = self.single_scatter_albedo
-                    Csca = omega0 * Cext
-                    Cabs = (1.0 - omega0) * Cext
-
-                    # Asymmetry parameter grows with x, capped < 1
-                    g = 0.2 + 0.7 * (1.0 - math.exp(-x / 10.0))
-                    g = float(np.clip(g, 0.0, 0.95))
-
-                    self.Cext[rr, ww] = Cext
-                    self.Csca[rr, ww] = Csca
-                    self.Cabs[rr, ww] = Cabs
-                    self.g[rr, ww]    = g
-            
-
-    # Convenience getters (unchanged)
-    def get_cross_sections(self):
-        return {
-            "Cabs": self.Cabs,
-            "Csca": self.Csca,
-            "Cext": self.Cext,
-            "g": self.g,
-        }
-
-    def get_refractive_indices(self):
-        return {"dry_ri": self.dry_ris, "h2o_ri": self.h2o_ris}
-
-    def get_cross_section(self, optics_type, rh_idx=None, wvl_idx=None):
-        key = str(optics_type).lower()
-        if key in ("b_abs", "absorption", "abs"):
-            arr = self.Cabs
-        elif key in ("b_scat", "scattering", "scat"):
-            arr = self.Csca
-        elif key in ("b_ext", "extinction", "ext"):
-            arr = self.Cext
-        elif key in ("g", "asymmetry"):
-            arr = self.g
-        else:
-            raise ValueError(f"Unknown optics_type: {optics_type}")
-        if rh_idx is not None and wvl_idx is not None:
-            return arr[rh_idx, wvl_idx]
-        return arr
-    '''
 
 def build(base_particle, config):
     """Optional fallback factory callable for discovery."""

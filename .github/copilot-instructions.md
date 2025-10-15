@@ -87,14 +87,14 @@ Feedback welcome: If a workflow or extension path is unclear (e.g. adding a frac
 
 ### Conda environments (runtime guidance)
 - Base development & non-PARTMC examples: create/activate `environment.yml` -> `conda env create -f environment.yml` (env name: `pyparticle`).
-- PARTMC or MAM4 population examples (require `netCDF4` and possibly large NetCDF inputs): use `environment-partmc.yml` (env name: `pyparticle-partmc`).
-- Always run PartMC/MAM4 examples with: `conda run -n pyparticle-partmc python examples/<script>.py` to ensure `netCDF4` is present.
+- PARTMC or MAM4 population examples (require `netCDF4` and possibly large NetCDF inputs): use `environment-partmc.yml` (env name: `pyparticle`).
+- Always run PartMC/MAM4 examples with: `conda run -n pyparticle python examples/<script>.py` to ensure `netCDF4` is present.
 - Do NOT silently fall back to another environment—raise if `netCDF4` import fails or required files absent.
  - Variant generation workflow: run `python tools/generate_env_variants.py --write` to (re)generate `environment-dev.yml` and `environment-partmc.yml` from the base `environment.yml` before creating/updating those envs.
  - Create variant envs after generation:
      * Dev: `conda env create -f environment-dev.yml` (name auto-suffixed `-dev`).
      * PartMC: `conda env create -f environment-partmc.yml` (name auto-suffixed `-partmc`).
- - If env files already exist and you modify base deps, regenerate variants and `conda env update -f environment-partmc.yml -n pyparticle-partmc`.
+ - If env files already exist and you modify base deps, regenerate variants and `conda env update -f environment-partmc.yml -n pyparticle`.
 
 ### Advanced: PARTMC & MAM4 population builders
 PARTMC (`population/factory/partmc.py`)

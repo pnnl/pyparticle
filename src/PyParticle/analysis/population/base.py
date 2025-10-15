@@ -17,6 +17,6 @@ class PopulationVariable(Variable):
     def __init__(self, cfg: Dict[str, Any]):
         self.cfg = cfg
 
-    def compute(self, population):  # pragma: no cover - interface
+    def compute(self, population):
         raise NotImplementedError
 

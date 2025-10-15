@@ -6,7 +6,7 @@ other projects where a top-level registry routes to family-specific
 discovery functions.
 
 Usage:
-  from PyParticle.analysis import global_registry as gr
+  from pyparticle.analysis import global_registry as gr
   builder = gr.get_variable_builder('dNdlnD', {})
   inst = builder({})
 

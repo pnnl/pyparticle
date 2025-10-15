@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 from ..base import PopulationVariable, VariableMeta
 from .registry import register_variable
-from PyParticle.optics.builder import build_optical_population
+from pyparticle.optics.builder import build_optical_population
 
 @register_variable("rh_grid")
 class RHGridVar(PopulationVariable):
