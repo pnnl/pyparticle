@@ -1,37 +1,64 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=69", "wheel", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyparticle"
-version = "0.1.0"
-readme = "README.md"
+name = "pyparticle"  # PyPI name
 description = "Describing and analyzing aerosol particles and particle populations"
-license = { text = "MIT" }
-authors = [ { name = "Laura Fierce" } ]
+readme = "README.md"
 requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Laura Fierce" }]
 dependencies = [
-    "numpy>=1.24",
-    "scipy>=1.10",
-    "PyYAML>=6.0",
+  "numpy>=1.24",
+  "scipy>=1.10",
+  "PyYAML>=6.0",
+]
+dynamic = ["version"]
+
+# Optional but recommended
+keywords = ["aerosol", "atmospheric", "optics", "modeling"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "PyMieScatt>=1.14",
-    "pyrcel>=0.4",
-    "matplotlib",
+  "pytest>=7.0",
+  "pytest-cov>=4.0",
+  "ruff>=0.5",
+  "mypy>=1.8",
+  "PyMieScatt>=1.14",
+  "pyrcel>=0.4",
+  "matplotlib",
 ]
 optics = ["PyMieScatt>=1.14"]
-integration = ["pyrcel>=0.4"]
 partmc = ["netCDF4"]
+
+[project.urls]
+Homepage = "https://github.com/<newaccount>/<reponame>"
+Repository = "https://github.com/<newaccount>/<reponame>"
+Issues = "https://github.com/<newaccount>/<reponame>/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["pyparticle*"]
 
 [tool.setuptools]
 include-package-data = true
 
+# Ensure data is inside the package dir: src/pyparticle/datasets/...
 [tool.setuptools.package-data]
-PyParticle = ["datasets/*", "datasets/species_data/*"]
+pyparticle = ["datasets/*", "datasets/species_data/*"]
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
+fallback_version = "0.0.0"
