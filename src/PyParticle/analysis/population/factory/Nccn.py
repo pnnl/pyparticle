@@ -43,7 +43,6 @@ class NccnVar(PopulationVariable):
             return {"s": s_eval, "Nccn": out}
         return out
 
-
-# def build(cfg=None):
-#     cfg = cfg or {}
-#     return NccnVar(cfg)
+def build(cfg=None):
+    cfg = cfg or {}
+    return NccnVar(cfg)

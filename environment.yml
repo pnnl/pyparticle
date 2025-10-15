@@ -1,3 +1,11 @@
+# >>> RELEASE KIT START
+name: yourpkg-dev
+dependencies:
+  - python>=3.9
+  - pip
+  - pip:
+      - -e .[dev]
+# <<< RELEASE KIT END
 name: pyparticle
 channels:
   - conda-forge
