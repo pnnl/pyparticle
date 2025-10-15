@@ -1,40 +1,26 @@
-# >>> RELEASE KIT START
+# codecov.yml — public repo
+# Minimal, quiet, and non-blocking. Codecov reads this from the repo root.
+
+comment: false
+
+github_checks:
+  annotations: false
+
 coverage:
   status:
     project:
       default:
         target: auto
-        threshold: 1%
-ignore:
-  - "tests/*"
-# <<< RELEASE KIT END
-# Codecov configuration
-# Make coverage reporting robust and avoid failing PRs on upload glitches.
-
-codecov:
-  require_ci_to_pass: false
-
-# Treat statuses as informational for now; tighten later if desired.
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 20%
+        threshold: 2%
         informational: true
     patch:
       default:
         target: auto
-        threshold: 20%
+        threshold: 2%
         informational: true
 
-# Ignore generated or data directories from coverage trends.
 ignore:
-#  - "tests"
-  - "datasets"
-  - "src/PyParticle/**/__pycache__"
+  - "datasets/**"
   - "**/*.ipynb"
+  - "**/__pycache__/**"
 
-# Improve path resolution
-fixes:
-  - "::"
