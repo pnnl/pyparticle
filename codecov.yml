@@ -1,30 +1,20 @@
-# Codecov configuration
-# Make coverage reporting robust and avoid failing PRs on upload glitches.
+# Minimal public Codecov config
+comment: false
 
-codecov:
-  require_ci_to_pass: false
-
-# Treat statuses as informational for now; tighten later if desired.
 coverage:
   status:
     project:
       default:
         target: auto
-        threshold: 20%
+        threshold: 2%
         informational: true
     patch:
       default:
         target: auto
-        threshold: 20%
+        threshold: 2%
         informational: true
 
-# Ignore generated or data directories from coverage trends.
 ignore:
-#  - "tests"
-  - "datasets"
-  - "src/PyParticle/**/__pycache__"
+  - "datasets/**"
   - "**/*.ipynb"
-
-# Improve path resolution
-fixes:
-  - "::"
+  - "**/__pycache__/**"
