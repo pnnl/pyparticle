@@ -108,7 +108,7 @@ if _HAS_NETCDF4:
 
 else:
     def build(config):
-        raise ModuleNotFoundError("Install netCDF4 to read PartMC files: "
-                                  "generate the pyparticle-partmc environment-partmc.yml file using "
-                                  "tools/create_conda_env.py, and then create and activate the " 
-                                  "pyparticle-partmc environment")
+        raise ModuleNotFoundError(
+            "Install netCDF4 to read PartMC files: generate the environment-partmc.yml file using tools/create_conda_env.py, "
+            "then create and activate the 'pyparticle' conda environment (conda env create -f environment-partmc.yml -n pyparticle)."
+        )
