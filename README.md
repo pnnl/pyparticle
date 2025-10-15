@@ -1,11 +1,13 @@
-# PyParticle
+# pyparticle
 
-![CI](https://github.com/lfierce2/PyParticle/actions/workflows/ci-codecov.yml/badge.svg?branch=tests_scaffold)
-<!-- * codecov: [![codecov](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold/graph/badge.svg)](https://codecov.io/gh/lfierce2/PyParticle/branch/tests_scaffold) -->
+[![CI](https://github.com/pnnl/pyparticle/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pnnl/pyparticle/actions/workflows/ci.yml)
 
+A Python library for constructing aerosol particle populations, attaching species-level physical properties, building per-particle morphologies, and aggregating to population-level aerosol properties. The package uses factory/builder discovery, so new population types, aerosol species, and morphologies can be added by dropping small modules into `factory/` folders.
 
+> **Note:** The distribution and import name are both **`pyparticle`** (PEP 8). If you previously imported `PyParticle`, switch to `pyparticle`.
 
-A Python library for constructing aerosol particle populations, attaching species-level physical properties, building per-particle morphologies, and aggregating to population-level aerosol properties. The package uses factory/builder discovery, so new population types, aerosol species, and morphologies can be added by dropping small modules into factory/ folders.
+---
+
 
 # Install
 
