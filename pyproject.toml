@@ -40,7 +40,7 @@ dev = [
   "pyrcel>=0.4",
   "matplotlib",
 ]
-optics = ["PyMieScatt>=1.14"]
+optics = ["pymiescatt>=1.14"]
 partmc = ["netCDF4"]
 
 [project.urls]
