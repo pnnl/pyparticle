@@ -1,55 +1,27 @@
-"""PyParticle package
-
-Lightweight package providing aerosol particle, species, population, and
-optics builders. This module exposes the high-level API used by examples
-and tests: particle constructors, species registry, population builders,
-and optics builders.
-
-Exports (selected):
-- Particle, make_particle, make_particle_from_masses
-- AerosolSpecies and registry helpers (get_species, register_species, ...)
-- build_population, build_optical_particle, build_optical_population
-
-See package submodules for implementation details.
-"""
-import os
-import numpy as np
+from importlib.resources import files, as_file
+import pyparticle as _pkg
 from pathlib import Path
+import os
 
+def get_data_path() -> Path:
+    # Highest priority: explicit override
+    if (p := os.environ.get("PYPARTICLE_DATA_PATH")):
+        return Path(p).expanduser()
 
-def _get_data_path():
-    """Resolve the package datasets path.
+    # Packaged datasets inside the installed wheel
+    ds = files(_pkg).joinpath("datasets")
+    if ds.is_dir():
+        # If callers need a filesystem path (e.g., for C libs), materialize it:
+        with as_file(ds) as pth:
+            return Path(pth)
 
-    Resolution order:
-    1. Environment override via PYPARTICLE_DATA_PATH (absolute path to datasets dir).
-    2. Package-local datasets directory (based on this file's location).
+    # Last resort for source checkouts
+    from pathlib import Path as _P
+    cand = _P(__file__).resolve().parent / "datasets"
+    return cand
 
-    This is robust when PyParticle is imported from other packages: it will
-    locate the datasets bundled with this package rather than using the
-    current working directory.
-    """
-    env = os.getenv("PYPARTICLE_DATA_PATH")
-    if env:
-        return Path(env)
-
-    # Default: prefer datasets directory next to this package's source files
-    pkg_root = Path(__file__).resolve().parent
-    candidate = pkg_root / "datasets"
-    if candidate.exists():
-        return candidate
-
-    # Otherwise, look for a top-level 'datasets' directory in ancestor folders
-    for parent in pkg_root.parents:
-        cand = parent / "datasets"
-        if cand.exists():
-            return cand
-
-    # Final fallback: use CWD/datasets to preserve backwards compatibility
-    return Path.cwd() / "datasets"
-
-
-# Exported path for modules that expect a pathlib-like object.
-data_path = _get_data_path()
+data_path = get_data_path()
+__all__ = ["data_path", "get_data_path"]
 
 # Public helpers
 from .utilities import get_number
