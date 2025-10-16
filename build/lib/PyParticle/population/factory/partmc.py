@@ -6,8 +6,8 @@ Build a population from a PARTMC NetCDF file
 """
 
 from ..base import ParticlePopulation
-from PyParticle import make_particle_from_masses
-from PyParticle.species.registry import get_species
+from pyparticle import make_particle_from_masses
+from pyparticle.species.registry import get_species
 import numpy as np
 import os
 from pathlib import Path
@@ -60,7 +60,13 @@ if _HAS_NETCDF4:
         else:
             raise IndexError('n_particles > len(part_ids)')
 
-        partmc_population = ParticlePopulation(species=species_list, spec_masses=[], num_concs=[], ids=[])
+        partmc_population = ParticlePopulation(
+            species=species_list,
+            spec_masses=[],
+            num_concs=[],
+            ids=[],
+            species_modifications=species_modifications,
+        )
         for ii in idx:
             particle = make_particle_from_masses(
                 aero_spec_names,
@@ -78,6 +84,9 @@ if _HAS_NETCDF4:
 
 
     def get_ncfile(partmc_output_dir, timestep, repeat):
+
+        if not os.path.exists(partmc_output_dir):
+            raise FileNotFoundError(f"PartMC output directory {partmc_output_dir} does not exist.")
         for root, dirs, files in os.walk(partmc_output_dir):
             f = files[0]
         if f.startswith('urban_plume_wc_'):
@@ -99,7 +108,7 @@ if _HAS_NETCDF4:
 
 else:
     def build(config):
-        raise ModuleNotFoundError("Install netCDF4 to read PartMC files: "
-                                  "generate the pyparticle-partmc environment-partmc.yml file using "
-                                  "tools/create_conda_env.py, and then create and activate the " 
-                                  "pyparticle-partmc environment")
+        raise ModuleNotFoundError(
+            "Install netCDF4 to read PartMC files: generate the environment-partmc.yml file using tools/create_conda_env.py, "
+            "then create and activate the 'pyparticle' conda environment (conda env create -f environment-partmc.yml -n pyparticle)."
+        )
