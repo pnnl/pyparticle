@@ -13,6 +13,10 @@ dependencies = [
   "numpy>=1.24",
   "scipy>=1.10",
   "PyYAML>=6.0",
+<<<<<<< Updated upstream
+=======
+  "matplotlib",
+>>>>>>> Stashed changes
   "pymiescatt",
   "netCDF4",
   "pytest>=7.0",
@@ -50,12 +54,12 @@ Issues = "https://github.com/<newaccount>/<reponame>/issues"
 where = ["src"]
 include = ["pyparticle*"]
 
-[tool.setuptools]
-include-package-data = true
-
 # Ensure data is inside the package dir: src/pyparticle/datasets/...
 [tool.setuptools.package-data]
 pyparticle = ["datasets/*", "datasets/species_data/*"]
+
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"

@@ -16,7 +16,7 @@ from .species.base import AerosolSpecies
 from .species.registry import get_species, retrieve_one_species
 from . import data_path
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Optional
 import numpy as np
 from scipy.constants import R
 import scipy.optimize as opt
@@ -200,7 +200,7 @@ class Particle:
     def get_Dwet(
             self,RH=None,T=None,
             sigma_sa=None, # more general than sigma_h2o
-            sigma_h2o=None, # todo: remove sigma_h2o
+            sigma_h2o=0.072, # todo: remove sigma_h2o
             rho_h2o=1000., MW_h2o=18e-3):
         
         if sigma_sa == None: 
@@ -208,14 +208,14 @@ class Particle:
                 sigma_sa = self.get_surface_tension()
             else:
                 sigma_sa = sigma_h2o
-                
+        
         if RH==None:
             vol_wet = self.get_vol_tot()
             Dwet = (vol_wet*6./np.pi)**(1./3.)
         else:
             Dwet = compute_Dwet(
                 self.get_Ddry(), self.get_tkappa(), RH, T, 
-                sigma_h2o=sigma_h2o, rho_h2o=rho_h2o, MW_h2o=MW_h2o)
+                sigma_sa=sigma_sa, rho_h2o=rho_h2o, MW_h2o=MW_h2o)
         
         return Dwet
     
@@ -232,7 +232,7 @@ class Particle:
         Dcore = (vol_core*6./np.pi)**(1./3.)
         return Dcore
     
-    # todo: fix this later
+    # todo: do we need this? should be tacked on the species.
     def get_rho_w(self):
         return 1000. # kg/m^3
     # def get_rho_w(self):
@@ -240,6 +240,7 @@ class Particle:
     #     rho_w = float(self.species[idx_h2o].density)
     #     return rho_w
     
+    # todo: move to hygroscopic growth module
     def get_tkappa(self):
         # compute effective kappa
         vks = self.get_vks()
@@ -260,7 +261,7 @@ class Particle:
     def get_surface_tension(self):
         warnings.warn("Surface tension not implemented; returning default 0.072 N/m", UserWarning)
         return 0.072 # N/m
-
+    
     def get_trho(self): 
         # compute effective density
         mks = self.masses
@@ -391,11 +392,20 @@ def compute_Sc_funsixdeg(diam,A,tkappa,dry_diam):
     z = c6*(diam**6.0) + c4*(diam**4.0) + c3*(diam**3.0) + c0;
     return z
 
-def compute_Dwet(Ddry, kappa, RH, T, sigma_h2o=0.072, rho_h2o=1000., MW_h2o=18e-3):
-    if RH>0. and kappa>0.:
-        A = 4*sigma_h2o*MW_h2o/(R*T*rho_h2o)
-        zero_this = lambda gf: RH/np.exp(A/(Ddry*gf))-(gf**3.-1.)/(gf**3.-(1.-kappa))
-        return Ddry*opt.brentq(zero_this,1.,10000000.)
+def compute_Dwet(Ddry, kappa, RH, T, sigma_h2o: Optional[float] = None, sigma_sa: Optional[float] = None, rho_h2o=1000., MW_h2o=18e-3):
+    """
+    Compute wet diameter from dry diameter, kappa and RH via the Kelvin/Kappa relation.
+
+    Backwards-compatible: accepts either keyword `sigma_h2o` (historical) or
+    `sigma_sa` (surface tension alias). If both provided, `sigma_h2o` takes precedence.
+    """
+    # choose surface tension value: prefer sigma_h2o if provided
+    # fixme: can we remove sigma_h2o altogether and just use sigma_sa?
+    sigma = sigma_sa if sigma_sa is not None else (sigma_h2o if sigma_h2o is not None else 0.072)
+    if RH > 0.0 and kappa > 0.0:
+        A = 4.0 * sigma * MW_h2o / (R * T * rho_h2o)
+        zero_this = lambda gf: RH / np.exp(A / (Ddry * gf)) - (gf**3.0 - 1.0) / (gf**3.0 - (1.0 - kappa))
+        return Ddry * opt.brentq(zero_this, 1.0, 1e7)
     else:
         return Ddry
 
