@@ -1,24 +1,15 @@
-# >>> RELEASE KIT START
-name: yourpkg-dev
-dependencies:
-  - python>=3.9
-  - pip
-  - pip:
-      - -e .[dev]
-# <<< RELEASE KIT END
-name: pyparticle
+name: pyparticle3
 channels:
   - conda-forge
   - defaults
 dependencies:
   - python=3.9
-  - pip
   - numpy
   - scipy
   - matplotlib
   - pyprojroot
   - pyyaml
-  - arviz
+  - pip
   # Uncomment if you want to install pytest via conda:
   # - pytest
   # - pytest-cov
@@ -28,3 +19,4 @@ dependencies:
       - codecov
       - pymiescatt
       - pyBCabs
+      - pyparticle
