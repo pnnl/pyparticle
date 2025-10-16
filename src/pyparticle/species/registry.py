@@ -59,137 +59,43 @@ def list_species():
 def extend_species(species: AerosolSpecies):
     _registry.extend(species)
 
-# def _iter_aero_data_lines(specdata_path=None):
-#     """Yield lines from the aero_data.dat resource.
-
-#     Resolution order:
-#     1. PYPARTICLE_DATA_PATH environment variable (points to datasets root)
-#     2. package resource at PyParticle/datasets/species_data/aero_data.dat
-#     3. fallback to provided specdata_path or package `data_path` / 'species_data'
-#     """
-#     # 1) Env override
-#     env = os.getenv("PYPARTICLE_DATA_PATH")
-#     if env:
-#         p = Path(env) / "species_data" / "aero_data.dat"
-#         if p.exists():
-#             with open(p, "r") as fh:
-#                 for line in fh:
-#                     yield line
-#             return
-
-#     # 2) Try package resource (works for installed packages and source)
-#     try:
-#         # package resource: use the actual (lowercase) package name 'pyparticle'
-#         resource = resources.files("pyparticle").joinpath("datasets", "species_data", "aero_data.dat")
-#         with resources.as_file(resource) as p:
-#             with open(p, "r") as fh:
-#                 for line in fh:
-#                     yield line
-#         return
-#     except Exception:
-#         pass
-
-#     # 3) Fallback to specdata_path or package data_path
-#     if specdata_path is None:
-#         specdata_path = data_path / "species_data"
-#     p = Path(specdata_path) / "aero_data.dat"
-#     with open(p, "r") as fh:
-#         for line in fh:
-#             yield line
-
 def _iter_aero_data_lines(specdata_path=None):
-    """Yield lines from species_data/aero_data.dat.
+    """Yield lines from the aero_data.dat resource.
 
     Resolution order:
-      1) PYPARTICLE_DATA_PATH (may point to datasets/, species_data/, or repo root)
-      2) Packaged resource at <package>/datasets/species_data/aero_data.dat
-         (package name derived from __package__, works for pyparticle or PyParticle)
-      3) Fallback to provided specdata_path or package data_path / 'species_data'
-      4) Last-ditch repo/CWD fallbacks
+    1. PYPARTICLE_DATA_PATH environment variable (points to datasets root)
+    2. package resource at PyParticle/datasets/species_data/aero_data.dat
+    3. fallback to provided specdata_path or package `data_path` / 'species_data'
     """
-    import os
-    import sys
-    from pathlib import Path
-    from importlib.resources import files, as_file
-
-    # --- 1) Environment override (accept several common layouts) ---
-    env = os.environ.get("PYPARTICLE_DATA_PATH")
+    # 1) Env override
+    env = os.getenv("PYPARTICLE_DATA_PATH")
     if env:
-        base = Path(env).expanduser()
-        candidates = [
-            base / "species_data" / "aero_data.dat",                 # env -> datasets/
-            base / "datasets" / "species_data" / "aero_data.dat",    # env -> repo root
-            base / "aero_data.dat" if base.name == "species_data" else None,  # env -> .../species_data
-        ]
-        for c in candidates:
-            if c and c.is_file():
-                with c.open("r", encoding="utf-8") as fh:
-                    for line in fh:
-                        yield line
-                return
-
-    # --- 2) Packaged resource (handles wheels/zip imports) ---
-    # Derive the top-level package name from __package__ to survive renames/case.
-    pkg_root_name = (__package__ or "pyparticle").split(".", 1)[0]
-    pkg_mod = sys.modules.get(pkg_root_name)  # should exist if this module is imported
-
-    try:
-        res = files(pkg_mod or pkg_root_name).joinpath(
-            "datasets", "species_data", "aero_data.dat"
-        )
-        if res.is_file():
-            with as_file(res) as p:
-                with Path(p).open("r", encoding="utf-8") as fh:
-                    for line in fh:
-                        yield line
-            return
-    except ModuleNotFoundError:
-        pass
-    except Exception:
-        # Non-fatal; try fallbacks next.
-        pass
-
-    # --- 3) Fallback to specdata_path (if provided) or package data_path ---
-    if specdata_path is not None:
-        sp = Path(specdata_path)
-        candidates = [
-            sp / "aero_data.dat",                            # specdata_path -> species_data/
-            sp / "species_data" / "aero_data.dat",           # specdata_path -> datasets/
-        ]
-        for c in candidates:
-            if c.is_file():
-                with c.open("r", encoding="utf-8") as fh:
-                    for line in fh:
-                        yield line
-                return
-
-    # Late import to avoid circulars if registry is imported during package init
-    try:
-        from .. import data_path as _dp  # type: ignore
-        c = Path(_dp) / "species_data" / "aero_data.dat"
-        if c.is_file():
-            with c.open("r", encoding="utf-8") as fh:
-                for line in fh:
-                    yield line
-            return
-    except Exception:
-        pass
-
-    # --- 4) Last-ditch source/CWD fallbacks (useful in dev checkouts) ---
-    for c in (
-        Path(__file__).resolve().parents[2] / "datasets" / "species_data" / "aero_data.dat",
-        Path.cwd() / "datasets" / "species_data" / "aero_data.dat",
-    ):
-        if c.is_file():
-            with c.open("r", encoding="utf-8") as fh:
+        p = Path(env) / "species_data" / "aero_data.dat"
+        if p.exists():
+            with open(p, "r") as fh:
                 for line in fh:
                     yield line
             return
 
-    raise FileNotFoundError(
-        "aero_data.dat not found. Set PYPARTICLE_DATA_PATH to your datasets root "
-        "or ensure the package includes datasets/species_data/aero_data.dat."
-    )
+    # 2) Try package resource (works for installed packages and source)
+    try:
+        # package resource: use the actual (lowercase) package name 'pyparticle'
+        resource = resources.files("pyparticle").joinpath("datasets", "species_data", "aero_data.dat")
+        with resources.as_file(resource) as p:
+            with open(p, "r") as fh:
+                for line in fh:
+                    yield line
+        return
+    except Exception:
+        pass
+
+    # 3) Fallback to specdata_path or package data_path
+    if specdata_path is None:
+        specdata_path = data_path / "species_data"
+    p = Path(specdata_path) / "aero_data.dat"
+    with open(p, "r") as fh:
+        for line in fh:
+            yield line
 
 
 def retrieve_one_species(name, specdata_path=None, spec_modifications={}):
