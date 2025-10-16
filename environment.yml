@@ -1,22 +1,10 @@
-name: pyparticle3
+name: pyparticle6
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9
-  - numpy
-  - scipy
+  - python=3.12
   - matplotlib
-  - pyprojroot
-  - pyyaml
   - pip
-  # Uncomment if you want to install pytest via conda:
-  # - pytest
-  # - pytest-cov
   - pip:
-      - pytest
-      - pytest-cov
-      - codecov
-      - pymiescatt
-      - pyBCabs
       - pyparticle

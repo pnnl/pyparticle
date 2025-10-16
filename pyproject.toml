@@ -14,7 +14,7 @@ dependencies = [
   "scipy>=1.10",
   "PyYAML>=6.0",
   "matplotlib",
-  "pymiescatt>=1.14",
+  "pymiescatt",
   "netCDF4",
   "pytest>=7.0",
   "pytest-cov>=4.0",
