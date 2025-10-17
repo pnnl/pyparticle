@@ -83,8 +83,8 @@ class DNdlnDVar(PopulationVariable):
              else population.get_particle(pid).get_Ddry())
             for pid in population.ids
         ])
-        weights = np.asarray(getattr(population, "num_concs", np.ones_like(Ds)), dtype=float)
-
+        weights = population.num_concs #np.asarray(getattr(population, "num_concs", np.ones_like(Ds)), dtype=float)
+        
         # target grid (prefer edges if provided)
         edges = cfg.get("edges")
         D_grid = cfg.get("diam_grid")

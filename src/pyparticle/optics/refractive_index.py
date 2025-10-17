@@ -65,12 +65,13 @@ def _to_float(s: str) -> float:
     s = s.lstrip("+")
     return float(s)
 
+
 @lru_cache(maxsize=1)
-def _load_water_ri(specdata_dir):
-    fn = (specdata_dir / 'ri_water.csv')
-    wl, n, k = [], [], []
-    with open(fn) as f:
-        for line in f:
+from ..data import species_open
+def _load_water_ri(specdata_dir=None):
+    # 'specdata_dir' kept for backwards compatibility but ignored when None
+    with species_open("ri_water.csv") as fh:
+        for line in fh:
             if 'Wavelength' in line: 
                 continue
             parts = line.strip().split(',')

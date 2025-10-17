@@ -106,7 +106,16 @@ class ParticlePopulation:
         else:
             raise NotImplementedError(f"{method} not yet implemented")
     
-
+    def get_tot_mass(self):
+        return np.sum(self.num_concs*np.sum(self.spec_masses,axis=1))
+    
+    def get_tot_dry_mass(self):
+        idx_h2o, = np.where([spec.name == 'H2O' for spec in self.species])
+        if len(idx_h2o)==0:
+            return self.get_tot_mass()
+        else:
+            return np.sum(self.num_concs*np.sum(self.spec_masses[:,np.arange(len(self.species))!=idx_h2o[0]],axis=1))
+        
     def get_mass_conc(self,spec_name):
         idx, = np.where([spec.name == spec_name for spec in self.species])
         return np.sum(self.num_concs*self.spec_masses[:,idx[0]])

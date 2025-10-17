@@ -7,9 +7,7 @@ reads `datasets/species_data/aero_data.dat` for default species.
 
 import copy
 from .base import AerosolSpecies
-from .. import data_path
-from importlib import resources
-from pathlib import Path
+from ..data import species_open
 import os
 
 
@@ -59,41 +57,8 @@ def list_species():
 def extend_species(species: AerosolSpecies):
     _registry.extend(species)
 
-def _iter_aero_data_lines(specdata_path=None):
-    """Yield lines from the aero_data.dat resource.
-
-    Resolution order:
-    1. PYPARTICLE_DATA_PATH environment variable (points to datasets root)
-    2. package resource at PyParticle/datasets/species_data/aero_data.dat
-    3. fallback to provided specdata_path or package `data_path` / 'species_data'
-    """
-    # 1) Env override
-    env = os.getenv("PYPARTICLE_DATA_PATH")
-    if env:
-        p = Path(env) / "species_data" / "aero_data.dat"
-        if p.exists():
-            with open(p, "r") as fh:
-                for line in fh:
-                    yield line
-            return
-
-    # 2) Try package resource (works for installed packages and source)
-    try:
-        # package resource: use the actual (lowercase) package name 'pyparticle'
-        resource = resources.files("pyparticle").joinpath("datasets", "species_data", "aero_data.dat")
-        with resources.as_file(resource) as p:
-            with open(p, "r") as fh:
-                for line in fh:
-                    yield line
-        return
-    except Exception:
-        pass
-
-    # 3) Fallback to specdata_path or package data_path
-    if specdata_path is None:
-        specdata_path = data_path / "species_data"
-    p = Path(specdata_path) / "aero_data.dat"
-    with open(p, "r") as fh:
+def _iter_aero_data_lines(): 
+    with species_open("aero_data.dat") as fh:
         for line in fh:
             yield line
 
@@ -115,7 +80,7 @@ def retrieve_one_species(name, specdata_path=None, spec_modifications={}):
     AerosolSpecies
         Constructed species dataclass.
     """
-    for line in _iter_aero_data_lines(specdata_path=specdata_path):
+    for line in _iter_aero_data_lines():
         if line.strip().startswith("#"):
             continue
         if line.upper().startswith(name.upper()):

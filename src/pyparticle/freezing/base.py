@@ -10,7 +10,7 @@ import numpy as np
 # Adjust imports to your tree
 from ..aerosol_particle import Particle
 from ..population.base import ParticlePopulation
-from .. import data_path
+from ..data import species_open
 from scipy.integrate import trapezoid
 
 
@@ -88,12 +88,15 @@ class FreezingPopulation(ParticlePopulation):
 
         
 
-def retrieve_Jhet_val(name, specdata_path=data_path / 'species_data', spec_modifications={}):
+
+def retrieve_Jhet_val(name, specdata_path=None / 'species_data', spec_modifications={}):
+    # 'specdata_path' kept for backwards compatibility but ignored
+    
     # todo: do we want to add Jhets to the species? Make "FreezingSpecies" class under base and update building?
     
     aero_datafile = specdata_path / 'freezing_data.dat'
-    with open(aero_datafile) as data_file:
-        for line in data_file:
+    with species_open('freezing_data.dat') as fh:
+        for line in fh:
             if line.strip().startswith("#"):
                 continue
             if line.upper().startswith(name.upper()):
