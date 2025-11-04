@@ -111,3 +111,4 @@ freezing_pop.get_frozen_fraction(-1.0) # specified cooling rate in K/s or C/s
 The PyParticle package was developed under the Integrated Cloud, Land-surface, and Aerosol System Study (ICLASS), a Science Focus Area of the U.S. Department of Energy's Atmospheric System Research program at Pacific Northwest National Laboratory (PNNL). Developoment of optics modules and links to the PartMC and MAM4 modules was supported by PNNL's Laboratory Directed Research and Development program. PNNL is a multi-program national laboratory operated for the U.S. Department of Energy by Battelle Memorial Institute under Contract No. DE-AC05-76RL01830.
 
 # References
+

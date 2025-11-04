@@ -47,6 +47,7 @@ class StateLinePlotter(Plotter):
         
         x = xvar.compute(population)
         y = yvar.compute(population)
+        
         if len(y) == 1:
             y = y[0]  # flatten single-value arrays
         if len(x) == 1:

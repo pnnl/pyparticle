@@ -103,7 +103,7 @@ if _HAS_NETCDF4:
             species_modifications = config.get('species_modification',{}) # modify species properties during post-processing
             output_filename = mam4_dir / 'mam_output.nc'
             currnc = netCDF4.Dataset(output_filename)
-
+            print(currnc.variables.keys())
             num_aer = currnc['num_aer']
             so4_aer = currnc['so4_aer']
             soa_aer = currnc['soa_aer']
@@ -263,6 +263,10 @@ else:
             "then create and activate the 'pyparticle' conda environment (conda env create -f environment-partmc.yml -n pyparticle)."
         )
 
+# fimxe: better way to deal with MAM input? send in namelist (or path to namelist)
+# import f90nml
+# namelist = f90nml.read('namelist')
+# qso2 = namelist['chem_input']['qso2']
 def get_mam_input(varname,mam_input_filename):
 
     f_input = open(mam_input_filename,'r')
@@ -281,23 +285,3 @@ def get_mam_input(varname,mam_input_filename):
     elif yep > 1:
         raise ValueError('more than one line in ', mam_input_filename, 'starts with', varname)
     return vardat
-
-def get_ncfile(partmc_output_dir, timestep, repeat):
-    for root, dirs, files in os.walk(partmc_output_dir):
-        f = files[0]
-    if f.startswith('urban_plume_wc_'):
-        preface_string = 'urban_plume_wc_'
-    elif f.startswith('urban_plume_'):
-        preface_string = 'urban_plume_'
-    else:
-        try:
-            idx = partmc_output_dir[(partmc_output_dir.find('/')+1):].find('/')
-            prefix_str = partmc_output_dir[(partmc_output_dir.find('/')+1):][:idx] + '_'
-        except:
-            try:
-                preface_string, repeat2, timestep2 = f.split('_')
-                preface_string += '_'
-            except:
-                preface_string = 'YOU_NEED_TO_CHANGE_preface_string_'
-    ncfile = partmc_output_dir / (preface_string + str(int(repeat)).zfill(4) + '_' + str(int(timestep)).zfill(8) + '.nc')
-    return ncfile

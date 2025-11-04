@@ -1,4 +1,4 @@
-name: pyparticle7
+name: pyparticle2
 channels:
   - conda-forge
   - defaults

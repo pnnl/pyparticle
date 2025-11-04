@@ -5,7 +5,7 @@ from functools import lru_cache
 
 import numpy as np
 from scipy import interpolate
-from .. import data_path
+from ..data import species_open
 
 import re
 
@@ -65,12 +65,12 @@ def _to_float(s: str) -> float:
     s = s.lstrip("+")
     return float(s)
 
+
 @lru_cache(maxsize=1)
-def _load_water_ri(specdata_dir):
-    fn = (specdata_dir / 'ri_water.csv')
-    wl, n, k = [], [], []
-    with open(fn) as f:
-        for line in f:
+def _load_water_ri(specdata_dir=None):
+    wl = []; n = []; k = []
+    with species_open("ri_water.csv") as fh:
+        for line in fh:
             if 'Wavelength' in line: 
                 continue
             parts = line.strip().split(',')
@@ -91,7 +91,7 @@ def _pwr(lam, v550, alpha):
     return v550 * (lam / 550e-9)**alpha
 
 
-def build_refractive_index(spec, wvl_grid, modifications=None, specdata_path=data_path / 'species_data'):
+def build_refractive_index(spec, wvl_grid, modifications=None, specdata_path=None):
     """Attach a RefractiveIndex to `spec` that matches the provided `wvl_grid`."""
     modifications = modifications or {}
     name = spec.name.upper()

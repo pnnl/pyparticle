@@ -6,7 +6,7 @@ AerosolSpecies class definition.
 """
 from dataclasses import dataclass
 from typing import Optional
-from .. import data_path
+from ..data import species_open
 
 @dataclass
 class AerosolSpecies:
@@ -21,10 +21,8 @@ class AerosolSpecies:
     def __post_init__(self):
         # Load defaults from file only if any key value is None
         if self.density is None or self.kappa is None or self.molar_mass is None:
-            specdata_path = data_path / 'species_data'
-            aero_datafile = specdata_path / 'aero_data.dat'
-            found = False
-            with open(aero_datafile) as data_file:
+            with species_open('aero_data.dat') as data_file:
+                found = False
                 for line in data_file:
                     if line.strip().startswith("#"):
                         continue

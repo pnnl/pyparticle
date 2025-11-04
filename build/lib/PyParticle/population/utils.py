@@ -16,8 +16,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from pyparticle.species.registry import get_species
-from pyparticle import data_path
-
+from ..data import species_open
 
 def _read_available_species_tokens() -> List[str]:
     """Read available species names from datasets/species_data/aero_data.dat.
@@ -25,10 +24,10 @@ def _read_available_species_tokens() -> List[str]:
     Returns a list of known tokens (species names) sorted by length (desc)
     to enable greedy longest-match parsing.
     """
-    species_file = Path(data_path) / "species_data" / "aero_data.dat"
+    #species_file = Path(data_path) / "species_data" / "aero_data.dat"
     tokens: List[str] = []
-    with open(species_file) as f:
-        for line in f:
+    with species_open("aero_data.dat") as fh:
+        for line in fh:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
