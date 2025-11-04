@@ -62,7 +62,6 @@ if _HAS_NETCDF4:
             for kk in range(len(Ns)):
                 spec_frac = []
                 total_frac = 0.
-                print(kk, aero_spec_names[kk])
                 for spec_name in aero_spec_names[kk]:
                     # fixme: come up with more elegant way to handle PartMC --> MAM4 species name mapping
                     if spec_name.lower() == 'oc':
@@ -116,13 +115,13 @@ if _HAS_NETCDF4:
             #from .binned_lognormals import build as build_binned_lognormals
             
             lognormals_cfg = config
-
+            
             # fixme: make this right
-            rho_dry_air = MOLAR_MASS_DRY_AIR * p / (R * T)
+            rho_dry_air = MOLAR_MASS_DRY_AIR * p / (R * T) # kg/m^3
             Ns = num_aer[:,output_tt_idx] * rho_dry_air # N/m^3
             idx, = np.where(Ns>0)
             Ns = Ns[idx]
-            D_is_wet = config.get("D_is_wet", True)
+            D_is_wet = True #config.get("D_is_wet", True)
             GMDs_wet = dgn_awet[idx,output_tt_idx]
             GMDs = dgn_a[idx,output_tt_idx]
             
@@ -151,7 +150,7 @@ if _HAS_NETCDF4:
                     spec_frac /= np.sum(spec_frac)
                     spec_frac[np.isnan(spec_frac)] = 0.
                     aero_spec_fracs.append(spec_frac)
-
+            
             if D_is_wet:
                 GMDs_cfg = GMDs_wet
             else:

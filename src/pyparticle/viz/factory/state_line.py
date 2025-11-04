@@ -48,9 +48,6 @@ class StateLinePlotter(Plotter):
         x = xvar.compute(population)
         y = yvar.compute(population)
         
-        print('Ntot', population.get_Ntot())
-        print('mass SO4', population.get_mass_conc('SO4'))
-
         if len(y) == 1:
             y = y[0]  # flatten single-value arrays
         if len(x) == 1:
